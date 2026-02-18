@@ -1,13 +1,13 @@
-.obsidian_lorebook_settings .obsidian_lorebook_status {
+.deeplore_settings .deeplore_status {
     display: inline-block;
     margin-left: 10px;
     font-size: 0.85em;
 }
 
-.obsidian_lorebook_settings .obsidian_lorebook_status.success {
+.deeplore_settings .deeplore_status.success {
     color: #4caf50;
 }
 
-.obsidian_lorebook_settings .obsidian_lorebook_status.failure {
+.deeplore_settings .deeplore_status.failure {
     color: var(--warning, #f44336);
 }

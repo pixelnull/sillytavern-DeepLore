@@ -12,6 +12,7 @@ import {
     renderExtensionTemplateAsync,
 } from '../../../extensions.js';
 import { oai_settings } from '../../../openai.js';
+import { getTokenCountAsync } from '../../../tokenizers.js';
 import { SlashCommandParser } from '../../../slash-commands/SlashCommandParser.js';
 import { SlashCommand } from '../../../slash-commands/SlashCommand.js';
 
@@ -49,6 +50,34 @@ const defaultSettings = {
     debugMode: false,
 };
 
+/** Validation constraints for numeric settings */
+const settingsConstraints = {
+    obsidianPort: { min: 1, max: 65535 },
+    scanDepth: { min: 1, max: 100 },
+    maxEntries: { min: 1, max: 100 },
+    maxTokensBudget: { min: 100, max: 100000 },
+    injectionDepth: { min: 0, max: 9999 },
+    maxRecursionSteps: { min: 1, max: 10 },
+    cacheTTL: { min: 0, max: 86400 },
+    reviewResponseTokens: { min: 0, max: 100000 },
+};
+
+/**
+ * Validate and clamp settings to their allowed ranges.
+ * @param {object} settings
+ */
+function validateSettings(settings) {
+    for (const [key, { min, max }] of Object.entries(settingsConstraints)) {
+        if (typeof settings[key] === 'number') {
+            settings[key] = Math.max(min, Math.min(max, Math.round(settings[key])));
+        }
+    }
+    // Ensure tags are trimmed strings
+    if (typeof settings.lorebookTag === 'string') {
+        settings.lorebookTag = settings.lorebookTag.trim() || 'lorebook';
+    }
+}
+
 /** @returns {typeof defaultSettings} */
 function getSettings() {
     if (!extension_settings[MODULE_NAME]) {
@@ -60,6 +89,7 @@ function getSettings() {
             extension_settings[MODULE_NAME][key] = value;
         }
     }
+    validateSettings(extension_settings[MODULE_NAME]);
     return extension_settings[MODULE_NAME];
 }
 
@@ -262,11 +292,21 @@ async function buildIndex() {
                 content,
                 priority,
                 constant,
-                tokenEstimate: Math.ceil(content.length / 3.5),
+                tokenEstimate: 0,
                 scanDepth,
                 excludeRecursion,
             });
         }
+
+        // Compute accurate token counts using SillyTavern's tokenizer
+        await Promise.all(entries.map(async (entry) => {
+            try {
+                entry.tokenEstimate = await getTokenCountAsync(entry.content);
+            } catch {
+                // Fallback to rough estimate if tokenizer unavailable
+                entry.tokenEstimate = Math.ceil(entry.content.length / 3.5);
+            }
+        }));
 
         vaultIndex = entries;
         indexTimestamp = Date.now();
@@ -388,20 +428,22 @@ function matchEntries(chat) {
 
     // Recursive scanning: scan matched entry content for more matches
     if (settings.recursiveScan && settings.maxRecursionSteps > 0) {
-        let newMatches = true;
         let step = 0;
+        /** @type {Set<VaultEntry>} Entries added in the previous step (seed with initial matches) */
+        let newlyMatched = new Set(matchedSet);
 
-        while (newMatches && step < settings.maxRecursionSteps) {
-            newMatches = false;
+        while (newlyMatched.size > 0 && step < settings.maxRecursionSteps) {
             step++;
 
-            // Build recursion scan text from all matched entries (that allow recursion)
-            const recursionText = [...matchedSet]
+            // Only scan content from entries added in the previous step
+            const recursionText = [...newlyMatched]
                 .filter(e => !e.excludeRecursion)
                 .map(e => e.content)
                 .join('\n');
 
             if (!recursionText.trim()) break;
+
+            newlyMatched = new Set();
 
             for (const entry of vaultIndex) {
                 if (matchedSet.has(entry)) continue;
@@ -410,8 +452,8 @@ function matchEntries(chat) {
                 const key = testEntryMatch(entry, recursionText, settings);
                 if (key) {
                     matchedSet.add(entry);
+                    newlyMatched.add(entry);
                     matchedKeys.set(entry.title, `${key} (recursion step ${step})`);
-                    newMatches = true;
                 }
             }
         }
@@ -554,7 +596,7 @@ globalThis.deepLore_onGenerate = onGenerate;
 // ============================================================================
 
 function updateIndexStats() {
-    const statsEl = document.getElementById('obsidian_lorebook_index_stats');
+    const statsEl = document.getElementById('deeplore_index_stats');
     if (statsEl) {
         if (vaultIndex.length > 0) {
             const totalKeys = vaultIndex.reduce((sum, e) => sum + e.keys.length, 0);
@@ -570,32 +612,32 @@ function updateIndexStats() {
 function loadSettingsUI() {
     const settings = getSettings();
 
-    $('#obsidian_lorebook_enabled').prop('checked', settings.enabled);
-    $('#obsidian_lorebook_port').val(settings.obsidianPort);
-    $('#obsidian_lorebook_api_key').val(settings.obsidianApiKey);
-    $('#obsidian_lorebook_tag').val(settings.lorebookTag);
-    $('#obsidian_lorebook_constant_tag').val(settings.constantTag);
-    $('#obsidian_lorebook_never_insert_tag').val(settings.neverInsertTag);
-    $('#obsidian_lorebook_scan_depth').val(settings.scanDepth);
-    $('#obsidian_lorebook_max_entries').val(settings.maxEntries);
-    $('#obsidian_lorebook_unlimited_entries').prop('checked', settings.unlimitedEntries);
-    $('#obsidian_lorebook_max_entries').prop('disabled', settings.unlimitedEntries);
-    $('#obsidian_lorebook_token_budget').val(settings.maxTokensBudget);
-    $('#obsidian_lorebook_unlimited_budget').prop('checked', settings.unlimitedBudget);
-    $('#obsidian_lorebook_token_budget').prop('disabled', settings.unlimitedBudget);
-    $('#obsidian_lorebook_template').val(settings.injectionTemplate);
-    $(`input[name="obsidian_lorebook_position"][value="${settings.injectionPosition}"]`).prop('checked', true);
-    $('#obsidian_lorebook_depth').val(settings.injectionDepth);
-    $('#obsidian_lorebook_role').val(settings.injectionRole);
-    $('#obsidian_lorebook_allow_wi_scan').prop('checked', settings.allowWIScan);
-    $('#obsidian_lorebook_recursive_scan').prop('checked', settings.recursiveScan);
-    $('#obsidian_lorebook_max_recursion').val(settings.maxRecursionSteps);
-    $('#obsidian_lorebook_max_recursion').prop('disabled', !settings.recursiveScan);
-    $('#obsidian_lorebook_cache_ttl').val(settings.cacheTTL);
-    $('#obsidian_lorebook_review_tokens').val(settings.reviewResponseTokens);
-    $('#obsidian_lorebook_case_sensitive').prop('checked', settings.caseSensitive);
-    $('#obsidian_lorebook_match_whole_words').prop('checked', settings.matchWholeWords);
-    $('#obsidian_lorebook_debug').prop('checked', settings.debugMode);
+    $('#deeplore_enabled').prop('checked', settings.enabled);
+    $('#deeplore_port').val(settings.obsidianPort);
+    $('#deeplore_api_key').val(settings.obsidianApiKey);
+    $('#deeplore_tag').val(settings.lorebookTag);
+    $('#deeplore_constant_tag').val(settings.constantTag);
+    $('#deeplore_never_insert_tag').val(settings.neverInsertTag);
+    $('#deeplore_scan_depth').val(settings.scanDepth);
+    $('#deeplore_max_entries').val(settings.maxEntries);
+    $('#deeplore_unlimited_entries').prop('checked', settings.unlimitedEntries);
+    $('#deeplore_max_entries').prop('disabled', settings.unlimitedEntries);
+    $('#deeplore_token_budget').val(settings.maxTokensBudget);
+    $('#deeplore_unlimited_budget').prop('checked', settings.unlimitedBudget);
+    $('#deeplore_token_budget').prop('disabled', settings.unlimitedBudget);
+    $('#deeplore_template').val(settings.injectionTemplate);
+    $(`input[name="deeplore_position"][value="${settings.injectionPosition}"]`).prop('checked', true);
+    $('#deeplore_depth').val(settings.injectionDepth);
+    $('#deeplore_role').val(settings.injectionRole);
+    $('#deeplore_allow_wi_scan').prop('checked', settings.allowWIScan);
+    $('#deeplore_recursive_scan').prop('checked', settings.recursiveScan);
+    $('#deeplore_max_recursion').val(settings.maxRecursionSteps);
+    $('#deeplore_max_recursion').prop('disabled', !settings.recursiveScan);
+    $('#deeplore_cache_ttl').val(settings.cacheTTL);
+    $('#deeplore_review_tokens').val(settings.reviewResponseTokens);
+    $('#deeplore_case_sensitive').prop('checked', settings.caseSensitive);
+    $('#deeplore_match_whole_words').prop('checked', settings.matchWholeWords);
+    $('#deeplore_debug').prop('checked', settings.debugMode);
 
     updateIndexStats();
 }
@@ -603,127 +645,127 @@ function loadSettingsUI() {
 function bindSettingsEvents() {
     const settings = getSettings();
 
-    $('#obsidian_lorebook_enabled').on('change', function () {
+    $('#deeplore_enabled').on('change', function () {
         settings.enabled = $(this).prop('checked');
         saveSettingsDebounced();
     });
 
-    $('#obsidian_lorebook_port').on('input', function () {
+    $('#deeplore_port').on('input', function () {
         settings.obsidianPort = Number($(this).val()) || 27123;
         saveSettingsDebounced();
     });
 
-    $('#obsidian_lorebook_api_key').on('input', function () {
+    $('#deeplore_api_key').on('input', function () {
         settings.obsidianApiKey = String($(this).val());
         saveSettingsDebounced();
     });
 
-    $('#obsidian_lorebook_tag').on('input', function () {
+    $('#deeplore_tag').on('input', function () {
         settings.lorebookTag = String($(this).val()).trim() || 'lorebook';
         saveSettingsDebounced();
     });
 
-    $('#obsidian_lorebook_constant_tag').on('input', function () {
+    $('#deeplore_constant_tag').on('input', function () {
         settings.constantTag = String($(this).val()).trim();
         saveSettingsDebounced();
     });
 
-    $('#obsidian_lorebook_never_insert_tag').on('input', function () {
+    $('#deeplore_never_insert_tag').on('input', function () {
         settings.neverInsertTag = String($(this).val()).trim();
         saveSettingsDebounced();
     });
 
-    $('#obsidian_lorebook_scan_depth').on('input', function () {
+    $('#deeplore_scan_depth').on('input', function () {
         settings.scanDepth = Number($(this).val()) || 4;
         saveSettingsDebounced();
     });
 
-    $('#obsidian_lorebook_max_entries').on('input', function () {
+    $('#deeplore_max_entries').on('input', function () {
         settings.maxEntries = Number($(this).val()) || 10;
         saveSettingsDebounced();
     });
 
-    $('#obsidian_lorebook_unlimited_entries').on('change', function () {
+    $('#deeplore_unlimited_entries').on('change', function () {
         settings.unlimitedEntries = $(this).prop('checked');
-        $('#obsidian_lorebook_max_entries').prop('disabled', settings.unlimitedEntries);
+        $('#deeplore_max_entries').prop('disabled', settings.unlimitedEntries);
         saveSettingsDebounced();
     });
 
-    $('#obsidian_lorebook_token_budget').on('input', function () {
+    $('#deeplore_token_budget').on('input', function () {
         settings.maxTokensBudget = Number($(this).val()) || 2048;
         saveSettingsDebounced();
     });
 
-    $('#obsidian_lorebook_unlimited_budget').on('change', function () {
+    $('#deeplore_unlimited_budget').on('change', function () {
         settings.unlimitedBudget = $(this).prop('checked');
-        $('#obsidian_lorebook_token_budget').prop('disabled', settings.unlimitedBudget);
+        $('#deeplore_token_budget').prop('disabled', settings.unlimitedBudget);
         saveSettingsDebounced();
     });
 
-    $('#obsidian_lorebook_template').on('input', function () {
+    $('#deeplore_template').on('input', function () {
         settings.injectionTemplate = String($(this).val());
         saveSettingsDebounced();
     });
 
-    $('input[name="obsidian_lorebook_position"]').on('change', function () {
+    $('input[name="deeplore_position"]').on('change', function () {
         settings.injectionPosition = Number($(this).val());
         saveSettingsDebounced();
     });
 
-    $('#obsidian_lorebook_depth').on('input', function () {
+    $('#deeplore_depth').on('input', function () {
         settings.injectionDepth = Number($(this).val()) || 4;
         saveSettingsDebounced();
     });
 
-    $('#obsidian_lorebook_role').on('change', function () {
+    $('#deeplore_role').on('change', function () {
         settings.injectionRole = Number($(this).val());
         saveSettingsDebounced();
     });
 
-    $('#obsidian_lorebook_allow_wi_scan').on('change', function () {
+    $('#deeplore_allow_wi_scan').on('change', function () {
         settings.allowWIScan = $(this).prop('checked');
         saveSettingsDebounced();
     });
 
-    $('#obsidian_lorebook_recursive_scan').on('change', function () {
+    $('#deeplore_recursive_scan').on('change', function () {
         settings.recursiveScan = $(this).prop('checked');
-        $('#obsidian_lorebook_max_recursion').prop('disabled', !settings.recursiveScan);
+        $('#deeplore_max_recursion').prop('disabled', !settings.recursiveScan);
         saveSettingsDebounced();
     });
 
-    $('#obsidian_lorebook_max_recursion').on('input', function () {
+    $('#deeplore_max_recursion').on('input', function () {
         settings.maxRecursionSteps = Number($(this).val()) || 3;
         saveSettingsDebounced();
     });
 
-    $('#obsidian_lorebook_cache_ttl').on('input', function () {
+    $('#deeplore_cache_ttl').on('input', function () {
         settings.cacheTTL = Number($(this).val()) || 300;
         saveSettingsDebounced();
     });
 
-    $('#obsidian_lorebook_review_tokens').on('input', function () {
+    $('#deeplore_review_tokens').on('input', function () {
         settings.reviewResponseTokens = Number($(this).val()) || 0;
         saveSettingsDebounced();
     });
 
-    $('#obsidian_lorebook_case_sensitive').on('change', function () {
+    $('#deeplore_case_sensitive').on('change', function () {
         settings.caseSensitive = $(this).prop('checked');
         saveSettingsDebounced();
     });
 
-    $('#obsidian_lorebook_match_whole_words').on('change', function () {
+    $('#deeplore_match_whole_words').on('change', function () {
         settings.matchWholeWords = $(this).prop('checked');
         saveSettingsDebounced();
     });
 
-    $('#obsidian_lorebook_debug').on('change', function () {
+    $('#deeplore_debug').on('change', function () {
         settings.debugMode = $(this).prop('checked');
         saveSettingsDebounced();
     });
 
     // Test Connection button
-    $('#obsidian_lorebook_test_connection').on('click', async function () {
-        const statusEl = $('#obsidian_lorebook_connection_status');
+    $('#deeplore_test_connection').on('click', async function () {
+        const statusEl = $('#deeplore_connection_status');
         statusEl.text('Testing...').removeClass('success failure');
 
         try {
@@ -750,8 +792,8 @@ function bindSettingsEvents() {
     });
 
     // Refresh Index button
-    $('#obsidian_lorebook_refresh').on('click', async function () {
-        $('#obsidian_lorebook_index_stats').text('Refreshing...');
+    $('#deeplore_refresh').on('click', async function () {
+        $('#deeplore_index_stats').text('Refreshing...');
         vaultIndex = [];
         indexTimestamp = 0;
         await buildIndex();
