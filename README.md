@@ -39,7 +39,22 @@ git clone https://github.com/pixelnull/sillytavern-DeepLore.git
 
 ### Step 2: Install the server plugin
 
-DeepLore needs a server plugin to talk to Obsidian. Copy the `server` folder from the installed extension into your SillyTavern `plugins` directory, renamed to `deeplore`:
+DeepLore needs a server plugin to talk to Obsidian.
+
+**Option A: Use the installer script (recommended)**
+
+Run the installer from the extension directory:
+
+- **Windows:** Double-click `install-server.bat` or run it from the command line
+- **Linux/Mac:** Run `./install-server.sh`
+
+If the extension isn't installed inside SillyTavern's directory, pass the SillyTavern root path as an argument:
+
+```bash
+./install-server.sh /path/to/SillyTavern
+```
+
+**Option B: Manual copy**
 
 1. Find the `server` folder at `SillyTavern/public/scripts/extensions/third-party/sillytavern-DeepLore/server`
 2. Copy it into `SillyTavern/plugins/`
