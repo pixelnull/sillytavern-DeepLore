@@ -1,0 +1,13 @@
+.obsidian_lorebook_settings .obsidian_lorebook_status {
+    display: inline-block;
+    margin-left: 10px;
+    font-size: 0.85em;
+}
+
+.obsidian_lorebook_settings .obsidian_lorebook_status.success {
+    color: var(--SmartThemeQuoteColor, #4caf50);
+}
+
+.obsidian_lorebook_settings .obsidian_lorebook_status.failure {
+    color: var(--warning, #f44336);
+}

@@ -1,0 +1,200 @@
+<div class="obsidian_lorebook_settings">
+    <div class="inline-drawer">
+        <div class="inline-drawer-toggle inline-drawer-header">
+            <b>DeepLore</b>
+            <div class="inline-drawer-icon fa-solid fa-circle-chevron-down down"></div>
+        </div>
+        <div class="inline-drawer-content">
+            <label class="checkbox_label" for="obsidian_lorebook_enabled" title="Enable or disable DeepLore. When disabled, no entries are injected into prompts.">
+                <input id="obsidian_lorebook_enabled" type="checkbox" class="checkbox">
+                <span>Enable DeepLore</span>
+            </label>
+
+            <hr>
+            <h4>Connection</h4>
+
+            <div class="flex-container flexFlowColumn">
+                <div class="flex-container">
+                    <div class="flex1" title="Port number for the Obsidian Local REST API plugin (default: 27123). Found in Obsidian Settings > Local REST API.">
+                        <label for="obsidian_lorebook_port">
+                            <small>Obsidian API Port</small>
+                        </label>
+                        <input id="obsidian_lorebook_port" type="number" class="text_pole" min="1" max="65535" />
+                    </div>
+                    <div class="flex1" title="API key from Obsidian Settings > Local REST API > API Key. Required for authenticated access to your vault.">
+                        <label for="obsidian_lorebook_api_key">
+                            <small>API Key</small>
+                        </label>
+                        <input id="obsidian_lorebook_api_key" type="password" class="text_pole" placeholder="Paste your API key" />
+                    </div>
+                </div>
+                <div class="flex-container">
+                    <div id="obsidian_lorebook_test_connection" class="menu_button menu_button_icon" title="Test the connection to your Obsidian vault using the port and API key above.">
+                        <i class="fa-solid fa-plug"></i>
+                        <span>Test Connection</span>
+                    </div>
+                    <span id="obsidian_lorebook_connection_status" class="obsidian_lorebook_status"></span>
+                </div>
+            </div>
+
+            <hr>
+            <h4>Vault Settings</h4>
+
+            <div class="flex-container flexFlowColumn">
+                <div class="flex-container">
+                    <div class="flex1" title="Obsidian tag (without #) that marks a note as a lorebook entry. Only notes with this tag will be indexed and available for injection. Default: lorebook">
+                        <label for="obsidian_lorebook_tag">
+                            <small>Lorebook Tag</small>
+                        </label>
+                        <input id="obsidian_lorebook_tag" type="text" class="text_pole" placeholder="lorebook" />
+                    </div>
+                    <div class="flex1" title="Obsidian tag (without #) that forces a note to always be injected, regardless of keyword matches. Useful for core world-building info that should always be in context. Leave empty to disable.">
+                        <label for="obsidian_lorebook_constant_tag">
+                            <small>Always-Send Tag</small>
+                        </label>
+                        <input id="obsidian_lorebook_constant_tag" type="text" class="text_pole" placeholder="lorebook-always" />
+                    </div>
+                </div>
+                <div class="flex-container">
+                    <div class="flex1" title="Obsidian tag (without #) that prevents a note from ever being injected, even if its keywords match. Useful for draft or WIP notes. Leave empty to disable.">
+                        <label for="obsidian_lorebook_never_insert_tag">
+                            <small>Never-Insert Tag</small>
+                        </label>
+                        <input id="obsidian_lorebook_never_insert_tag" type="text" class="text_pole" placeholder="lorebook-never" />
+                    </div>
+                </div>
+                <div class="flex-container">
+                    <div class="flex1" title="Number of recent chat messages to scan for keyword matches. Higher values scan more conversation history but may match more entries. Default: 4">
+                        <label for="obsidian_lorebook_scan_depth">
+                            <small>Scan Depth</small>
+                        </label>
+                        <input id="obsidian_lorebook_scan_depth" type="number" class="text_pole" min="1" max="100" />
+                    </div>
+                </div>
+                <div class="flex-container">
+                    <div class="flex1">
+                        <label class="checkbox_label" for="obsidian_lorebook_unlimited_entries" title="Remove the cap on how many entries can be injected per generation. When unchecked, only the top N entries (by priority) are injected.">
+                            <input id="obsidian_lorebook_unlimited_entries" type="checkbox" class="checkbox">
+                            <span>Unlimited Entries</span>
+                        </label>
+                    </div>
+                    <div class="flex1" title="Maximum number of lorebook entries to inject per generation, sorted by priority. Only applies when Unlimited Entries is unchecked.">
+                        <label for="obsidian_lorebook_max_entries">
+                            <small>Max Entries</small>
+                        </label>
+                        <input id="obsidian_lorebook_max_entries" type="number" class="text_pole" min="1" max="100" />
+                    </div>
+                </div>
+                <div class="flex-container">
+                    <div class="flex1">
+                        <label class="checkbox_label" for="obsidian_lorebook_unlimited_budget" title="Remove the token budget cap. When unchecked, entries are injected until the budget is reached. A warning toast appears if injected lore exceeds 20% of total context.">
+                            <input id="obsidian_lorebook_unlimited_budget" type="checkbox" class="checkbox">
+                            <span>Unlimited Token Budget</span>
+                        </label>
+                    </div>
+                    <div class="flex1" title="Maximum total tokens to inject from lorebook entries per generation. Entries are added in priority order until the budget is reached. Only applies when Unlimited Token Budget is unchecked.">
+                        <label for="obsidian_lorebook_token_budget">
+                            <small>Token Budget</small>
+                        </label>
+                        <input id="obsidian_lorebook_token_budget" type="number" class="text_pole" min="100" max="100000" />
+                    </div>
+                </div>
+            </div>
+
+            <hr>
+            <h4>Matching</h4>
+
+            <label class="checkbox_label" for="obsidian_lorebook_case_sensitive" title="When checked, keyword matching is case-sensitive ('Eris' won't match 'eris'). When unchecked, matching ignores case.">
+                <input id="obsidian_lorebook_case_sensitive" type="checkbox" class="checkbox">
+                <span>Case Sensitive</span>
+            </label>
+            <label class="checkbox_label" for="obsidian_lorebook_match_whole_words" title="When checked, keywords must match as whole words ('war' won't match 'warning'). Uses word boundary detection.">
+                <input id="obsidian_lorebook_match_whole_words" type="checkbox" class="checkbox">
+                <span>Match Whole Words</span>
+            </label>
+            <label class="checkbox_label" for="obsidian_lorebook_recursive_scan" title="After initial keyword matches, scan matched entries' content for keywords that might trigger additional entries. Mirrors SillyTavern's built-in World Info recursive scanning behavior.">
+                <input id="obsidian_lorebook_recursive_scan" type="checkbox" class="checkbox">
+                <span>Recursive Scanning</span>
+            </label>
+            <div class="flex-container" style="margin-left: 20px;">
+                <div class="flex1" title="Maximum number of recursive scan passes. Each pass scans newly matched entries for more keyword triggers. Higher values find deeper connections but take longer.">
+                    <label for="obsidian_lorebook_max_recursion">
+                        <small>Max Recursion Steps</small>
+                    </label>
+                    <input id="obsidian_lorebook_max_recursion" type="number" class="text_pole" min="1" max="10" />
+                </div>
+            </div>
+
+            <hr>
+            <h4>Injection</h4>
+
+            <div class="flex-container flexFlowColumn">
+                <div title="Template for formatting each injected entry. Use {{title}} for the entry name and {{content}} for the note body. Default: XML-style tags.">
+                    <label for="obsidian_lorebook_template">
+                        <small>Injection Template</small>
+                    </label>
+                    <textarea id="obsidian_lorebook_template" class="text_pole textarea_compact" rows="3" placeholder="Use {{title}} and {{content}} macros."></textarea>
+                </div>
+
+                <label>Injection Position</label>
+                <div class="radio_group">
+                    <label title="Inject lore before the main system prompt / story string.">
+                        <input type="radio" name="obsidian_lorebook_position" value="2" />
+                        <span>Before Main Prompt / Story String</span>
+                    </label>
+                    <label title="Inject lore after the main system prompt / story string.">
+                        <input type="radio" name="obsidian_lorebook_position" value="0" />
+                        <span>After Main Prompt / Story String</span>
+                    </label>
+                    <label title="Inject lore as a message in the chat history at the specified depth (0 = last message, 4 = 4 messages back). Choose the role (System/User/Assistant) for the injected message.">
+                        <input type="radio" name="obsidian_lorebook_position" value="1" />
+                        <span>In-chat @ Depth </span>
+                        <input id="obsidian_lorebook_depth" class="text_pole widthUnset" type="number" min="0" max="9999" />
+                        <span> as </span>
+                        <select id="obsidian_lorebook_role" class="text_pole widthNatural">
+                            <option value="0">System</option>
+                            <option value="1">User</option>
+                            <option value="2">Assistant</option>
+                        </select>
+                    </label>
+                </div>
+
+                <label class="checkbox_label" for="obsidian_lorebook_allow_wi_scan" title="Let SillyTavern's built-in World Info system scan the injected Obsidian lore for WI keyword matches. Enables cross-system triggering between Obsidian entries and native World Info entries.">
+                    <input id="obsidian_lorebook_allow_wi_scan" type="checkbox" class="checkbox">
+                    <span>Allow World Info Scan</span>
+                </label>
+            </div>
+
+            <hr>
+            <h4>Index & Debug</h4>
+
+            <div class="flex-container flexFlowColumn">
+                <div class="flex-container">
+                    <div id="obsidian_lorebook_refresh" class="menu_button menu_button_icon" title="Clear the cached vault index and re-fetch all entries from Obsidian. Use after editing notes in Obsidian to pick up changes immediately.">
+                        <i class="fa-solid fa-rotate"></i>
+                        <span>Refresh Index</span>
+                    </div>
+                </div>
+                <small id="obsidian_lorebook_index_stats">No index loaded.</small>
+                <div class="flex-container">
+                    <div class="flex1" title="How long (in seconds) to cache the vault index before automatically re-fetching from Obsidian. Set to 0 to always fetch fresh data (slower). Default: 300 (5 minutes)">
+                        <label for="obsidian_lorebook_cache_ttl">
+                            <small>Cache TTL (seconds)</small>
+                        </label>
+                        <input id="obsidian_lorebook_cache_ttl" type="number" class="text_pole" min="0" max="86400" />
+                    </div>
+                    <div class="flex1" title="Token limit hint sent to the AI when using /obsidian-lore-review. Set to 0 to automatically use your connection profile's Max Response Length setting.">
+                        <label for="obsidian_lorebook_review_tokens">
+                            <small>Review Response Tokens (0 = auto)</small>
+                        </label>
+                        <input id="obsidian_lorebook_review_tokens" type="number" class="text_pole" min="0" max="100000" />
+                    </div>
+                </div>
+                <label class="checkbox_label" for="obsidian_lorebook_debug" title="Log detailed match information to the browser console (F12). Shows which entries matched, which keywords triggered them, token counts, and injection details.">
+                    <input id="obsidian_lorebook_debug" type="checkbox" class="checkbox">
+                    <span>Debug Mode</span>
+                </label>
+            </div>
+        </div>
+    </div>
+</div>
