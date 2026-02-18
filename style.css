@@ -5,7 +5,7 @@
 }
 
 .obsidian_lorebook_settings .obsidian_lorebook_status.success {
-    color: var(--SmartThemeQuoteColor, #4caf50);
+    color: #4caf50;
 }
 
 .obsidian_lorebook_settings .obsidian_lorebook_status.failure {
