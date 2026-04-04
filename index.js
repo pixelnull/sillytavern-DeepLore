@@ -557,7 +557,7 @@ globalThis.deepLoreEnhanced_matchText = matchTextForExternal;
 jQuery(async function () {
     try {
         const settingsHtml = await renderExtensionTemplateAsync(
-            'third-party/sillytavern-DeepLore-Enhanced',
+            'third-party/sillytavern-DeepLore-Enhanced-Cheesedozer-Edition',
             'settings',
         );
         $('#extensions_settings2').append(settingsHtml);

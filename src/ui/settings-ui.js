@@ -341,7 +341,7 @@ function updatePopupIndexStats() {
  */
 export async function openSettingsPopup() {
     const html = await renderExtensionTemplateAsync(
-        'third-party/sillytavern-DeepLore-Enhanced',
+        'third-party/sillytavern-DeepLore-Enhanced-Cheesedozer-Edition',
         'settings-popup',
     );
     const $container = $(html);

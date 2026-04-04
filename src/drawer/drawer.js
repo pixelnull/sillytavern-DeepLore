@@ -95,7 +95,7 @@ export async function createDrawerPanel() {
 
     // Load the drawer HTML template
     const drawerContent = await renderExtensionTemplateAsync(
-        'third-party/sillytavern-DeepLore-Enhanced',
+        'third-party/sillytavern-DeepLore-Enhanced-Cheesedozer-Edition',
         'drawer',
     );
 
@@ -146,7 +146,7 @@ export async function createDrawerPanel() {
     $('#top-settings-holder').append($drawer);
 
     // Load custom SVG icon (async, non-blocking — FA fallback already in place)
-    fetch('/scripts/extensions/third-party/sillytavern-DeepLore-Enhanced/icon.svg')
+    fetch('/scripts/extensions/third-party/sillytavern-DeepLore-Enhanced-Cheesedozer-Edition/icon.svg')
         .then(r => r.ok ? r.text() : null)
         .then(svg => {
             if (!svg) return;

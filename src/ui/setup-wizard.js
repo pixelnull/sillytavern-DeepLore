@@ -42,7 +42,7 @@ let $wizard = null;
  * @param {number} [startPage=1] - Page to start on (1-indexed)
  */
 export async function showSetupWizard(startPage = 1) {
-    const html = await renderExtensionTemplateAsync('third-party/sillytavern-DeepLore-Enhanced', 'setup-wizard');
+    const html = await renderExtensionTemplateAsync('third-party/sillytavern-DeepLore-Enhanced-Cheesedozer-Edition', 'setup-wizard');
 
     currentPage = 1;
     connectionVerified = false;
