@@ -24,6 +24,8 @@ If a previous session note is provided, do NOT repeat what it already covers —
 
 Format with markdown headings and bullet points. Be specific — use character names and concrete details, not vague summaries.`;
 
+let _orphanedScribePending = false;
+
 /**
  * Route a Scribe AI call based on the configured connection mode.
  * @param {string} systemPrompt - System prompt text
@@ -47,20 +49,30 @@ export async function callScribe(systemPrompt, userMessage, settings) {
     }
 
     // Default: 'st' mode — use SillyTavern's active connection via generateQuietPrompt
-    // Note: generateQuietPrompt cannot be aborted — the timed-out generation will complete in background
+    // Note: generateQuietPrompt cannot be aborted — timed-out generation completes in background.
+    // _orphanedScribePending guards against overlapping calls that waste API tokens.
+    if (_orphanedScribePending) {
+        throw new Error('Scribe skipped — a previous ST generation is still running in the background');
+    }
     const quietPrompt = `${systemPrompt}\n\n${userMessage}`;
     // BUG-FIX: timeout=0 should mean "no timeout", not "instant timeout" (setTimeout(fn, 0) fires immediately)
     const timeout = settings.scribeTimeout || 60000;
     const { generateQuietPrompt } = SillyTavern.getContext();
+    _orphanedScribePending = true;
     const quietPromise = generateQuietPrompt({ quietPrompt, skipWIAN: true, responseLength: settings.scribeMaxTokens });
     let scribeTimer;
-    return await Promise.race([
-        quietPromise.finally(() => clearTimeout(scribeTimer)),
-        new Promise((_, reject) => { scribeTimer = setTimeout(() => {
-            console.warn('[DLE] Scribe quiet prompt timed out — orphaned generation may still complete in background');
-            reject(new Error(`Scribe quiet prompt timed out (${Math.round(timeout / 1000)}s)`));
-        }, timeout); }),
-    ]);
+    try {
+        return await Promise.race([
+            quietPromise.finally(() => { _orphanedScribePending = false; clearTimeout(scribeTimer); }),
+            new Promise((_, reject) => { scribeTimer = setTimeout(() => {
+                console.warn('[DLE] Scribe quiet prompt timed out — orphaned generation may still complete in background');
+                reject(new Error(`Scribe quiet prompt timed out (${Math.round(timeout / 1000)}s)`));
+            }, timeout); }),
+        ]);
+    } catch (err) {
+        // On timeout, _orphanedScribePending stays true until the orphaned promise resolves
+        throw err;
+    }
 }
 
 /**

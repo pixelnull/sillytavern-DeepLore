@@ -1086,23 +1086,64 @@ function bindPopupEvents($container) {
     $container.on('click', '.dle-copy-ai-btn', function () {
         const target = $(this).data('copy-target');
         const mode = settings.aiSearchConnectionMode;
+
+        // Helper: copy AI Search connection settings to a target subsystem
+        const copyToTarget = (keys, uiUpdater) => {
+            settings[keys.mode] = mode;
+            settings[keys.profileId] = settings.aiSearchProfileId;
+            settings[keys.proxyUrl] = settings.aiSearchProxyUrl;
+            settings[keys.model] = settings.aiSearchModel;
+            uiUpdater();
+        };
+
         if (target === 'scribe') {
-            settings.scribeConnectionMode = mode; settings.scribeProfileId = settings.aiSearchProfileId; settings.scribeProxyUrl = settings.aiSearchProxyUrl; settings.scribeModel = settings.aiSearchModel;
-            $c(`input[name="dle-sp-scribe-connection-mode"][value="${mode}"]`).prop('checked', true); $c('#dle-sp-scribe-proxy-url').val(settings.scribeProxyUrl); $c('#dle-sp-scribe-model').val(settings.scribeModel);
-            populateProfileDropdownIn($container, 'dle-sp-scribe-profile-select', 'scribeProfileId');
-            updateConnectionVisibilityIn($container, { modeSettingsKey: 'scribeConnectionMode', profileRowSelector: '#dle-sp-scribe-profile-row', proxyRowSelector: '#dle-sp-scribe-proxy-row', modelInputSelector: '#dle-sp-scribe-model', profileIdSettingsKey: 'scribeProfileId', externalOnlySelectors: ['#dle-sp-scribe-model-row'], hasStMode: true });
+            copyToTarget(
+                { mode: 'scribeConnectionMode', profileId: 'scribeProfileId', proxyUrl: 'scribeProxyUrl', model: 'scribeModel' },
+                () => {
+                    $c(`input[name="dle-sp-scribe-connection-mode"][value="${mode}"]`).prop('checked', true);
+                    $c('#dle-sp-scribe-proxy-url').val(settings.scribeProxyUrl);
+                    $c('#dle-sp-scribe-model').val(settings.scribeModel);
+                    populateProfileDropdownIn($container, 'dle-sp-scribe-profile-select', 'scribeProfileId');
+                    updateConnectionVisibilityIn($container, {
+                        modeSettingsKey: 'scribeConnectionMode', profileRowSelector: '#dle-sp-scribe-profile-row',
+                        proxyRowSelector: '#dle-sp-scribe-proxy-row', modelInputSelector: '#dle-sp-scribe-model',
+                        profileIdSettingsKey: 'scribeProfileId', externalOnlySelectors: ['#dle-sp-scribe-model-row'], hasStMode: true,
+                    });
+                },
+            );
         } else if (target === 'ai_notepad') {
-            settings.aiNotepadConnectionMode = mode; settings.aiNotepadProfileId = settings.aiSearchProfileId; settings.aiNotepadProxyUrl = settings.aiSearchProxyUrl; settings.aiNotepadModel = settings.aiSearchModel;
-            $c(`input[name="dle-sp-ai-notepad-connection-mode"][value="${mode}"]`).prop('checked', true); $c('#dle-sp-ai-notepad-proxy-url').val(settings.aiNotepadProxyUrl); $c('#dle-sp-ai-notepad-model').val(settings.aiNotepadModel);
-            populateProfileDropdownIn($container, 'dle-sp-ai-notepad-profile-select', 'aiNotepadProfileId');
-            updateConnectionVisibilityIn($container, { modeSettingsKey: 'aiNotepadConnectionMode', profileRowSelector: '#dle-sp-ai-notepad-profile-row', proxyRowSelector: '#dle-sp-ai-notepad-proxy-row', modelInputSelector: '#dle-sp-ai-notepad-model', profileIdSettingsKey: 'aiNotepadProfileId', externalOnlySelectors: ['#dle-sp-ai-notepad-model-row'] });
+            copyToTarget(
+                { mode: 'aiNotepadConnectionMode', profileId: 'aiNotepadProfileId', proxyUrl: 'aiNotepadProxyUrl', model: 'aiNotepadModel' },
+                () => {
+                    $c(`input[name="dle-sp-ai-notepad-connection-mode"][value="${mode}"]`).prop('checked', true);
+                    $c('#dle-sp-ai-notepad-proxy-url').val(settings.aiNotepadProxyUrl);
+                    $c('#dle-sp-ai-notepad-model').val(settings.aiNotepadModel);
+                    populateProfileDropdownIn($container, 'dle-sp-ai-notepad-profile-select', 'aiNotepadProfileId');
+                    updateConnectionVisibilityIn($container, {
+                        modeSettingsKey: 'aiNotepadConnectionMode', profileRowSelector: '#dle-sp-ai-notepad-profile-row',
+                        proxyRowSelector: '#dle-sp-ai-notepad-proxy-row', modelInputSelector: '#dle-sp-ai-notepad-model',
+                        profileIdSettingsKey: 'aiNotepadProfileId', externalOnlySelectors: ['#dle-sp-ai-notepad-model-row'],
+                    });
+                },
+            );
         } else if (target === 'autosuggest') {
-            settings.autoSuggestConnectionMode = mode; settings.autoSuggestProfileId = settings.aiSearchProfileId; settings.autoSuggestProxyUrl = settings.aiSearchProxyUrl; settings.autoSuggestModel = settings.aiSearchModel;
-            $c(`input[name="dle-sp-autosuggest-connection-mode"][value="${mode}"]`).prop('checked', true); $c('#dle-sp-autosuggest-proxy-url').val(settings.autoSuggestProxyUrl); $c('#dle-sp-autosuggest-model').val(settings.autoSuggestModel);
-            populateProfileDropdownIn($container, 'dle-sp-autosuggest-profile', 'autoSuggestProfileId');
-            updateConnectionVisibilityIn($container, { modeSettingsKey: 'autoSuggestConnectionMode', profileRowSelector: '#dle-sp-autosuggest-profile-container', proxyRowSelector: '#dle-sp-autosuggest-proxy-container' });
+            copyToTarget(
+                { mode: 'autoSuggestConnectionMode', profileId: 'autoSuggestProfileId', proxyUrl: 'autoSuggestProxyUrl', model: 'autoSuggestModel' },
+                () => {
+                    $c(`input[name="dle-sp-autosuggest-connection-mode"][value="${mode}"]`).prop('checked', true);
+                    $c('#dle-sp-autosuggest-proxy-url').val(settings.autoSuggestProxyUrl);
+                    $c('#dle-sp-autosuggest-model').val(settings.autoSuggestModel);
+                    populateProfileDropdownIn($container, 'dle-sp-autosuggest-profile', 'autoSuggestProfileId');
+                    updateConnectionVisibilityIn($container, {
+                        modeSettingsKey: 'autoSuggestConnectionMode', profileRowSelector: '#dle-sp-autosuggest-profile-container',
+                        proxyRowSelector: '#dle-sp-autosuggest-proxy-container',
+                    });
+                },
+            );
         }
-        invalidateSettingsCache(); saveSettingsDebounced();
+
+        invalidateSettingsCache();
+        saveSettingsDebounced();
         toastr.success('Connection settings copied from AI Search.', 'DeepLore Enhanced');
     });
 

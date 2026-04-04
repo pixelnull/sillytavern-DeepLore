@@ -28,6 +28,8 @@ Example: [{"title": "The Silver Crown", "type": "lore", "keys": ["silver crown",
  * Route an Auto Suggest AI call based on connection mode (mirrors callScribe pattern).
  * BUG 1 FIX: st mode now uses object form of generateQuietPrompt.
  */
+let _orphanedAutoSuggestPending = false;
+
 export async function callAutoSuggest(systemPrompt, userMessage) {
     if (isAiCircuitOpen() && !tryAcquireHalfOpenProbe()) {
         throw new Error('AI circuit breaker is open — skipping auto-suggest');
@@ -39,21 +41,31 @@ export async function callAutoSuggest(systemPrompt, userMessage) {
     const maxTokens = settings.autoSuggestMaxTokens;
 
     if (mode === 'st') {
-        // Note: generateQuietPrompt cannot be aborted — timed-out generation completes in background
+        if (_orphanedAutoSuggestPending) {
+            throw new Error('Auto-suggest skipped — a previous ST generation is still running in the background');
+        }
+        // Note: generateQuietPrompt cannot be aborted — timed-out generation completes in background.
+        // _orphanedAutoSuggestPending guards against overlapping calls that waste API tokens.
         const quietPrompt = `${systemPrompt}\n\n${userMessage}`;
         // BUG-FIX: timeout=0 should mean "no timeout", not "instant timeout" (setTimeout(fn, 0) fires immediately)
         const effectiveTimeout = timeout || 60000;
         const { generateQuietPrompt } = SillyTavern.getContext();
+        _orphanedAutoSuggestPending = true;
         const quietPromise = generateQuietPrompt({ quietPrompt, skipWIAN: true, responseLength: maxTokens });
         let suggestTimer;
-        const response = await Promise.race([
-            quietPromise.finally(() => clearTimeout(suggestTimer)),
-            new Promise((_, reject) => { suggestTimer = setTimeout(() => {
-                console.warn('[DLE] Auto-suggest quiet prompt timed out — orphaned generation may still complete in background');
-                reject(new Error(`Auto-suggest quiet prompt timed out (${Math.round(effectiveTimeout / 1000)}s)`));
-            }, effectiveTimeout); }),
-        ]);
-        return { text: response, usage: null };
+        try {
+            const response = await Promise.race([
+                quietPromise.finally(() => { _orphanedAutoSuggestPending = false; clearTimeout(suggestTimer); }),
+                new Promise((_, reject) => { suggestTimer = setTimeout(() => {
+                    console.warn('[DLE] Auto-suggest quiet prompt timed out — orphaned generation may still complete in background');
+                    reject(new Error(`Auto-suggest quiet prompt timed out (${Math.round(effectiveTimeout / 1000)}s)`));
+                }, effectiveTimeout); }),
+            ]);
+            return { text: response, usage: null };
+        } catch (err) {
+            // On timeout, _orphanedAutoSuggestPending stays true until the orphaned promise resolves
+            throw err;
+        }
     } else if (mode === 'profile' || mode === 'proxy') {
         return await callAI(systemPrompt, userMessage, {
             mode,
