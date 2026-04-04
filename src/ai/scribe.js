@@ -1,13 +1,6 @@
 /**
  * DeepLore Enhanced — Session Scribe
  */
-import {
-    generateQuietPrompt,
-    saveChatDebounced,
-    chat,
-    chat_metadata,
-    name2,
-} from '../../../../../../script.js';
 import { getSettings, getPrimaryVault } from '../../settings.js';
 import { writeNote } from '../vault/obsidian-api.js';
 import { buildAiChatContext } from '../../core/utils.js';
@@ -58,6 +51,7 @@ export async function callScribe(systemPrompt, userMessage, settings) {
     const quietPrompt = `${systemPrompt}\n\n${userMessage}`;
     // BUG-FIX: timeout=0 should mean "no timeout", not "instant timeout" (setTimeout(fn, 0) fires immediately)
     const timeout = settings.scribeTimeout || 60000;
+    const { generateQuietPrompt } = SillyTavern.getContext();
     const quietPromise = generateQuietPrompt({ quietPrompt, skipWIAN: true, responseLength: settings.scribeMaxTokens });
     let scribeTimer;
     return await Promise.race([
@@ -82,6 +76,7 @@ export async function runScribe(customPrompt) {
 
     try {
         const settings = getSettings();
+        const { chat, chatMetadata, name2, saveChatDebounced } = SillyTavern.getContext();
         if (!chat || chat.length === 0) {
             toastr.info('No active chat to summarize.', 'DeepLore Enhanced');
             return;
@@ -152,8 +147,8 @@ export async function runScribe(customPrompt) {
                 return;
             }
             setLastScribeSummary(sanitizedSummary.trim());
-            setLastScribeChatLength(chat?.length || 0); // Use current length, not stale start value
-            chat_metadata.deeplore_lastScribeSummary = lastScribeSummary;
+            setLastScribeChatLength(SillyTavern.getContext().chat?.length || 0); // Use current length, not stale start value
+            chatMetadata.deeplore_lastScribeSummary = lastScribeSummary;
             saveChatDebounced();
             toastr.success(`Session note saved: ${filename}`, 'DeepLore Enhanced', { timeOut: 5000 });
         } else {

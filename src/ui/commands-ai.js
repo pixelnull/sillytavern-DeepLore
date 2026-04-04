@@ -5,7 +5,6 @@
 import {
     sendMessageAsUser,
     Generate,
-    chat,
 } from '../../../../../../script.js';
 import { escapeHtml } from '../../../../../utils.js';
 import { callGenericPopup, POPUP_TYPE } from '../../../../../popup.js';
@@ -59,6 +58,7 @@ export function registerAiCommands() {
     }));
 
     const newloreCallback = async () => {
+        const { chat } = SillyTavern.getContext();
         if (!chat || chat.length === 0) {
             toastr.info('No active chat.', 'DeepLore Enhanced');
             return '';
@@ -227,7 +227,7 @@ export async function summarizeEntries(entries) {
                 mode: settings.aiSearchConnectionMode || 'profile',
                 profileId: settings.aiSearchProfileId,
                 proxyUrl: settings.aiSearchProxyUrl,
-                model: settings.aiSearchModel || 'claude-haiku-4-5-20251001',
+                model: settings.aiSearchModel,
                 maxTokens: 300,
                 timeout: settings.aiSearchTimeout,
             });

@@ -15,15 +15,20 @@ import {
     fieldDefinitions,
 } from '../state.js';
 import { dedupWarning } from '../toast-dedup.js';
-// Re-export pure functions from helpers.js for consumers that import from ai.js
-export { extractAiResponseClient, clusterEntries, buildCategoryManifest, normalizeResults, isForceInjected, fuzzyTitleMatch } from '../helpers.js';
+// Import for local use
 import { extractAiResponseClient, clusterEntries, buildCategoryManifest, normalizeResults, isForceInjected, fuzzyTitleMatch } from '../helpers.js';
 
+// Re-export for consumers that import from ai.js
+export { extractAiResponseClient, clusterEntries, buildCategoryManifest, normalizeResults, isForceInjected, fuzzyTitleMatch };
+
 // ── AI call throttle ──
-// Minimum 2 seconds between actual AI API calls to prevent rapid-generation spam.
+// Minimum 500ms between actual AI API calls to prevent rapid-generation spam.
 // Cache hits and circuit breaker skips are not throttled (they don't make API calls).
 let _lastAiCallTimestamp = 0;
 const AI_CALL_MIN_INTERVAL_MS = 500;
+
+// Default model for proxy mode when no model is specified
+const DEFAULT_PROXY_MODEL = 'claude-haiku-4-5-20251001';
 
 /** Reset AI call throttle — call on chat change to avoid cross-chat penalty. */
 export function resetAiThrottle() { _lastAiCallTimestamp = 0; }
@@ -59,7 +64,10 @@ export async function callViaProfile(systemPrompt, userMessage, maxTokens, timeo
     const settings = getSettings();
     const resolvedProfileId = profileId || settings.aiSearchProfileId;
     const resolvedModel = modelOverride !== undefined ? modelOverride : settings.aiSearchModel;
-    if (!resolvedProfileId) throw new Error('No connection profile selected.');
+    if (!profileId && settings.debugMode) {
+        console.debug('[DLE] callViaProfile: No profileId passed, falling back to aiSearchProfileId');
+    }
+    if (!resolvedProfileId) throw new Error('No connection profile selected. Set one in AI Search settings, or create one in SillyTavern\'s Connection Manager.');
 
     // Validate profile exists before making the API call
     try {
@@ -165,9 +173,12 @@ export async function callAI(systemPrompt, userMessage, connectionConfig) {
         result = await callViaProfile(systemPrompt, userMessage, maxTokens, timeout, profileId, model);
     } else {
         // Proxy mode
+        if (!model) {
+            console.warn('[DLE] No model specified for proxy mode, falling back to:', DEFAULT_PROXY_MODEL);
+        }
         result = await callProxyViaCorsBridge(
             proxyUrl,
-            model || 'claude-haiku-4-5-20251001',
+            model || DEFAULT_PROXY_MODEL,
             systemPrompt,
             userMessage,
             maxTokens,

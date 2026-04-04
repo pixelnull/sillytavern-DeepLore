@@ -2,11 +2,6 @@
  * DeepLore Enhanced — Auto Lorebook Creation
  * Fixes Bug 1 (callAutoSuggest st mode) and Bug 3 (scan depth)
  */
-import {
-    generateQuietPrompt,
-    chat,
-    saveSettingsDebounced,
-} from '../../../../../../script.js';
 import { escapeHtml } from '../../../../../utils.js';
 import { callGenericPopup, POPUP_TYPE } from '../../../../../popup.js';
 import { getSettings, getPrimaryVault } from '../../settings.js';
@@ -34,17 +29,21 @@ Example: [{"title": "The Silver Crown", "type": "lore", "keys": ["silver crown",
  * BUG 1 FIX: st mode now uses object form of generateQuietPrompt.
  */
 export async function callAutoSuggest(systemPrompt, userMessage) {
+    if (isAiCircuitOpen() && !tryAcquireHalfOpenProbe()) {
+        throw new Error('AI circuit breaker is open — skipping auto-suggest');
+    }
+
     const settings = getSettings();
     const mode = settings.autoSuggestConnectionMode;
     const timeout = settings.autoSuggestTimeout;
     const maxTokens = settings.autoSuggestMaxTokens;
 
     if (mode === 'st') {
-        if (isAiCircuitOpen() && !tryAcquireHalfOpenProbe()) throw new Error('AI circuit breaker is open — skipping auto-suggest');
         // Note: generateQuietPrompt cannot be aborted — timed-out generation completes in background
         const quietPrompt = `${systemPrompt}\n\n${userMessage}`;
         // BUG-FIX: timeout=0 should mean "no timeout", not "instant timeout" (setTimeout(fn, 0) fires immediately)
         const effectiveTimeout = timeout || 60000;
+        const { generateQuietPrompt } = SillyTavern.getContext();
         const quietPromise = generateQuietPrompt({ quietPrompt, skipWIAN: true, responseLength: maxTokens });
         let suggestTimer;
         const response = await Promise.race([
@@ -56,7 +55,6 @@ export async function callAutoSuggest(systemPrompt, userMessage) {
         ]);
         return { text: response, usage: null };
     } else if (mode === 'profile' || mode === 'proxy') {
-        if (isAiCircuitOpen() && !tryAcquireHalfOpenProbe()) throw new Error('AI circuit breaker is open — skipping auto-suggest');
         return await callAI(systemPrompt, userMessage, {
             mode,
             profileId: settings.autoSuggestProfileId,
@@ -86,6 +84,7 @@ export async function runAutoSuggest() {
 
     const existingTitles = vaultIndex.map(e => `"${e.title.replace(/"/g, '\\"')}"`).join(', ');
     // BUG 3 FIX: Use a proper scan depth, not the interval frequency
+    const { chat } = SillyTavern.getContext();
     const chatContext = buildAiChatContext(chat, settings.aiSearchScanDepth || 20);
 
     const systemPrompt = DEFAULT_AUTO_SUGGEST_PROMPT;
@@ -166,7 +165,7 @@ export async function showSuggestionPopup(suggestions) {
             if (skipCheckbox) {
                 skipCheckbox.addEventListener('change', function () {
                     settings.autoSuggestSkipReview = this.checked;
-                    saveSettingsDebounced();
+                    SillyTavern.getContext().saveSettingsDebounced();
                 });
             }
 

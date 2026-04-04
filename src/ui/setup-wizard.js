@@ -2,7 +2,6 @@
  * DeepLore Enhanced — First-Run Setup Wizard
  * Multi-page wizard for new user onboarding.
  */
-import { saveSettingsDebounced } from '../../../../../../script.js';
 import { escapeHtml } from '../../../../../utils.js';
 import { renderExtensionTemplateAsync } from '../../../../../extensions.js';
 import { callGenericPopup, POPUP_TYPE } from '../../../../../popup.js';
@@ -366,7 +365,7 @@ function wireAiSetup() {
             if (mode === 'profile') {
                 const profileId = $wizard.find('#dle-wiz-ai-profile').val();
                 if (!profileId) throw new Error('Select a connection profile first');
-                const { ConnectionManagerRequestService } = await import('../../../../../shared.js')
+                const { ConnectionManagerRequestService } = await import('../../../../shared.js')
                     .catch(() => ({ ConnectionManagerRequestService: null }));
                 if (!ConnectionManagerRequestService) throw new Error('Connection Manager not available');
                 // Verify profile exists
@@ -418,7 +417,7 @@ function wireAiSetup() {
 async function loadAiProfiles() {
     const $select = $wizard.find('#dle-wiz-ai-profile');
     try {
-        const { ConnectionManagerRequestService } = await import('../../../../../shared.js')
+        const { ConnectionManagerRequestService } = await import('../../../../shared.js')
             .catch(() => ({ ConnectionManagerRequestService: null }));
         if (!ConnectionManagerRequestService) {
             $select.html('<option value="">Connection Manager not available</option>');
@@ -611,7 +610,7 @@ async function applyWizardSettings() {
     settings._wizardCompleted = true;
 
     invalidateSettingsCache();
-    saveSettingsDebounced();
+    SillyTavern.getContext().saveSettingsDebounced();
 
     // Build index
     setIndexTimestamp(0);
