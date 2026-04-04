@@ -4,7 +4,7 @@
  */
 import { escapeHtml } from '../../../../../utils.js';
 import { callGenericPopup, POPUP_TYPE } from '../../../../../popup.js';
-import { getSettings, getPrimaryVault } from '../../settings.js';
+import { getSettings, getPrimaryVault, getConnectionConfig } from '../../settings.js';
 import { writeNote } from '../vault/obsidian-api.js';
 import { buildAiChatContext, yamlEscape, classifyError } from '../../core/utils.js';
 import { callAI, extractAiResponseClient } from './ai.js';
@@ -35,10 +35,8 @@ export async function callAutoSuggest(systemPrompt, userMessage) {
         throw new Error('AI circuit breaker is open — skipping auto-suggest');
     }
 
-    const settings = getSettings();
-    const mode = settings.autoSuggestConnectionMode;
-    const timeout = settings.autoSuggestTimeout;
-    const maxTokens = settings.autoSuggestMaxTokens;
+    const connConfig = getConnectionConfig('autoSuggest');
+    const mode = connConfig.mode;
 
     if (mode === 'st') {
         if (_orphanedAutoSuggestPending) {
@@ -48,10 +46,10 @@ export async function callAutoSuggest(systemPrompt, userMessage) {
         // _orphanedAutoSuggestPending guards against overlapping calls that waste API tokens.
         const quietPrompt = `${systemPrompt}\n\n${userMessage}`;
         // BUG-FIX: timeout=0 should mean "no timeout", not "instant timeout" (setTimeout(fn, 0) fires immediately)
-        const effectiveTimeout = timeout || 60000;
+        const effectiveTimeout = connConfig.timeout || 60000;
         const { generateQuietPrompt } = SillyTavern.getContext();
         _orphanedAutoSuggestPending = true;
-        const quietPromise = generateQuietPrompt({ quietPrompt, skipWIAN: true, responseLength: maxTokens });
+        const quietPromise = generateQuietPrompt({ quietPrompt, skipWIAN: true, responseLength: connConfig.maxTokens });
         let suggestTimer;
         try {
             const response = await Promise.race([
@@ -67,14 +65,7 @@ export async function callAutoSuggest(systemPrompt, userMessage) {
             throw err;
         }
     } else if (mode === 'profile' || mode === 'proxy') {
-        return await callAI(systemPrompt, userMessage, {
-            mode,
-            profileId: settings.autoSuggestProfileId,
-            proxyUrl: settings.autoSuggestProxyUrl,
-            model: settings.autoSuggestModel,
-            maxTokens,
-            timeout,
-        });
+        return await callAI(systemPrompt, userMessage, connConfig);
     }
     throw new Error(`Unknown auto-suggest connection mode: ${mode}`);
 }

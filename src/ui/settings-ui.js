@@ -10,7 +10,7 @@ import { escapeHtml } from '../../../../../utils.js';
 import { callGenericPopup, POPUP_TYPE } from '../../../../../popup.js';
 import { renderExtensionTemplateAsync } from '../../../../../extensions.js';
 import { buildAiChatContext } from '../../core/utils.js';
-import { getSettings, getPrimaryVault, DEFAULT_AI_SYSTEM_PROMPT, PROMPT_TAG_PREFIX, settingsConstraints, invalidateSettingsCache, defaultSettings } from '../../settings.js';
+import { getSettings, getPrimaryVault, getConnectionConfig, DEFAULT_AI_SYSTEM_PROMPT, PROMPT_TAG_PREFIX, settingsConstraints, invalidateSettingsCache, defaultSettings } from '../../settings.js';
 import { promptManager } from '../../../../../openai.js';
 import { testConnection } from '../vault/obsidian-api.js';
 import { testProxyConnection } from '../ai/proxy-api.js';
@@ -634,6 +634,10 @@ function loadPopupSettings($container) {
     $c('#dle-sp-ai-notepad-max-tokens').val(settings.aiNotepadMaxTokens || 1024);
     $c('#dle-sp-ai-notepad-timeout').val(settings.aiNotepadTimeout || 30000);
     updateConnectionVisibilityIn($container, { modeSettingsKey: 'aiNotepadConnectionMode', profileRowSelector: '#dle-sp-ai-notepad-profile-row', proxyRowSelector: '#dle-sp-ai-notepad-proxy-row', modelInputSelector: '#dle-sp-ai-notepad-model', profileIdSettingsKey: 'aiNotepadProfileId', externalOnlySelectors: ['#dle-sp-ai-notepad-model-row'] });
+    // "Use different connection" toggle
+    $c('#dle-sp-ai-notepad-use-own-connection').prop('checked', settings.aiNotepadUseOwnConnection);
+    $c('#dle-sp-ai-notepad-own-connection-fields').toggle(!!settings.aiNotepadUseOwnConnection);
+    $c('#dle-sp-ai-notepad-inherit-notice').toggle(!settings.aiNotepadUseOwnConnection);
     // Show/hide mode-specific options
     $c('#dle-sp-ai-notepad-mode-tag-desc').toggle(aiNbMode === 'tag');
     $c('#dle-sp-ai-notepad-mode-extract-desc').toggle(aiNbMode === 'extract');
@@ -663,6 +667,10 @@ function loadPopupSettings($container) {
     $c('#dle-sp-scribe-timeout').val(settings.scribeTimeout);
     $c('#dle-sp-scribe-scan-depth').val(settings.scribeScanDepth);
     $c('#dle-sp-scribe-prompt').val(settings.scribePrompt);
+    // "Use different connection" toggle
+    $c('#dle-sp-scribe-use-own-connection').prop('checked', settings.scribeUseOwnConnection);
+    $c('#dle-sp-scribe-own-connection-fields').toggle(!!settings.scribeUseOwnConnection);
+    $c('#dle-sp-scribe-inherit-notice').toggle(!settings.scribeUseOwnConnection);
 
     // ── Features — Auto Lorebook ──
     $c('#dle-sp-autosuggest-enabled').prop('checked', settings.autoSuggestEnabled);
@@ -680,6 +688,10 @@ function loadPopupSettings($container) {
     $c('#dle-sp-autosuggest-model').val(settings.autoSuggestModel);
     $c('#dle-sp-autosuggest-max-tokens').val(settings.autoSuggestMaxTokens);
     $c('#dle-sp-autosuggest-timeout').val(settings.autoSuggestTimeout);
+    // "Use different connection" toggle
+    $c('#dle-sp-autosuggest-use-own-connection').prop('checked', settings.autoSuggestUseOwnConnection);
+    $c('#dle-sp-autosuggest-own-connection-fields').toggle(!!settings.autoSuggestUseOwnConnection);
+    $c('#dle-sp-autosuggest-inherit-notice').toggle(!settings.autoSuggestUseOwnConnection);
 
     // ── System ── (index stats updated in onOpen, after DOM is live)
     $c('#dle-sp-cache-ttl').val(settings.cacheTTL);
@@ -1082,69 +1094,27 @@ function bindPopupEvents($container) {
     $c('#dle-sp-autosuggest-max-tokens').on('input', function () { settings.autoSuggestMaxTokens = numVal($(this).val(), 2048); saveSettingsDebounced(); });
     $c('#dle-sp-autosuggest-timeout').on('input', function () { settings.autoSuggestTimeout = numVal($(this).val(), 30000); saveSettingsDebounced(); });
 
-    // Copy from AI Search buttons
-    $container.on('click', '.dle-copy-ai-btn', function () {
-        const target = $(this).data('copy-target');
-        const mode = settings.aiSearchConnectionMode;
-
-        // Helper: copy AI Search connection settings to a target subsystem
-        const copyToTarget = (keys, uiUpdater) => {
-            settings[keys.mode] = mode;
-            settings[keys.profileId] = settings.aiSearchProfileId;
-            settings[keys.proxyUrl] = settings.aiSearchProxyUrl;
-            settings[keys.model] = settings.aiSearchModel;
-            uiUpdater();
-        };
-
-        if (target === 'scribe') {
-            copyToTarget(
-                { mode: 'scribeConnectionMode', profileId: 'scribeProfileId', proxyUrl: 'scribeProxyUrl', model: 'scribeModel' },
-                () => {
-                    $c(`input[name="dle-sp-scribe-connection-mode"][value="${mode}"]`).prop('checked', true);
-                    $c('#dle-sp-scribe-proxy-url').val(settings.scribeProxyUrl);
-                    $c('#dle-sp-scribe-model').val(settings.scribeModel);
-                    populateProfileDropdownIn($container, 'dle-sp-scribe-profile-select', 'scribeProfileId');
-                    updateConnectionVisibilityIn($container, {
-                        modeSettingsKey: 'scribeConnectionMode', profileRowSelector: '#dle-sp-scribe-profile-row',
-                        proxyRowSelector: '#dle-sp-scribe-proxy-row', modelInputSelector: '#dle-sp-scribe-model',
-                        profileIdSettingsKey: 'scribeProfileId', externalOnlySelectors: ['#dle-sp-scribe-model-row'], hasStMode: true,
-                    });
-                },
-            );
-        } else if (target === 'ai_notepad') {
-            copyToTarget(
-                { mode: 'aiNotepadConnectionMode', profileId: 'aiNotepadProfileId', proxyUrl: 'aiNotepadProxyUrl', model: 'aiNotepadModel' },
-                () => {
-                    $c(`input[name="dle-sp-ai-notepad-connection-mode"][value="${mode}"]`).prop('checked', true);
-                    $c('#dle-sp-ai-notepad-proxy-url').val(settings.aiNotepadProxyUrl);
-                    $c('#dle-sp-ai-notepad-model').val(settings.aiNotepadModel);
-                    populateProfileDropdownIn($container, 'dle-sp-ai-notepad-profile-select', 'aiNotepadProfileId');
-                    updateConnectionVisibilityIn($container, {
-                        modeSettingsKey: 'aiNotepadConnectionMode', profileRowSelector: '#dle-sp-ai-notepad-profile-row',
-                        proxyRowSelector: '#dle-sp-ai-notepad-proxy-row', modelInputSelector: '#dle-sp-ai-notepad-model',
-                        profileIdSettingsKey: 'aiNotepadProfileId', externalOnlySelectors: ['#dle-sp-ai-notepad-model-row'],
-                    });
-                },
-            );
-        } else if (target === 'autosuggest') {
-            copyToTarget(
-                { mode: 'autoSuggestConnectionMode', profileId: 'autoSuggestProfileId', proxyUrl: 'autoSuggestProxyUrl', model: 'autoSuggestModel' },
-                () => {
-                    $c(`input[name="dle-sp-autosuggest-connection-mode"][value="${mode}"]`).prop('checked', true);
-                    $c('#dle-sp-autosuggest-proxy-url').val(settings.autoSuggestProxyUrl);
-                    $c('#dle-sp-autosuggest-model').val(settings.autoSuggestModel);
-                    populateProfileDropdownIn($container, 'dle-sp-autosuggest-profile', 'autoSuggestProfileId');
-                    updateConnectionVisibilityIn($container, {
-                        modeSettingsKey: 'autoSuggestConnectionMode', profileRowSelector: '#dle-sp-autosuggest-profile-container',
-                        proxyRowSelector: '#dle-sp-autosuggest-proxy-container',
-                    });
-                },
-            );
-        }
-
+    // "Use different connection" checkboxes — toggle between inheriting from AI Search and own settings
+    $c('#dle-sp-scribe-use-own-connection').on('change', function () {
+        settings.scribeUseOwnConnection = $(this).prop('checked');
+        $c('#dle-sp-scribe-own-connection-fields').toggle(settings.scribeUseOwnConnection);
+        $c('#dle-sp-scribe-inherit-notice').toggle(!settings.scribeUseOwnConnection);
         invalidateSettingsCache();
         saveSettingsDebounced();
-        toastr.success('Connection settings copied from AI Search.', 'DeepLore Enhanced');
+    });
+    $c('#dle-sp-ai-notepad-use-own-connection').on('change', function () {
+        settings.aiNotepadUseOwnConnection = $(this).prop('checked');
+        $c('#dle-sp-ai-notepad-own-connection-fields').toggle(settings.aiNotepadUseOwnConnection);
+        $c('#dle-sp-ai-notepad-inherit-notice').toggle(!settings.aiNotepadUseOwnConnection);
+        invalidateSettingsCache();
+        saveSettingsDebounced();
+    });
+    $c('#dle-sp-autosuggest-use-own-connection').on('change', function () {
+        settings.autoSuggestUseOwnConnection = $(this).prop('checked');
+        $c('#dle-sp-autosuggest-own-connection-fields').toggle(settings.autoSuggestUseOwnConnection);
+        $c('#dle-sp-autosuggest-inherit-notice').toggle(!settings.autoSuggestUseOwnConnection);
+        invalidateSettingsCache();
+        saveSettingsDebounced();
     });
 
     // ── System ──

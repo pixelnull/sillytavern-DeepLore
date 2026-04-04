@@ -1,7 +1,7 @@
 /**
  * DeepLore Enhanced — Session Scribe
  */
-import { getSettings, getPrimaryVault } from '../../settings.js';
+import { getSettings, getPrimaryVault, getConnectionConfig } from '../../settings.js';
 import { writeNote } from '../vault/obsidian-api.js';
 import { buildAiChatContext } from '../../core/utils.js';
 import { callAI } from './ai.js';
@@ -34,17 +34,11 @@ let _orphanedScribePending = false;
  * @returns {Promise<string>} Generated summary text
  */
 export async function callScribe(systemPrompt, userMessage, settings) {
-    const mode = settings.scribeConnectionMode || 'st';
+    const connConfig = getConnectionConfig('scribe');
+    const mode = connConfig.mode || 'st';
 
     if (mode === 'profile' || mode === 'proxy') {
-        const result = await callAI(systemPrompt, userMessage, {
-            mode,
-            profileId: settings.scribeProfileId,
-            proxyUrl: settings.scribeProxyUrl,
-            model: settings.scribeModel,
-            maxTokens: settings.scribeMaxTokens,
-            timeout: settings.scribeTimeout,
-        });
+        const result = await callAI(systemPrompt, userMessage, connConfig);
         return result.text || '';
     }
 
@@ -56,10 +50,10 @@ export async function callScribe(systemPrompt, userMessage, settings) {
     }
     const quietPrompt = `${systemPrompt}\n\n${userMessage}`;
     // BUG-FIX: timeout=0 should mean "no timeout", not "instant timeout" (setTimeout(fn, 0) fires immediately)
-    const timeout = settings.scribeTimeout || 60000;
+    const timeout = connConfig.timeout || 60000;
     const { generateQuietPrompt } = SillyTavern.getContext();
     _orphanedScribePending = true;
-    const quietPromise = generateQuietPrompt({ quietPrompt, skipWIAN: true, responseLength: settings.scribeMaxTokens });
+    const quietPromise = generateQuietPrompt({ quietPrompt, skipWIAN: true, responseLength: connConfig.maxTokens });
     let scribeTimer;
     try {
         return await Promise.race([

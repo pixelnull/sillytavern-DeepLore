@@ -1,7 +1,7 @@
 /**
  * DeepLore Enhanced — Self-Healing Diagnostics & Why Not?
  */
-import { getSettings } from '../../settings.js';
+import { getSettings, getConnectionConfig } from '../../settings.js';
 import { buildScanText } from '../../core/utils.js';
 import { testEntryMatch, countKeywordOccurrences } from '../../core/matching.js';
 import {
@@ -34,20 +34,24 @@ export function runHealthCheck() {
         issues.push({ type: 'Settings', severity: 'error', entry: '—', detail: 'Scan depth is 0 and AI search is disabled — nothing will ever match' });
     }
 
-    if (settings.aiSearchEnabled && settings.aiSearchMode === 'ai-only' && settings.aiSearchConnectionMode === 'profile' && !settings.aiSearchProfileId) {
-        issues.push({ type: 'Settings', severity: 'error', entry: '—', detail: 'AI-only mode enabled but no connection profile selected' });
+    if (settings.aiSearchEnabled) {
+        const aiConn = getConnectionConfig('aiSearch');
+        if (settings.aiSearchMode === 'ai-only' && aiConn.mode === 'profile' && !aiConn.profileId) {
+            issues.push({ type: 'Settings', severity: 'error', entry: '—', detail: 'AI-only mode enabled but no connection profile selected' });
+        }
+        if (aiConn.mode === 'proxy' && !aiConn.proxyUrl) {
+            issues.push({ type: 'Settings', severity: 'error', entry: '—', detail: 'AI search enabled in proxy mode but no proxy URL set' });
+        }
     }
 
-    if (settings.aiSearchEnabled && settings.aiSearchConnectionMode === 'proxy' && !settings.aiSearchProxyUrl) {
-        issues.push({ type: 'Settings', severity: 'error', entry: '—', detail: 'AI search enabled in proxy mode but no proxy URL set' });
-    }
-
-    if (settings.scribeEnabled && settings.scribeConnectionMode === 'profile' && !settings.scribeProfileId) {
-        issues.push({ type: 'Settings', severity: 'error', entry: '—', detail: 'Scribe enabled in profile mode but no profile selected' });
-    }
-
-    if (settings.scribeEnabled && settings.scribeConnectionMode === 'proxy' && !settings.scribeProxyUrl) {
-        issues.push({ type: 'Settings', severity: 'error', entry: '—', detail: 'Scribe enabled in proxy mode but no proxy URL set' });
+    if (settings.scribeEnabled) {
+        const scribeConn = getConnectionConfig('scribe');
+        if (scribeConn.mode === 'profile' && !scribeConn.profileId) {
+            issues.push({ type: 'Settings', severity: 'error', entry: '—', detail: `Scribe enabled in profile mode but no profile selected${settings.scribeUseOwnConnection ? '' : ' (using AI Search connection)'}` });
+        }
+        if (scribeConn.mode === 'proxy' && !scribeConn.proxyUrl) {
+            issues.push({ type: 'Settings', severity: 'error', entry: '—', detail: `Scribe enabled in proxy mode but no proxy URL set${settings.scribeUseOwnConnection ? '' : ' (using AI Search connection)'}` });
+        }
     }
 
     if (!settings.unlimitedBudget && settings.maxTokensBudget < 200) {

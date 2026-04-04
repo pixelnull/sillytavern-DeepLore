@@ -752,49 +752,54 @@
                     <div class="dle-connection-card" id="dle-sp-ai-notepad-connection-card">
                         <div class="dle-connection-card-header">
                             <span class="dle-text-xs">Connection</span>
-                            <div class="dle-copy-ai-btn menu_button menu_button_icon" data-copy-target="ai_notepad" role="button" tabindex="0" title="Copy connection settings from AI Search.">
-                                <i class="fa-solid fa-copy" aria-hidden="true"></i>
-                                <span>Copy from AI Search</span>
-                            </div>
                         </div>
-                        <div class="radio_group">
-                            <label title="Use a saved Connection Manager profile.">
-                                <input type="radio" name="dle-sp-ai-notepad-connection-mode" value="profile" />
-                                <span>Connection Profile</span>
-                            </label>
-                            <label title="Use a separate proxy server.">
-                                <input type="radio" name="dle-sp-ai-notepad-connection-mode" value="proxy" />
-                                <span>Custom Proxy</span>
-                            </label>
+                        <div id="dle-sp-ai-notepad-inherit-notice" class="dle-inherit-notice">
+                            <i class="fa-solid fa-link"></i> Using AI Search connection settings.
                         </div>
-                        <div class="flex-container" id="dle-sp-ai-notepad-profile-row">
-                            <div class="flex1">
-                                <label for="dle-sp-ai-notepad-profile-select"><small>Connection Profile</small></label>
-                                <select id="dle-sp-ai-notepad-profile-select" class="text_pole">
-                                    <option value="">— Select a profile —</option>
-                                </select>
+                        <label class="checkbox_label dle-text-xs" for="dle-sp-ai-notepad-use-own-connection" title="When unchecked, AI Notepad uses the same connection as AI Search.">
+                            <input id="dle-sp-ai-notepad-use-own-connection" type="checkbox" class="checkbox" />
+                            <span>Use different connection</span>
+                        </label>
+                        <div id="dle-sp-ai-notepad-own-connection-fields" style="display: none;">
+                            <div class="radio_group">
+                                <label title="Use a saved Connection Manager profile.">
+                                    <input type="radio" name="dle-sp-ai-notepad-connection-mode" value="profile" />
+                                    <span>Connection Profile</span>
+                                </label>
+                                <label title="Use a separate proxy server.">
+                                    <input type="radio" name="dle-sp-ai-notepad-connection-mode" value="proxy" />
+                                    <span>Custom Proxy</span>
+                                </label>
                             </div>
-                        </div>
-                        <div class="flex-container" id="dle-sp-ai-notepad-proxy-row">
-                            <div class="flex1">
-                                <label for="dle-sp-ai-notepad-proxy-url"><small>Proxy URL</small></label>
-                                <input id="dle-sp-ai-notepad-proxy-url" type="text" class="text_pole" placeholder="http://localhost:42069" />
+                            <div class="flex-container" id="dle-sp-ai-notepad-profile-row">
+                                <div class="flex1">
+                                    <label for="dle-sp-ai-notepad-profile-select"><small>Connection Profile</small></label>
+                                    <select id="dle-sp-ai-notepad-profile-select" class="text_pole">
+                                        <option value="">— Select a profile —</option>
+                                    </select>
+                                </div>
                             </div>
-                        </div>
-                        <div class="flex-container" id="dle-sp-ai-notepad-model-row">
-                            <div class="flex1">
-                                <label for="dle-sp-ai-notepad-model"><small>Model Override</small></label>
-                                <input id="dle-sp-ai-notepad-model" type="text" class="text_pole" placeholder="Leave empty to use profile model" />
+                            <div class="flex-container" id="dle-sp-ai-notepad-proxy-row">
+                                <div class="flex1">
+                                    <label for="dle-sp-ai-notepad-proxy-url"><small>Proxy URL</small></label>
+                                    <input id="dle-sp-ai-notepad-proxy-url" type="text" class="text_pole" placeholder="http://localhost:42069" />
+                                </div>
                             </div>
-                        </div>
-                        <div class="flex-container">
-                            <div class="flex1" title="Maximum response tokens for extraction.">
-                                <label for="dle-sp-ai-notepad-max-tokens"><small>Max Tokens</small></label>
-                                <input id="dle-sp-ai-notepad-max-tokens" type="number" class="text_pole" min="256" max="4096" />
+                            <div class="flex-container" id="dle-sp-ai-notepad-model-row">
+                                <div class="flex1">
+                                    <label for="dle-sp-ai-notepad-model"><small>Model Override</small></label>
+                                    <input id="dle-sp-ai-notepad-model" type="text" class="text_pole" placeholder="Leave empty to use profile model" />
+                                </div>
                             </div>
-                            <div class="flex1" title="Request timeout in milliseconds.">
-                                <label for="dle-sp-ai-notepad-timeout"><small>Timeout (ms)</small></label>
-                                <input id="dle-sp-ai-notepad-timeout" type="number" class="text_pole" min="5000" max="120000" />
+                            <div class="flex-container">
+                                <div class="flex1" title="Maximum response tokens for extraction.">
+                                    <label for="dle-sp-ai-notepad-max-tokens"><small>Max Tokens</small></label>
+                                    <input id="dle-sp-ai-notepad-max-tokens" type="number" class="text_pole" min="256" max="4096" />
+                                </div>
+                                <div class="flex1" title="Request timeout in milliseconds.">
+                                    <label for="dle-sp-ai-notepad-timeout"><small>Timeout (ms)</small></label>
+                                    <input id="dle-sp-ai-notepad-timeout" type="number" class="text_pole" min="5000" max="120000" />
+                                </div>
                             </div>
                         </div>
                     </div>
@@ -830,43 +835,48 @@
                 <div class="dle-connection-card" id="dle-sp-scribe-connection-card">
                     <div class="dle-connection-card-header">
                         <span class="dle-text-xs">Connection</span>
-                        <div class="dle-copy-ai-btn menu_button menu_button_icon" data-copy-target="scribe" role="button" tabindex="0" title="Copy connection settings from AI Search.">
-                            <i class="fa-solid fa-copy" aria-hidden="true"></i>
-                            <span>Copy from AI Search</span>
+                    </div>
+                    <div id="dle-sp-scribe-inherit-notice" class="dle-inherit-notice">
+                        <i class="fa-solid fa-link"></i> Using AI Search connection settings.
+                    </div>
+                    <label class="checkbox_label dle-text-xs" for="dle-sp-scribe-use-own-connection" title="When unchecked, Scribe uses the same connection as AI Search.">
+                        <input id="dle-sp-scribe-use-own-connection" type="checkbox" class="checkbox" />
+                        <span>Use different connection</span>
+                    </label>
+                    <div id="dle-sp-scribe-own-connection-fields" style="display: none;">
+                        <div class="radio_group">
+                            <label title="Use SillyTavern's active AI connection.">
+                                <input type="radio" name="dle-sp-scribe-connection-mode" value="st" />
+                                <span>SillyTavern</span>
+                            </label>
+                            <label title="Use a saved Connection Manager profile.">
+                                <input type="radio" name="dle-sp-scribe-connection-mode" value="profile" />
+                                <span>Connection Profile</span>
+                            </label>
+                            <label title="Use a separate proxy server.">
+                                <input type="radio" name="dle-sp-scribe-connection-mode" value="proxy" />
+                                <span>Custom Proxy</span>
+                            </label>
                         </div>
-                    </div>
-                    <div class="radio_group">
-                        <label title="Use SillyTavern's active AI connection.">
-                            <input type="radio" name="dle-sp-scribe-connection-mode" value="st" />
-                            <span>SillyTavern</span>
-                        </label>
-                        <label title="Use a saved Connection Manager profile.">
-                            <input type="radio" name="dle-sp-scribe-connection-mode" value="profile" />
-                            <span>Connection Profile</span>
-                        </label>
-                        <label title="Use a separate proxy server.">
-                            <input type="radio" name="dle-sp-scribe-connection-mode" value="proxy" />
-                            <span>Custom Proxy</span>
-                        </label>
-                    </div>
-                    <div class="flex-container" id="dle-sp-scribe-profile-row">
-                        <div class="flex1">
-                            <label for="dle-sp-scribe-profile-select"><small>Connection Profile</small></label>
-                            <select id="dle-sp-scribe-profile-select" class="text_pole">
-                                <option value="">— Select a profile —</option>
-                            </select>
+                        <div class="flex-container" id="dle-sp-scribe-profile-row">
+                            <div class="flex1">
+                                <label for="dle-sp-scribe-profile-select"><small>Connection Profile</small></label>
+                                <select id="dle-sp-scribe-profile-select" class="text_pole">
+                                    <option value="">— Select a profile —</option>
+                                </select>
+                            </div>
                         </div>
-                    </div>
-                    <div class="flex-container" id="dle-sp-scribe-proxy-row">
-                        <div class="flex1">
-                            <label for="dle-sp-scribe-proxy-url"><small>Proxy URL</small></label>
-                            <input id="dle-sp-scribe-proxy-url" type="text" class="text_pole" placeholder="http://localhost:42069" />
+                        <div class="flex-container" id="dle-sp-scribe-proxy-row">
+                            <div class="flex1">
+                                <label for="dle-sp-scribe-proxy-url"><small>Proxy URL</small></label>
+                                <input id="dle-sp-scribe-proxy-url" type="text" class="text_pole" placeholder="http://localhost:42069" />
+                            </div>
                         </div>
-                    </div>
-                    <div class="flex-container" id="dle-sp-scribe-model-row">
-                        <div class="flex1">
-                            <label for="dle-sp-scribe-model"><small>Model Override</small></label>
-                            <input id="dle-sp-scribe-model" type="text" class="text_pole" placeholder="Leave empty to use profile model" />
+                        <div class="flex-container" id="dle-sp-scribe-model-row">
+                            <div class="flex1">
+                                <label for="dle-sp-scribe-model"><small>Model Override</small></label>
+                                <input id="dle-sp-scribe-model" type="text" class="text_pole" placeholder="Leave empty to use profile model" />
+                            </div>
                         </div>
                     </div>
                 </div>
@@ -918,36 +928,41 @@
                 <div class="dle-connection-card" id="dle-sp-autosuggest-connection-card">
                     <div class="dle-connection-card-header">
                         <span class="dle-text-xs">Connection</span>
-                        <div class="dle-copy-ai-btn menu_button menu_button_icon" data-copy-target="autosuggest" role="button" tabindex="0" title="Copy connection settings from AI Search.">
-                            <i class="fa-solid fa-copy" aria-hidden="true"></i>
-                            <span>Copy from AI Search</span>
+                    </div>
+                    <div id="dle-sp-autosuggest-inherit-notice" class="dle-inherit-notice">
+                        <i class="fa-solid fa-link"></i> Using AI Search connection settings.
+                    </div>
+                    <label class="checkbox_label dle-text-xs" for="dle-sp-autosuggest-use-own-connection" title="When unchecked, Auto Lorebook uses the same connection as AI Search.">
+                        <input id="dle-sp-autosuggest-use-own-connection" type="checkbox" class="checkbox" />
+                        <span>Use different connection</span>
+                    </label>
+                    <div id="dle-sp-autosuggest-own-connection-fields" style="display: none;">
+                        <div class="radio_group">
+                            <label title="Use SillyTavern's active AI connection."><input type="radio" name="dle-sp-autosuggest-connection-mode" value="st" /> SillyTavern</label>
+                            <label title="Use a saved Connection Manager profile."><input type="radio" name="dle-sp-autosuggest-connection-mode" value="profile" /> Connection Profile</label>
+                            <label title="Use a separate proxy server."><input type="radio" name="dle-sp-autosuggest-connection-mode" value="proxy" /> Custom Proxy</label>
                         </div>
-                    </div>
-                    <div class="radio_group">
-                        <label title="Use SillyTavern's active AI connection."><input type="radio" name="dle-sp-autosuggest-connection-mode" value="st" /> SillyTavern</label>
-                        <label title="Use a saved Connection Manager profile."><input type="radio" name="dle-sp-autosuggest-connection-mode" value="profile" /> Connection Profile</label>
-                        <label title="Use a separate proxy server."><input type="radio" name="dle-sp-autosuggest-connection-mode" value="proxy" /> Custom Proxy</label>
-                    </div>
-                    <div id="dle-sp-autosuggest-profile-container">
-                        <label for="dle-sp-autosuggest-profile"><small>Connection Profile</small></label>
-                        <select id="dle-sp-autosuggest-profile" class="text_pole"></select>
-                    </div>
-                    <div id="dle-sp-autosuggest-proxy-container">
-                        <label for="dle-sp-autosuggest-proxy-url"><small>Proxy URL</small></label>
-                        <input id="dle-sp-autosuggest-proxy-url" type="text" class="text_pole" placeholder="http://localhost:42069" />
-                    </div>
-                    <div class="flex-container">
-                        <div class="flex1" title="Model override for auto-suggest.">
-                            <label for="dle-sp-autosuggest-model"><small>Model</small></label>
-                            <input id="dle-sp-autosuggest-model" type="text" class="text_pole" placeholder="claude-haiku-4-5-20251001" />
+                        <div id="dle-sp-autosuggest-profile-container">
+                            <label for="dle-sp-autosuggest-profile"><small>Connection Profile</small></label>
+                            <select id="dle-sp-autosuggest-profile" class="text_pole"></select>
                         </div>
-                        <div class="flex1" title="Max tokens for auto-suggest response. Default: 2048.">
-                            <label for="dle-sp-autosuggest-max-tokens"><small>Max Tokens</small></label>
-                            <input id="dle-sp-autosuggest-max-tokens" type="number" class="text_pole" min="256" max="4096" />
+                        <div id="dle-sp-autosuggest-proxy-container">
+                            <label for="dle-sp-autosuggest-proxy-url"><small>Proxy URL</small></label>
+                            <input id="dle-sp-autosuggest-proxy-url" type="text" class="text_pole" placeholder="http://localhost:42069" />
                         </div>
-                        <div class="flex1" title="Timeout in ms for auto-suggest requests. Default: 30000. Local LLMs may need 60000-120000ms; cloud APIs typically respond in 5000-15000ms.">
-                            <label for="dle-sp-autosuggest-timeout"><small>Timeout (ms)</small></label>
-                            <input id="dle-sp-autosuggest-timeout" type="number" class="text_pole" min="5000" max="120000" />
+                        <div class="flex-container">
+                            <div class="flex1" title="Model override for auto-suggest.">
+                                <label for="dle-sp-autosuggest-model"><small>Model</small></label>
+                                <input id="dle-sp-autosuggest-model" type="text" class="text_pole" placeholder="claude-haiku-4-5-20251001" />
+                            </div>
+                            <div class="flex1" title="Max tokens for auto-suggest response. Default: 2048.">
+                                <label for="dle-sp-autosuggest-max-tokens"><small>Max Tokens</small></label>
+                                <input id="dle-sp-autosuggest-max-tokens" type="number" class="text_pole" min="256" max="4096" />
+                            </div>
+                            <div class="flex1" title="Timeout in ms for auto-suggest requests. Default: 30000. Local LLMs may need 60000-120000ms; cloud APIs typically respond in 5000-15000ms.">
+                                <label for="dle-sp-autosuggest-timeout"><small>Timeout (ms)</small></label>
+                                <input id="dle-sp-autosuggest-timeout" type="number" class="text_pole" min="5000" max="120000" />
+                            </div>
                         </div>
                     </div>
                 </div>

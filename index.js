@@ -22,7 +22,7 @@ import {
     applyStripDedup, trackGeneration, decrementTrackers, recordAnalytics,
 } from './src/stages.js';
 import { clearPrompts } from './core/pipeline.js';
-import { getSettings, PROMPT_TAG_PREFIX, PROMPT_TAG, invalidateSettingsCache } from './settings.js';
+import { getSettings, getConnectionConfig, PROMPT_TAG_PREFIX, PROMPT_TAG, invalidateSettingsCache } from './settings.js';
 import {
     vaultIndex, indexEverLoaded, indexing,
     lastInjectionSources, lastInjectionEpoch, lastScribeChatLength, scribeInProgress,
@@ -712,15 +712,7 @@ jQuery(async function () {
                             userMsg = `[Previous session notes]\n${existingNotes}\n\n${userMsg}`;
                         }
 
-                        const connectionConfig = {
-                            mode: settings.aiNotepadConnectionMode || 'profile',
-                            profileId: settings.aiNotepadProfileId,
-                            proxyUrl: settings.aiNotepadProxyUrl,
-                            model: settings.aiNotepadModel,
-                            maxTokens: settings.aiNotepadMaxTokens || 1024,
-                            timeout: settings.aiNotepadTimeout || 30000,
-                            skipThrottle: true,
-                        };
+                        const connectionConfig = getConnectionConfig('aiNotepad', { skipThrottle: true });
 
                         const result = await callAI(extractPrompt, userMsg, connectionConfig);
                         const responseText = (result?.text || result || '').trim();

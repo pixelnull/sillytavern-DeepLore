@@ -11,7 +11,7 @@ import { callGenericPopup, POPUP_TYPE } from '../../../../../popup.js';
 import { SlashCommandParser } from '../../../../../slash-commands/SlashCommandParser.js';
 import { SlashCommand } from '../../../../../slash-commands/SlashCommand.js';
 import { classifyError, NO_ENTRIES_MSG, yamlEscape } from '../../core/utils.js';
-import { getSettings, getPrimaryVault } from '../../settings.js';
+import { getSettings, getPrimaryVault, getConnectionConfig } from '../../settings.js';
 import { vaultIndex, scribeInProgress, setIndexTimestamp } from '../state.js';
 import { buildIndex, ensureIndexFresh, getMaxResponseTokens } from '../vault/vault.js';
 import { runScribe } from '../ai/scribe.js';
@@ -223,14 +223,7 @@ export async function summarizeEntries(entries) {
             const systemPrompt = 'You are a lore librarian. Write a concise AI search summary (max 600 chars) for the following lorebook entry. The summary should answer: What is this? When should it be selected? Key relationships? Do NOT include physical descriptions or atmospheric prose. Write for an AI that needs to decide whether to inject this entry.';
             const userMsg = `Entry: ${entry.title}\n\nContent:\n${entry.content.substring(0, 3000)}`;
 
-            const result = await callAI(systemPrompt, userMsg, {
-                mode: settings.aiSearchConnectionMode || 'profile',
-                profileId: settings.aiSearchProfileId,
-                proxyUrl: settings.aiSearchProxyUrl,
-                model: settings.aiSearchModel,
-                maxTokens: 300,
-                timeout: settings.aiSearchTimeout,
-            });
+            const result = await callAI(systemPrompt, userMsg, getConnectionConfig('aiSearch', { maxTokens: 300 }));
             const responseText = result.text;
 
             const summary = responseText.trim().substring(0, 600);

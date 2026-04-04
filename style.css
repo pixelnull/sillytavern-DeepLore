@@ -2045,6 +2045,13 @@ button.dle-browse-block.dle-block-active {
     margin-bottom: 4px;
 }
 
+.dle-inherit-notice {
+    font-size: var(--dle-text-xs, 0.75rem);
+    color: var(--dle-accent, #4a9eff);
+    padding: 4px 0;
+    opacity: 0.85;
+}
+
 /* ── Injection tab table ── */
 .dle-injection-table {
     display: flex;

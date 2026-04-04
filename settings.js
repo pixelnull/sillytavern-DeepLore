@@ -94,6 +94,7 @@ export const defaultSettings = {
     aiNotepadRole: 0,         // system
     aiNotepadPrompt: '',      // custom instruction prompt for tag mode (empty = default)
     aiNotepadExtractPrompt: '', // custom extraction prompt for extract mode (empty = default)
+    aiNotepadUseOwnConnection: false, // when false, inherits from AI Search connection settings
     aiNotepadConnectionMode: 'profile', // extract mode connection: 'profile' or 'proxy'
     aiNotepadProfileId: '',
     aiNotepadProxyUrl: 'http://localhost:42069',
@@ -121,6 +122,7 @@ export const defaultSettings = {
     scribeInterval: 5,
     scribeFolder: 'Sessions',
     scribePrompt: '',
+    scribeUseOwnConnection: false, // when false, inherits from AI Search connection settings
     scribeConnectionMode: 'st',
     scribeProfileId: '',
     scribeProxyUrl: 'http://localhost:42069',
@@ -136,6 +138,7 @@ export const defaultSettings = {
     // Auto Lorebook Creation
     autoSuggestEnabled: false,
     autoSuggestInterval: 10,
+    autoSuggestUseOwnConnection: false, // when false, inherits from AI Search connection settings
     autoSuggestConnectionMode: 'st',
     autoSuggestProfileId: '',
     autoSuggestProxyUrl: 'http://localhost:42069',
@@ -198,7 +201,7 @@ export const defaultSettings = {
     // First-run setup wizard completed flag
     _wizardCompleted: false,
     // Settings version — increment to trigger migrations
-    settingsVersion: 1,
+    settingsVersion: 2,
 };
 
 /**
@@ -210,8 +213,21 @@ function runMigrations(settings, fromVersion, toVersion) {
     if (fromVersion < 1) {
         if (settings.debugMode) console.log('[DLE] Migrating settings to version 1');
     }
-    // Future migrations go here:
-    // if (fromVersion < 2) { ... }
+    // Migration 1 → 2: Detect existing per-subsystem connection overrides and enable them
+    if (fromVersion < 2) {
+        if (settings.debugMode) console.log('[DLE] Migrating settings to version 2 (connection override flags)');
+        // If user had explicitly configured a subsystem connection (non-default mode or non-empty profileId),
+        // enable the override flag so their existing config is preserved.
+        if (settings.scribeConnectionMode !== 'st' || settings.scribeProfileId || settings.scribeProxyUrl !== 'http://localhost:42069') {
+            settings.scribeUseOwnConnection = true;
+        }
+        if (settings.autoSuggestConnectionMode !== 'st' || settings.autoSuggestProfileId || settings.autoSuggestProxyUrl !== 'http://localhost:42069') {
+            settings.autoSuggestUseOwnConnection = true;
+        }
+        if (settings.aiNotepadConnectionMode !== 'profile' || settings.aiNotepadProfileId || settings.aiNotepadProxyUrl !== 'http://localhost:42069') {
+            settings.aiNotepadUseOwnConnection = true;
+        }
+    }
 }
 
 /** Validation constraints for numeric settings */
@@ -344,6 +360,58 @@ export function getSettings() {
 export function getPrimaryVault(settings) {
     const s = settings || getSettings();
     return (s.vaults && s.vaults.find(v => v.enabled)) || s.vaults?.[0] || { name: 'Default', host: '127.0.0.1', port: 27123, apiKey: '', enabled: false };
+}
+
+/**
+ * Get the resolved connection config for a subsystem.
+ * If the subsystem has its own override enabled, returns its own settings.
+ * Otherwise, returns the primary AI Search connection settings.
+ *
+ * @param {'aiSearch'|'scribe'|'autoSuggest'|'aiNotepad'} subsystem
+ * @param {object} [overrides] - Optional overrides (e.g. { skipThrottle: true })
+ * @returns {{ mode: string, profileId: string, proxyUrl: string, model: string, maxTokens: number, timeout: number }}
+ */
+export function getConnectionConfig(subsystem, overrides = {}) {
+    const s = getSettings();
+
+    // AI Search is the primary — always uses its own settings
+    if (subsystem === 'aiSearch') {
+        return {
+            mode: s.aiSearchConnectionMode,
+            profileId: s.aiSearchProfileId,
+            proxyUrl: s.aiSearchProxyUrl,
+            model: s.aiSearchModel,
+            maxTokens: s.aiSearchMaxTokens,
+            timeout: s.aiSearchTimeout,
+            ...overrides,
+        };
+    }
+
+    // For other subsystems, check if they have their own override enabled
+    const useOwn = s[`${subsystem}UseOwnConnection`];
+
+    if (useOwn) {
+        return {
+            mode: s[`${subsystem}ConnectionMode`],
+            profileId: s[`${subsystem}ProfileId`],
+            proxyUrl: s[`${subsystem}ProxyUrl`],
+            model: s[`${subsystem}Model`],
+            maxTokens: s[`${subsystem}MaxTokens`],
+            timeout: s[`${subsystem}Timeout`],
+            ...overrides,
+        };
+    }
+
+    // Inherit from AI Search (primary connection)
+    return {
+        mode: s.aiSearchConnectionMode,
+        profileId: s.aiSearchProfileId,
+        proxyUrl: s.aiSearchProxyUrl,
+        model: s.aiSearchModel,
+        maxTokens: s[`${subsystem}MaxTokens`] || s.aiSearchMaxTokens,
+        timeout: s[`${subsystem}Timeout`] || s.aiSearchTimeout,
+        ...overrides,
+    };
 }
 
 /**
