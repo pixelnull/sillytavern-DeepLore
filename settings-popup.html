@@ -1,0 +1,1310 @@
+<!-- DeepLore Enhanced — Settings Popup (tabbed layout) -->
+<div class="dle-settings-popup">
+
+    <!-- Sidebar tabs -->
+    <nav class="dle-settings-sidebar" role="tablist" aria-label="Settings sections" aria-orientation="vertical">
+        <button class="dle-settings-tab active" id="dle-sp-tab-about" data-settings-tab="about" role="tab"
+                aria-selected="true" aria-controls="dle-sp-about">
+            <i class="fa-solid fa-circle-info" aria-hidden="true"></i>
+            <span>About</span>
+        </button>
+        <div class="dle-settings-tab dle-settings-tab--header" id="dle-sp-tab-connection" data-settings-tab="connection"
+             aria-expanded="true">
+            <i class="fa-solid fa-plug" aria-hidden="true"></i>
+            <span>Connection</span>
+        </div>
+        <div class="dle-connection-children">
+            <button class="dle-connection-subtab active" data-connection-subtab="obsidian">
+                <i class="fa-solid fa-vault" aria-hidden="true"></i><span>Obsidian</span>
+            </button>
+            <button class="dle-connection-subtab" data-connection-subtab="ai-connections">
+                <i class="fa-solid fa-brain" aria-hidden="true"></i><span>AI Connections</span>
+            </button>
+        </div>
+        <button class="dle-settings-tab" id="dle-sp-tab-matching" data-settings-tab="matching" role="tab"
+                aria-selected="false" aria-controls="dle-sp-matching">
+            <i class="fa-solid fa-crosshairs" aria-hidden="true"></i>
+            <span>Matching</span>
+        </button>
+        <button class="dle-settings-tab" id="dle-sp-tab-ai" data-settings-tab="ai" role="tab"
+                aria-selected="false" aria-controls="dle-sp-ai">
+            <i class="fa-solid fa-brain" aria-hidden="true"></i>
+            <span>AI Search</span>
+        </button>
+        <button class="dle-settings-tab" id="dle-sp-tab-injection" data-settings-tab="injection" role="tab"
+                aria-selected="false" aria-controls="dle-sp-injection">
+            <i class="fa-solid fa-layer-group" aria-hidden="true"></i>
+            <span>Injection</span>
+        </button>
+        <div class="dle-settings-tab dle-settings-tab--header" id="dle-sp-tab-features" data-settings-tab="features"
+             aria-expanded="true">
+            <i class="fa-solid fa-puzzle-piece" aria-hidden="true"></i>
+            <span>Features</span>
+        </div>
+        <div class="dle-features-children">
+            <button class="dle-features-subtab active" data-features-subtab="author-notebook">
+                <i class="fa-solid fa-book" aria-hidden="true"></i><span>Author Notebook</span>
+            </button>
+            <button class="dle-features-subtab" data-features-subtab="ai-notebook">
+                <i class="fa-solid fa-robot" aria-hidden="true"></i><span>AI Notebook</span>
+            </button>
+            <button class="dle-features-subtab" data-features-subtab="session-scribe">
+                <i class="fa-solid fa-feather-pointed" aria-hidden="true"></i><span>Session Scribe</span>
+            </button>
+            <button class="dle-features-subtab" data-features-subtab="auto-lorebook">
+                <i class="fa-solid fa-wand-magic-sparkles" aria-hidden="true"></i><span>Auto Lorebook</span>
+            </button>
+            <button class="dle-features-subtab" data-features-subtab="graph">
+                <i class="fa-solid fa-diagram-project" aria-hidden="true"></i><span>Graph</span>
+            </button>
+            <button class="dle-features-subtab" data-features-subtab="librarian">
+                <i class="fa-solid fa-book-bookmark" aria-hidden="true"></i><span>Librarian</span>
+            </button>
+        </div>
+        <button class="dle-settings-tab" id="dle-sp-tab-system" data-settings-tab="system" role="tab"
+                aria-selected="false" aria-controls="dle-sp-system">
+            <i class="fa-solid fa-sliders" aria-hidden="true"></i>
+            <span>System</span>
+        </button>
+    </nav>
+
+    <!-- Content area -->
+    <div class="dle-settings-content">
+        <!-- ═══════════════════════════════════════════════════════════════════
+             TAB: Connection
+             ═══════════════════════════════════════════════════════════════════ -->
+        <div class="dle-settings-panel" id="dle-sp-connection" data-settings-panel="connection"
+             role="tabpanel" aria-labelledby="dle-sp-tab-connection">
+
+            <!-- Sub-panel: Obsidian -->
+            <div class="dle-connection-subpanel active" id="dle-sp-conn-obsidian" data-connection-subpanel="obsidian"
+                 role="tabpanel">
+
+            <div class="dle-settings-section">
+            <h4>Vault Connections</h4>
+            <p class="dle-section-desc">Connect to your Obsidian vaults. Each vault needs the Local REST API plugin running.</p>
+
+            <div class="flex-container flexFlowColumn">
+                <div id="dle-sp-vault-list" style="margin-bottom: 6px;">
+                    <!-- Vault rows rendered dynamically -->
+                </div>
+                <div class="flex-container" style="gap: 6px;">
+                    <div id="dle-sp-add-vault" class="menu_button menu_button_icon" role="button" title="Add another Obsidian vault connection." tabindex="0">
+                        <i class="fa-solid fa-plus" aria-hidden="true"></i>
+                        <span>Add Vault</span>
+                    </div>
+                    <div id="dle-sp-test-connection" class="menu_button menu_button_icon" role="button" title="Test all enabled vault connections." tabindex="0">
+                        <i class="fa-solid fa-plug" aria-hidden="true"></i>
+                        <span>Test All</span>
+                    </div>
+                    <div id="dle-sp-scan-vaults" class="menu_button menu_button_icon" role="button" title="Scan a port range for responding Obsidian Local REST API instances." tabindex="0">
+                        <i class="fa-solid fa-radar" aria-hidden="true"></i>
+                        <span>Scan for Vaults</span>
+                    </div>
+                    <span id="dle-sp-connection-status" class="dle-status"></span>
+                </div>
+            </div>
+
+            <div class="flex-container dle-sp-margin-top">
+                <div class="flex1" title="When two vaults have entries with the same title: All keeps both, First/Last vault wins, Merge combines their keywords.">
+                    <label for="dle-sp-multi-vault-conflict"><small>Multi-Vault Conflict Resolution</small></label>
+                    <select id="dle-sp-multi-vault-conflict" class="text_pole">
+                        <option value="all">All (keep duplicates)</option>
+                        <option value="first">First vault wins</option>
+                        <option value="last">Last vault wins</option>
+                        <option value="merge">Merge (union keywords)</option>
+                    </select>
+                </div>
+            </div>
+            </div>
+
+            <div class="dle-settings-section">
+            <h4>Vault Tags</h4>
+            <p class="dle-section-desc">Tags control which Obsidian notes are indexed and how they behave.</p>
+
+            <div class="flex-container flexFlowColumn">
+                <div class="flex-container">
+                    <div class="flex1" title="Tag (without #) that marks an Obsidian note as a lorebook entry.">
+                        <label for="dle-sp-tag"><small>Lorebook Tag</small></label>
+                        <input id="dle-sp-tag" type="text" class="text_pole" placeholder="lorebook" />
+                    </div>
+                    <div class="flex1" title="Tag (without #) that forces a note to always be included, regardless of keyword matches.">
+                        <label for="dle-sp-constant-tag"><small>Always-Send Tag</small></label>
+                        <input id="dle-sp-constant-tag" type="text" class="text_pole" placeholder="lorebook-always" />
+                    </div>
+                </div>
+                <div class="flex-container">
+                    <div class="flex1" title="Tag (without #) that prevents a note from ever being included.">
+                        <label for="dle-sp-never-insert-tag"><small>Never-Insert Tag</small></label>
+                        <input id="dle-sp-never-insert-tag" type="text" class="text_pole" placeholder="lorebook-never" />
+                    </div>
+                </div>
+                <div class="dle-advanced-toggle" data-section="sp_vault_tags" tabindex="0" role="button" aria-expanded="false">
+                    <i class="fa-solid fa-chevron-right dle-advanced-icon" aria-hidden="true"></i> Show Advanced
+                </div>
+                <div class="dle-advanced-section" data-section="sp_vault_tags" style="display: none;">
+                    <div class="flex-container">
+                        <div class="flex1" title="Tag for entries whose content is sent to the AI as background context on new chats.">
+                            <label for="dle-sp-seed-tag"><small>Seed Tag</small></label>
+                            <input id="dle-sp-seed-tag" type="text" class="text_pole" placeholder="lorebook-seed" />
+                        </div>
+                        <div class="flex1" title="Tag for starter entries — always included when the chat is short (below the New Chat Threshold).">
+                            <label for="dle-sp-bootstrap-tag"><small>Starter Entry Tag</small></label>
+                            <input id="dle-sp-bootstrap-tag" type="text" class="text_pole" placeholder="lorebook-bootstrap" />
+                        </div>
+                    </div>
+                    <div class="flex-container">
+                        <div class="flex1" title="Tag for Librarian-only writing/style guides. These entries never reach the writing AI — only the Librarian can fetch them via its chat tool.">
+                            <label for="dle-sp-librarian-guide-tag"><small>Librarian Guide Tag</small></label>
+                            <input id="dle-sp-librarian-guide-tag" type="text" class="text_pole" placeholder="lorebook-guide" />
+                        </div>
+                        <div class="flex1" title="Message count threshold for new chat features. Default: 3.">
+                            <label for="dle-sp-new-chat-threshold"><small>New Chat Threshold</small></label>
+                            <input id="dle-sp-new-chat-threshold" type="number" class="text_pole" min="1" max="20" />
+                        </div>
+                    </div>
+                </div>
+            </div>
+            </div>
+
+            <div class="dle-settings-section">
+            <h4>Field Definitions</h4>
+            <p class="dle-section-desc">Custom gating fields (era, location, mood, etc.) defined in a YAML file inside your vault.</p>
+
+            <div class="flex-container" style="align-items: flex-end;">
+                <div class="flex1" title="Path to the YAML file in Obsidian that defines custom gating fields. Relative to vault root.">
+                    <label for="dle-sp-field-definitions-path"><small>Field Definitions Path</small></label>
+                    <input id="dle-sp-field-definitions-path" type="text" class="text_pole" placeholder="DeepLore/field-definitions.yaml" />
+                </div>
+                <div id="dle-sp-edit-fields-btn" class="menu_button" title="Open the field definition editor" style="height: fit-content; margin-left: 8px; white-space: nowrap;">
+                    <i class="fa-solid fa-gear"></i> Edit Fields
+                </div>
+            </div>
+            </div>
+
+            </div><!-- end Sub-panel: Obsidian -->
+
+            <!-- Sub-panel: AI Connections -->
+            <div class="dle-connection-subpanel" id="dle-sp-conn-ai-connections" data-connection-subpanel="ai-connections"
+                 role="tabpanel" hidden>
+
+            <div class="dle-settings-section" id="dle-sp-ai-connections">
+                <h4>AI Connections</h4>
+                <p class="dle-section-desc">Configure AI connections for each tool. Tools set to "Inherit" use the AI Search connection.</p>
+                <!-- Claude adaptive-thinking misconfiguration banner (populated by settings-ui.js) -->
+                <div id="dle-claude-effort-banner" class="dle-warning-banner" style="display:none; padding: var(--dle-space-2) var(--dle-space-3); background: color-mix(in srgb, var(--dle-warning, #d97706) 15%, transparent); border-left: 3px solid var(--dle-warning, #d97706); border-radius: 4px; margin: var(--dle-space-2) 0; font-size: var(--dle-text-sm);" role="alert">
+                    <i class="fa-solid fa-triangle-exclamation" style="color: var(--dle-warning, #d97706); margin-right: 6px;"></i>
+                    <span class="dle-claude-effort-banner-text"></span>
+                </div>
+                <!-- Demo: static accordion items (normally generated by settings-ui.js) -->
+                <div class="dle-ai-connection-item" style="border:1px solid rgba(255,255,255,0.08); border-radius:6px; padding:8px 12px; margin-top:8px;">
+                    <div style="display:flex; justify-content:space-between; align-items:center;">
+                        <span><i class="fa-solid fa-magnifying-glass" style="margin-right:6px; opacity:0.5;"></i> AI Search</span>
+                        <span class="dle-text-xs" style="color:#4caf50;">● Connected</span>
+                    </div>
+                    <div class="dle-text-xs dle-muted" style="margin-top:4px;">Mode: Inherit (use Connection Profile)</div>
+                </div>
+                <div class="dle-ai-connection-item" style="border:1px solid rgba(255,255,255,0.08); border-radius:6px; padding:8px 12px; margin-top:6px;">
+                    <div style="display:flex; justify-content:space-between; align-items:center;">
+                        <span><i class="fa-solid fa-book-bookmark" style="margin-right:6px; opacity:0.5;"></i> Librarian</span>
+                        <span class="dle-text-xs" style="color:#4caf50;">● Connected</span>
+                    </div>
+                    <div class="dle-text-xs dle-muted" style="margin-top:4px;">Mode: Inherit (use Connection Profile)</div>
+                </div>
+                <div class="dle-ai-connection-item" style="border:1px solid rgba(255,255,255,0.08); border-radius:6px; padding:8px 12px; margin-top:6px;">
+                    <div style="display:flex; justify-content:space-between; align-items:center;">
+                        <span><i class="fa-solid fa-feather-pointed" style="margin-right:6px; opacity:0.5;"></i> Session Scribe</span>
+                        <span class="dle-text-xs" style="color:#4caf50;">● Connected</span>
+                    </div>
+                    <div class="dle-text-xs dle-muted" style="margin-top:4px;">Mode: Inherit (use Connection Profile)</div>
+                </div>
+            </div>
+
+            </div><!-- end Sub-panel: AI Connections -->
+
+        </div>
+
+        <!-- ═══════════════════════════════════════════════════════════════════
+             TAB: Matching
+             ═══════════════════════════════════════════════════════════════════ -->
+        <div class="dle-settings-panel" id="dle-sp-matching" data-settings-panel="matching"
+             role="tabpanel" aria-labelledby="dle-sp-tab-matching" hidden>
+
+            <div class="dle-settings-section">
+            <h4>Search Mode</h4>
+            <p class="dle-section-desc">Choose how entries are selected: keywords (free), two-stage (keywords + AI), or AI-only.</p>
+
+            <div class="flex-container flexFlowColumn">
+                <div class="flex-container">
+                    <div class="flex1" title="How DeepLore matches entries to inject.">
+                        <label for="dle-sp-search-mode"><small>Mode</small></label>
+                        <select id="dle-sp-search-mode" class="text_pole">
+                            <option value="keywords-only">Keyword Only</option>
+                            <option value="two-stage">Two-Stage (Keywords &rarr; AI)</option>
+                            <option value="ai-only">AI Only</option>
+                        </select>
+                    </div>
+                </div>
+            </div>
+            </div>
+
+            <div class="dle-settings-section">
+            <h4>Matching &amp; Budget</h4>
+            <p class="dle-section-desc">Control how entries are matched and how much context they can use.</p>
+
+            <div class="flex-container flexFlowColumn">
+                <div class="flex-container">
+                    <div class="flex1" title="Number of recent chat messages to scan for keyword matches. Default: 4.">
+                        <label for="dle-sp-scan-depth"><small>Messages to Search</small></label>
+                        <input id="dle-sp-scan-depth" type="number" class="text_pole" min="0" max="100" />
+                    </div>
+                </div>
+            </div>
+            <label class="checkbox_label" for="dle-sp-char-context-scan" title="Automatically include the active character's vault entry based on their name, without needing a keyword match.">
+                <input id="dle-sp-char-context-scan" type="checkbox" class="checkbox">
+                <span>Auto-match active character</span>
+            </label>
+            <label class="checkbox_label" for="dle-sp-fuzzy-search" title="Enable flexible text matching alongside keywords — finds entries even when the exact keyword isn't used.">
+                <input id="dle-sp-fuzzy-search" type="checkbox" class="checkbox">
+                <span>Flexible Matching</span>
+            </label>
+            <div id="dle-sp-fuzzy-min-score-row" class="dle-sp-indent">
+                <div title="How strict fuzzy matching should be. Lower finds more entries (including weaker matches), higher is stricter. Default: 0.5.">
+                    <label for="dle-sp-fuzzy-min-score"><small>Match Sensitivity</small></label>
+                    <input id="dle-sp-fuzzy-min-score" type="range" min="0.1" max="2.0" step="0.1" class="dle-w-full" />
+                    <div class="flex-container" style="justify-content: space-between;">
+                        <span class="dle-text-xs dle-muted">Loose (more matches)</span>
+                        <span class="dle-text-xs dle-muted" id="dle-sp-fuzzy-min-score-value">0.5</span>
+                        <span class="dle-text-xs dle-muted">Strict (fewer)</span>
+                    </div>
+                </div>
+                <div id="dle-sp-fuzzy-preview-results" style="margin-top: 6px; max-height: 200px; overflow-y: auto; font-size: 0.85em;"></div>
+            </div>
+            <div class="flex-container">
+                <div class="flex1">
+                    <label class="checkbox_label" for="dle-sp-unlimited-entries" title="Remove the cap on how many entries can be injected per generation.">
+                        <input id="dle-sp-unlimited-entries" type="checkbox" class="checkbox">
+                        <span>Unlimited Entries</span>
+                    </label>
+                    <small class="dle-text-xs dle-muted dle-unlimited-warning" id="dle-sp-unlimited-entries-warn" style="display:none;" title="Larger vaults take longer to inject every entry every generation.">Larger vaults may feel slower.</small>
+                </div>
+                <div class="flex1" title="Maximum number of lorebook entries to inject per generation.">
+                    <label for="dle-sp-max-entries"><small>Max Entries</small></label>
+                    <input id="dle-sp-max-entries" type="number" class="text_pole" min="1" max="100" />
+                </div>
+            </div>
+            <div class="flex-container">
+                <div class="flex1">
+                    <label class="checkbox_label" for="dle-sp-unlimited-budget" title="Remove the token budget cap.">
+                        <input id="dle-sp-unlimited-budget" type="checkbox" class="checkbox">
+                        <span>Unlimited Token Budget</span>
+                    </label>
+                    <small class="dle-text-xs dle-muted dle-unlimited-warning" id="dle-sp-unlimited-budget-warn" style="display:none;" title="Larger vaults take longer to inject every entry every generation.">Larger vaults may feel slower.</small>
+                </div>
+                <div class="flex1" title="Maximum total tokens to inject from lorebook entries per generation.">
+                    <label for="dle-sp-token-budget"><small>Token Budget</small></label>
+                    <input id="dle-sp-token-budget" type="number" class="text_pole" min="100" max="100000" />
+                </div>
+            </div>
+            <h4>Repetition Control</h4>
+            <label class="checkbox_label" for="dle-sp-decay-enabled" title="Entries that haven't appeared recently become more likely to be picked. Entries appearing too often become less likely. Adds variety to lore injection.">
+                <input id="dle-sp-decay-enabled" type="checkbox" class="checkbox">
+                <span>Enable Repetition Control</span>
+            </label>
+            <div class="flex-container" id="dle-sp-decay-controls">
+                <div class="flex1" title="How many turns an entry can be skipped before it's boosted to reappear. Default: 5.">
+                    <label for="dle-sp-decay-boost-threshold"><small>Boost After N Skips</small></label>
+                    <input id="dle-sp-decay-boost-threshold" type="number" class="text_pole" min="2" max="20" />
+                </div>
+                <div class="flex1" title="How many times in a row an entry can be injected before it becomes less likely to appear. Default: 2.">
+                    <label for="dle-sp-decay-penalty-threshold"><small>Penalize After N in a Row</small></label>
+                    <input id="dle-sp-decay-penalty-threshold" type="number" class="text_pole" min="2" max="10" />
+                </div>
+            </div>
+
+            <div class="dle-advanced-toggle" data-section="sp_matching" tabindex="0" role="button" aria-expanded="false">
+                <i class="fa-solid fa-chevron-right dle-advanced-icon" aria-hidden="true"></i> Show Advanced
+            </div>
+            <div class="dle-advanced-section" data-section="sp_matching" style="display: none;">
+                <label class="dle-advanced-subheader"><small>Keyword Matching</small></label>
+                <label class="checkbox_label" for="dle-sp-case-sensitive" title="When checked, keyword matching is case-sensitive.">
+                    <input id="dle-sp-case-sensitive" type="checkbox" class="checkbox">
+                    <span>Case Sensitive</span>
+                </label>
+                <label class="checkbox_label" for="dle-sp-match-whole-words" title="Keywords must match as whole words.">
+                    <input id="dle-sp-match-whole-words" type="checkbox" class="checkbox">
+                    <span>Match Whole Words</span>
+                </label>
+                <label class="checkbox_label" for="dle-sp-keyword-occurrence-weighting" title="When enabled, entries with more keyword occurrences in the chat sort higher within the same priority tier. May increase processing time on large vaults.">
+                    <input id="dle-sp-keyword-occurrence-weighting" type="checkbox" class="checkbox">
+                    <span>Keyword Occurrence Weighting</span>
+                </label>
+                <span class="dle-text-xs dle-muted dle-sp-indent"><i class="fa-solid fa-triangle-exclamation" aria-hidden="true"></i> May increase processing time on large vaults — counts occurrences for every matched entry.</span>
+
+                <label class="dle-advanced-subheader"><small>Chain Matching</small></label>
+                <label class="checkbox_label" for="dle-sp-recursive-scan" title="Scan matched entries' content for keywords that might trigger additional entries.">
+                    <input id="dle-sp-recursive-scan" type="checkbox" class="checkbox">
+                    <span>Chain Matching</span>
+                </label>
+                <div class="flex-container dle-sp-indent">
+                    <div class="flex1" title="Maximum number of recursive scan passes. Default: 3.">
+                        <label for="dle-sp-max-recursion"><small>Max Recursion Steps</small></label>
+                        <input id="dle-sp-max-recursion" type="number" class="text_pole" min="1" max="10" />
+                    </div>
+                </div>
+
+                <label class="dle-advanced-subheader"><small>Re-injection Control</small></label>
+                <div class="flex-container">
+                    <div class="flex1" title="After an entry is injected, skip it for the next N generations. 0 = always include when matched.">
+                        <label for="dle-sp-reinjection-cooldown"><small>Repeat Cooldown (0 = off)</small></label>
+                        <input id="dle-sp-reinjection-cooldown" type="number" class="text_pole" min="0" max="50" />
+                    </div>
+                </div>
+                <div class="flex-container">
+                    <div class="flex1">
+                        <label class="checkbox_label" for="dle-sp-strip-dedup" title="Skip entries that were already injected in recent messages, preventing repeats.">
+                            <input id="dle-sp-strip-dedup" type="checkbox" class="checkbox">
+                            <span>Skip Recently Injected</span>
+                        </label>
+                    </div>
+                    <div class="flex1" title="How many prior messages to check for recently injected entries.">
+                        <label for="dle-sp-strip-lookback"><small>Messages to check</small></label>
+                        <input id="dle-sp-strip-lookback" type="number" class="text_pole" min="1" max="10" />
+                    </div>
+                </div>
+
+                <label class="dle-advanced-subheader"><small>Scene Filters</small></label>
+                <div class="flex-container">
+                    <div class="flex1" title="How to handle entries with era/location/scene requirements when no context is set. Strict: block if any dimension is missing. Moderate: block only when entry's dimension is set but doesn't match. Lenient: allow all entries when no context dimensions are set.">
+                        <label for="dle-sp-contextual-gating-tolerance"><small>Filter Strictness</small></label>
+                        <select id="dle-sp-contextual-gating-tolerance" class="text_pole">
+                            <option value="strict">Strict (block when context missing)</option>
+                            <option value="moderate">Moderate (block only on mismatch)</option>
+                            <option value="lenient">Lenient (allow when no context set)</option>
+                        </select>
+                    </div>
+                </div>
+            </div>
+            </div>
+        </div>
+
+        <!-- ═══════════════════════════════════════════════════════════════════
+             TAB: Injection
+             ═══════════════════════════════════════════════════════════════════ -->
+        <div class="dle-settings-panel" id="dle-sp-injection" data-settings-panel="injection"
+             role="tabpanel" aria-labelledby="dle-sp-tab-injection" hidden>
+
+            <div class="dle-settings-section">
+            <h4>Injection Mode</h4>
+            <p class="dle-section-desc">Control how DeepLore places entries into the prompt.</p>
+
+            <div class="radio_group">
+                <label title="Use the standard SillyTavern injection method with fixed position, depth, and role.">
+                    <input type="radio" name="dle-sp-injection-mode" value="extension" />
+                    <span>Extension Prompt</span>
+                </label>
+                <label title="Create named prompts that appear in the prompt list. Drag them to any position.">
+                    <input type="radio" name="dle-sp-injection-mode" value="prompt_list" />
+                    <span>Prompt List (drag &amp; drop)</span>
+                </label>
+            </div>
+            </div>
+
+            <div class="dle-settings-section">
+            <h4>Injection Overview</h4>
+            <p class="dle-section-desc">Default position, depth, and role for each injection type.</p>
+
+            <div class="dle-injection-table">
+
+                <!-- Constants -->
+                <div class="dle-injection-row">
+                    <div class="dle-injection-type">
+                        <i class="fa-solid fa-thumbtack" aria-hidden="true"></i>
+                        <span>Constants</span>
+                    </div>
+                    <div class="dle-injection-controls">
+                        <div class="dle-injection-ext-controls">
+                            <span class="dle-text-xs dle-muted">Same position as Lore Entries</span>
+                        </div>
+                        <span class="dle-injection-pm-name" style="display:none"><code>DLE Constants</code></span>
+                    </div>
+                    <div class="dle-injection-status">
+                        <span id="dle-sp-inj-constants-status" class="dle-text-xs dle-muted">3,661 tokens (10 entries)</span>
+                    </div>
+                </div>
+
+                <!-- Lore Entries -->
+                <div class="dle-injection-row">
+                    <div class="dle-injection-type">
+                        <i class="fa-solid fa-book" aria-hidden="true"></i>
+                        <span>Lore Entries</span>
+                    </div>
+                    <div class="dle-injection-controls">
+                        <div class="dle-injection-ext-controls">
+                            <select id="dle-sp-position" class="text_pole widthNatural" title="Where to inject matched lore entries in the prompt.">
+                                <option value="2">Before Main Prompt</option>
+                                <option value="0">After Main Prompt</option>
+                                <option value="1">In-chat</option>
+                            </select>
+                            <span class="dle-injection-inchat-controls" style="display:none">
+                                <label class="dle-text-xs" for="dle-sp-depth">depth</label>
+                                <input id="dle-sp-depth" class="text_pole widthUnset dle-sp-narrow-input" type="number" min="0" max="9999" />
+                                <label class="dle-text-xs" for="dle-sp-role">as</label>
+                                <select id="dle-sp-role" class="text_pole widthNatural">
+                                    <option value="0">System</option>
+                                    <option value="1">User</option>
+                                    <option value="2">Assistant</option>
+                                </select>
+                            </span>
+                        </div>
+                        <span class="dle-injection-pm-name" style="display:none"><code>DLE Lore Entries</code></span>
+                    </div>
+                    <div class="dle-injection-status">
+                        <span id="dle-sp-inj-lore-status" class="dle-text-xs dle-muted">458 tokens (2 entries)</span>
+                    </div>
+                </div>
+
+                <!-- Author's Notebook -->
+                <div class="dle-injection-row">
+                    <div class="dle-injection-type">
+                        <i class="fa-solid fa-pen-fancy" aria-hidden="true"></i>
+                        <span>Author's Notebook</span>
+                    </div>
+                    <div class="dle-injection-controls">
+                        <div class="dle-injection-ext-controls">
+                            <select id="dle-sp-notebook-position" class="text_pole widthNatural" title="Where to inject the Author's Notebook content.">
+                                <option value="2">Before Main Prompt</option>
+                                <option value="0">After Main Prompt</option>
+                                <option value="1">In-chat</option>
+                            </select>
+                            <span class="dle-injection-inchat-controls" style="display:none">
+                                <label class="dle-text-xs" for="dle-sp-notebook-depth">depth</label>
+                                <input id="dle-sp-notebook-depth" class="text_pole widthUnset dle-sp-narrow-input" type="number" min="0" max="9999" />
+                                <label class="dle-text-xs" for="dle-sp-notebook-role">as</label>
+                                <select id="dle-sp-notebook-role" class="text_pole widthNatural">
+                                    <option value="0">System</option>
+                                    <option value="1">User</option>
+                                    <option value="2">Assistant</option>
+                                </select>
+                            </span>
+                        </div>
+                        <span class="dle-injection-pm-name" style="display:none"><code>DLE Author's Notebook</code></span>
+                    </div>
+                    <div class="dle-injection-status">
+                        <span id="dle-sp-inj-notebook-status" class="dle-text-xs dle-muted">147 tokens</span>
+                    </div>
+                </div>
+
+                <!-- AI Notebook -->
+                <div class="dle-injection-row">
+                    <div class="dle-injection-type">
+                        <i class="fa-solid fa-robot" aria-hidden="true"></i>
+                        <span>AI Notebook</span>
+                    </div>
+                    <div class="dle-injection-controls">
+                        <div class="dle-injection-ext-controls">
+                            <select id="dle-sp-ai-notepad-position" class="text_pole widthNatural" title="Where to inject the AI Notebook content.">
+                                <option value="2">Before Main Prompt</option>
+                                <option value="0">After Main Prompt</option>
+                                <option value="1">In-chat</option>
+                            </select>
+                            <span class="dle-injection-inchat-controls" style="display:none">
+                                <label class="dle-text-xs" for="dle-sp-ai-notepad-depth">depth</label>
+                                <input id="dle-sp-ai-notepad-depth" class="text_pole widthUnset dle-sp-narrow-input" type="number" min="0" max="9999" />
+                                <label class="dle-text-xs" for="dle-sp-ai-notepad-role">as</label>
+                                <select id="dle-sp-ai-notepad-role" class="text_pole widthNatural">
+                                    <option value="0">System</option>
+                                    <option value="1">User</option>
+                                    <option value="2">Assistant</option>
+                                </select>
+                            </span>
+                        </div>
+                        <span class="dle-injection-pm-name" style="display:none"><code>DLE AI Notebook</code></span>
+                    </div>
+                    <div class="dle-injection-status">
+                        <span id="dle-sp-inj-notepad-status" class="dle-text-xs dle-muted">~280 tokens</span>
+                    </div>
+                </div>
+
+            </div>
+
+            <span class="dle-text-xs dle-muted"><i class="fa-solid fa-circle-info" aria-hidden="true"></i> Individual entries can override these defaults in their frontmatter (position, depth, role).</span>
+
+            <div id="dle-sp-injection-pm-info" style="display: none;">
+                <span class="dle-text-xs dle-muted"><i class="fa-solid fa-circle-info" aria-hidden="true"></i> Drag these entries in SillyTavern's Prompt Manager to control injection order.</span>
+            </div>
+            </div>
+
+            <div class="dle-settings-section">
+            <h4>Source Tracking</h4>
+            <div class="flex-container flexFlowColumn">
+                <label class="checkbox_label" for="dle-sp-show-sources" title="Add a book icon to AI messages showing which vault entries were injected and why.">
+                    <input id="dle-sp-show-sources" type="checkbox" class="checkbox">
+                    <span>Show Sources Button</span>
+                </label>
+                <span class="dle-text-xs dle-muted">Deep links require vault connection names to match your Obsidian vault names.</span>
+            </div>
+            </div>
+
+            <div class="dle-settings-section">
+            <div class="dle-advanced-toggle" data-section="sp_injection" tabindex="0" role="button" aria-expanded="false">
+                <i class="fa-solid fa-chevron-right dle-advanced-icon" aria-hidden="true"></i> Show Advanced
+            </div>
+            <div class="dle-advanced-section" data-section="sp_injection" style="display: none;">
+                <div title="Template for formatting each injected entry. Use {{title}} and {{content}} macros.">
+                    <label for="dle-sp-template"><small>Entry Format</small></label>
+                    <textarea id="dle-sp-template" class="text_pole textarea_compact" rows="3" placeholder="Use {{title}} and {{content}} macros."></textarea>
+                </div>
+                <label class="checkbox_label" for="dle-sp-allow-wi-scan" title="When enabled, SillyTavern's built-in World Info can trigger on text inside your DeepLore entries. Useful if you use both systems. May cause duplicate injections.">
+                    <input id="dle-sp-allow-wi-scan" type="checkbox" class="checkbox">
+                    <span>Allow World Info Scan</span>
+                </label>
+            </div>
+            </div>
+
+        </div>
+
+        <!-- ═══════════════════════════════════════════════════════════════════
+             TAB: AI Search
+             ═══════════════════════════════════════════════════════════════════ -->
+        <div class="dle-settings-panel" id="dle-sp-ai" data-settings-panel="ai"
+             role="tabpanel" aria-labelledby="dle-sp-tab-ai" hidden>
+
+            <div id="dle-sp-ai-disabled-notice" class="dle-overlay-notice" style="display: none;">
+                <div class="dle-overlay-notice-card">
+                    <i class="fa-solid fa-brain" aria-hidden="true" style="font-size: 1.4em; opacity: 0.6;"></i>
+                    <p>AI search is currently disabled.</p>
+                    <p>Set Search Mode to <strong>Two-Stage</strong> or <strong>AI Only</strong> in the
+                    <a href="#" id="dle-sp-goto-matching" class="dle-notice-link">Matching tab</a>
+                    to configure these settings.</p>
+                </div>
+            </div>
+
+            <div class="dle-sp-field-row">
+                <label for="dle-sp-ai-search-mode-mirror">Search Mode</label>
+                <select id="dle-sp-ai-search-mode-mirror" class="text_pole">
+                    <option value="keywords-only">Keyword Only</option>
+                    <option value="two-stage">Two-Stage (Keywords &rarr; AI)</option>
+                    <option value="ai-only">AI Only</option>
+                </select>
+                <small class="dle-muted">Also configurable in the Matching tab.</small>
+            </div>
+
+            <div class="dle-ai-content-wrap">
+            <h4>AI Search Settings</h4>
+            <p class="dle-section-desc">Configure the AI model that selects which entries to inject.</p>
+
+            <div class="flex-container flexFlowColumn">
+                <span class="dle-text-xs dle-muted">Connection settings: <a href="#" class="dle-goto-ai-connections">AI Connections</a> in Connection tab.</span>
+                <div class="flex-container" style="gap: 6px;">
+                    <div id="dle-sp-test-ai" class="menu_button menu_button_icon" role="button" tabindex="0" title="Test AI search connection.">
+                        <i class="fa-solid fa-brain"></i>
+                        <span>Test AI Search</span>
+                    </div>
+                    <div id="dle-sp-preview-ai" class="menu_button menu_button_icon" role="button" tabindex="0" title="Preview the AI search prompt.">
+                        <i class="fa-solid fa-eye"></i>
+                        <span>Preview Prompt</span>
+                    </div>
+                    <span id="dle-sp-ai-status" class="dle-status"></span>
+                </div>
+                <!-- Always visible: Confidence + Fallback -->
+                <div class="flex-container">
+                    <div class="flex1" title="Filter AI results by confidence tier. Low includes all, Medium drops low-confidence, High keeps only high-confidence entries.">
+                        <label for="dle-sp-ai-confidence-threshold"><small>AI Confidence Threshold</small></label>
+                        <select id="dle-sp-ai-confidence-threshold" class="text_pole">
+                            <option value="low">Low (include all tiers)</option>
+                            <option value="medium">Medium (medium + high only)</option>
+                            <option value="high">High (high confidence only)</option>
+                        </select>
+                    </div>
+                </div>
+                <div class="flex-container">
+                    <div class="flex1" title="What to inject when AI search encounters an error (network failure, timeout, etc).">
+                        <label for="dle-sp-ai-error-fallback"><small>AI Error Fallback</small></label>
+                        <select id="dle-sp-ai-error-fallback" class="text_pole">
+                            <option value="keyword">Keyword matching</option>
+                            <option value="constants_only">Constants only</option>
+                            <option value="bootstrap_only">Bootstrap entries only</option>
+                            <option value="none">Nothing (skip injection)</option>
+                        </select>
+                    </div>
+                    <div class="flex1" title="What to inject when AI search returns no results (AI decided nothing is relevant).">
+                        <label for="dle-sp-ai-empty-fallback"><small>AI Empty Result Fallback</small></label>
+                        <select id="dle-sp-ai-empty-fallback" class="text_pole">
+                            <option value="constants">Constants only</option>
+                            <option value="constants_bootstrap">Constants + Bootstrap</option>
+                            <option value="keyword">Keyword matching</option>
+                            <option value="none">Nothing (skip injection)</option>
+                        </select>
+                    </div>
+                </div>
+
+                <!-- Toggle: Show Prompt & Context -->
+                <div class="dle-advanced-toggle" data-section="sp_ai_prompt" tabindex="0" role="button" aria-expanded="false">
+                    <i class="fa-solid fa-chevron-right dle-advanced-icon" aria-hidden="true"></i> Show Prompt &amp; Context
+                </div>
+                <div class="dle-advanced-section" data-section="sp_ai_prompt" style="display: none;">
+                    <div class="flex-container">
+                        <div class="flex1" title="Number of recent chat messages sent to the AI for context when selecting entries. Default: 4.">
+                            <label for="dle-sp-ai-scan-depth"><small>Messages Sent to AI</small></label>
+                            <input id="dle-sp-ai-scan-depth" type="number" class="text_pole" min="1" max="100" />
+                        </div>
+                        <div class="flex1" title="Max characters for each entry's summary shown to the AI when deciding which entries to include. Default: 600.">
+                            <label for="dle-sp-ai-summary-length"><small>Max Summary Length (chars)</small></label>
+                            <input id="dle-sp-ai-summary-length" type="number" class="text_pole" min="100" max="1000" />
+                        </div>
+                    </div>
+                    <div title="Override the default system prompt for AI entry selection.">
+                        <div class="flex-container" style="align-items: center; gap: 6px;">
+                            <label for="dle-sp-ai-system-prompt"><small>System Prompt Override (empty = default)</small></label>
+                            <select class="dle-prompt-preset-select text_pole" data-tool="aiSearch" style="flex: 0 0 auto; width: auto; font-size: 0.85em;" title="Load a saved prompt preset"></select>
+                        </div>
+                        <textarea id="dle-sp-ai-system-prompt" class="text_pole textarea_compact" rows="3" placeholder="Leave empty for default prompt." data-prompt-tool="aiSearch"></textarea>
+                    </div>
+                    <label class="checkbox_label" for="dle-sp-ai-claude-prefix" title="Adds a system identity prefix that improves Claude model performance when using the proxy connection. Proxy mode only.">
+                        <input id="dle-sp-ai-claude-prefix" type="checkbox" class="checkbox">
+                        <span>Claude system prefix (proxy only)</span>
+                    </label>
+                    <label class="checkbox_label" for="dle-sp-ai-force-user-role" title="Merge system prompt into user message. Use this if your AI provider rejects the system role (e.g. some Z.AI GLM versions). Try setting Prompt Post-Processing to Semi/Strict first.">
+                        <input id="dle-sp-ai-force-user-role" type="checkbox" class="checkbox">
+                        <span>Force merge system prompt into user message</span>
+                    </label>
+                    <label class="checkbox_label" for="dle-sp-scribe-informed-retrieval" title="Feed the Session Scribe's latest summary into AI search context.">
+                        <input id="dle-sp-scribe-informed-retrieval" type="checkbox" class="checkbox">
+                        <span>Use Session Notes as AI Context</span>
+                    </label>
+                </div>
+
+                <!-- Toggle: Show Filtering -->
+                <div class="dle-advanced-toggle" data-section="sp_ai_filtering" tabindex="0" role="button" aria-expanded="false">
+                    <i class="fa-solid fa-chevron-right dle-advanced-icon" aria-hidden="true"></i> Show Filtering
+                </div>
+                <div class="dle-advanced-section" data-section="sp_ai_filtering" style="display: none;">
+                    <div class="flex-container">
+                        <div class="flex1" title="Controls how aggressively categories are pruned for large vaults (40+ entries). Higher = more categories can be cut before AI selection. 0 = keep all categories.">
+                            <label for="dle-sp-hierarchical-aggressiveness"><small>Category Filtering Strength</small></label>
+                            <input id="dle-sp-hierarchical-aggressiveness" type="range" min="0" max="0.8" step="0.1" class="dle-w-full" />
+                            <div class="flex-container" style="justify-content: space-between;">
+                                <span class="dle-text-xs dle-muted">Conservative (keep all)</span>
+                                <span class="dle-text-xs dle-muted" id="dle-sp-hierarchical-value">0.8</span>
+                                <span class="dle-text-xs dle-muted">Aggressive (trim 80%)</span>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="flex-container">
+                        <div class="flex1" title="Controls how entry descriptions are built for AI selection. Prefer Summary uses the summary field if it exists, otherwise truncates content. Summary Only skips entries without summaries. Content Only always truncates the full content.">
+                            <label for="dle-sp-manifest-summary-mode"><small>AI Entry Description Mode</small></label>
+                            <select id="dle-sp-manifest-summary-mode" class="text_pole">
+                                <option value="prefer_summary">Prefer Summary (use summary, fall back to content)</option>
+                                <option value="summary_only">Summary Only (skip entries without summaries)</option>
+                                <option value="content_only">Content Only (always truncate content)</option>
+                            </select>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Toggle: Show AI Utilities -->
+                <div class="dle-advanced-toggle" data-section="sp_ai_search" tabindex="0" role="button" aria-expanded="false">
+                    <i class="fa-solid fa-chevron-right dle-advanced-icon" aria-hidden="true"></i> Show AI Utilities
+                </div>
+                <div class="dle-advanced-section" data-section="sp_ai_search" style="display: none;">
+                    <label class="dle-advanced-subheader"><small>AI Utilities</small></label>
+                    <div class="flex-container">
+                        <div class="flex1" title="When running /dle-optimize-keys, use keyword-only analysis or two-stage (keyword + AI) analysis.">
+                            <label for="dle-sp-optimize-keys-mode"><small>Optimize Keys Mode</small></label>
+                            <select id="dle-sp-optimize-keys-mode" class="text_pole">
+                                <option value="keyword">Keyword Only</option>
+                                <option value="two-stage">Two-Stage (Keyword + AI)</option>
+                            </select>
+                        </div>
+                    </div>
+                    <div title="Custom prompt for keyword optimization. Leave empty for default.">
+                        <div class="flex-container" style="align-items: center; gap: 6px;">
+                            <label for="dle-sp-optimize-keys-prompt"><small>Optimize Keys Prompt (empty = default)</small></label>
+                            <select class="dle-prompt-preset-select text_pole" data-tool="optimizeKeys" style="flex: 0 0 auto; width: auto; font-size: 0.85em;" title="Load a saved prompt preset"></select>
+                        </div>
+                        <textarea id="dle-sp-optimize-keys-prompt" class="text_pole textarea_compact" rows="3" placeholder="Leave empty for default." data-prompt-tool="optimizeKeys"></textarea>
+                    </div>
+                </div>
+            </div>
+
+            </div><!-- /.dle-ai-content-wrap -->
+        </div>
+
+        <!-- ═══════════════════════════════════════════════════════════════════
+             TAB: Features
+             ═══════════════════════════════════════════════════════════════════ -->
+        <div class="dle-settings-panel" id="dle-sp-features" data-settings-panel="features"
+             role="tabpanel" aria-labelledby="dle-sp-tab-features" hidden>
+
+            <!-- Sub-panel: Author Notebook -->
+            <div class="dle-features-subpanel active" id="dle-sp-feat-author-notebook" data-features-subpanel="author-notebook"
+                 role="tabpanel">
+            <div class="dle-settings-section">
+            <h4>Author Notebook</h4>
+            <p class="dle-section-desc">A per-chat scratchpad for notes, scene direction, or writing instructions.</p>
+            <div class="flex-container flexFlowColumn">
+                <label class="checkbox_label" for="dle-sp-notebook-enabled" title="Include Author Notebook content in every message to the AI for this chat.">
+                    <input id="dle-sp-notebook-enabled" type="checkbox" class="checkbox">
+                    <span>Enable Author Notebook</span>
+                </label>
+                <div class="flex-container">
+                    <div id="dle-sp-open-notebook" class="menu_button menu_button_icon" role="button" tabindex="0" title="Open the Author Notebook editor.">
+                        <i class="fa-solid fa-book" aria-hidden="true"></i>
+                        <span>Open Author Notebook</span>
+                    </div>
+                </div>
+                <span class="dle-text-xs dle-muted">Injection position: configured in the <a href="#" class="dle-goto-tab-link" data-goto-tab="injection">Injection tab</a>.</span>
+            </div>
+            </div>
+            </div>
+
+            <!-- Sub-panel: AI Notebook -->
+            <div class="dle-features-subpanel" id="dle-sp-feat-ai-notebook" data-features-subpanel="ai-notebook"
+                 role="tabpanel" hidden>
+            <div class="dle-settings-section">
+            <h4>AI Notebook</h4>
+            <p class="dle-section-desc">Automatically capture session notes from AI responses. Notes are stored per-chat and reinjected into future messages so the AI remembers what happened.</p>
+            <div class="flex-container flexFlowColumn">
+                <label class="checkbox_label" for="dle-sp-ai-notepad-enabled" title="Enable AI Notebook — session notes are captured and reinjected into future messages.">
+                    <input id="dle-sp-ai-notepad-enabled" type="checkbox" class="checkbox">
+                    <span>Enable AI Notebook</span>
+                </label>
+
+                <div id="dle-sp-ai-notepad-mode-controls">
+                    <label><small>Capture Mode</small></label>
+                    <div class="radio_group">
+                        <label title="The writing AI appends notes in &lt;dle-notes&gt; tags. Free — no extra API calls. Requires a model that reliably follows formatting instructions.">
+                            <input type="radio" name="dle-sp-ai-notepad-mode" value="tag" />
+                            <span>Tag Mode</span>
+                        </label>
+                        <label title="After each AI response, a separate API call extracts noteworthy information. Works with any model. Uses your AI Search connection.">
+                            <input type="radio" name="dle-sp-ai-notepad-mode" value="extract" />
+                            <span>Extract Mode</span>
+                        </label>
+                    </div>
+                    <div id="dle-sp-ai-notepad-mode-tag-desc" class="dle-text-xs dle-muted" style="margin-top: 4px;">
+                        <i class="fa-solid fa-tag" aria-hidden="true"></i>
+                        The writing AI includes <code>&lt;dle-notes&gt;</code> tags in its response. No extra API calls — notes are extracted from the response text. Best with flagship models (Claude Opus/Sonnet, GPT-4o). Smaller models may not follow the format.
+                    </div>
+                    <div id="dle-sp-ai-notepad-mode-extract-desc" class="dle-text-xs dle-muted" style="display: none; margin-top: 4px;">
+                        <i class="fa-solid fa-bolt" aria-hidden="true"></i>
+                        After each response, DLE sends the text to your <b>AI Search connection</b> to extract session notes. Works with any writing model — the extraction uses a separate, reliable call. Visible "Note to self:" prose is automatically stripped. Costs one extra API call per message.
+                    </div>
+                </div>
+
+                <div class="flex-container">
+                    <div id="dle-sp-open-ai-notepad" class="menu_button menu_button_icon" role="button" tabindex="0" title="View accumulated AI notes for this chat.">
+                        <i class="fa-solid fa-robot" aria-hidden="true"></i>
+                        <span>View AI Notebook</span>
+                    </div>
+                </div>
+                <span class="dle-text-xs dle-muted">Injection position: configured in the <a href="#" class="dle-goto-tab-link" data-goto-tab="injection">Injection tab</a>.</span>
+                <div id="dle-sp-ai-notepad-tag-options">
+                    <label for="dle-sp-ai-notepad-prompt"><small>Custom Tag Instruction (leave empty for default)</small></label>
+                    <textarea id="dle-sp-ai-notepad-prompt" class="text_pole" rows="3" placeholder="Leave empty for default. Instructs the AI to append &lt;dle-notes&gt; after its response."></textarea>
+                </div>
+                <div id="dle-sp-ai-notepad-extract-options" style="display: none;">
+                    <span class="dle-text-xs dle-muted">Connection settings: <a href="#" class="dle-goto-ai-connections">AI Connections</a> in Connection tab.</span>
+                    <label for="dle-sp-ai-notepad-extract-prompt"><small>Custom Extraction Prompt (leave empty for default)</small></label>
+                    <textarea id="dle-sp-ai-notepad-extract-prompt" class="text_pole" rows="3" placeholder="Leave empty for default. The extraction model receives the AI response and returns bullet-point notes."></textarea>
+                </div>
+            </div>
+            </div>
+            </div>
+
+            <!-- Sub-panel: Session Scribe -->
+            <div class="dle-features-subpanel" id="dle-sp-feat-session-scribe" data-features-subpanel="session-scribe"
+                 role="tabpanel" hidden>
+            <div class="dle-settings-section">
+            <h4>Session Scribe</h4>
+            <p class="dle-section-desc">Automatically summarize the roleplay session and write notes to your Obsidian vault.</p>
+            <label class="checkbox_label" for="dle-sp-scribe-enabled" title="Generate session summaries using your chosen AI connection.">
+                <input id="dle-sp-scribe-enabled" type="checkbox" class="checkbox">
+                <span>Enable Session Scribe</span>
+            </label>
+
+            <div class="flex-container flexFlowColumn" id="dle-sp-scribe-controls">
+                <div class="flex-container">
+                    <div class="flex1" title="Write a session note every N AI messages. Default: 5.">
+                        <label for="dle-sp-scribe-interval"><small>Auto-scribe Every N Messages</small></label>
+                        <input id="dle-sp-scribe-interval" type="number" class="text_pole" min="1" max="50" />
+                    </div>
+                    <div class="flex1" title="Folder in your Obsidian vault where session notes are saved.">
+                        <label for="dle-sp-scribe-folder"><small>Session Folder</small></label>
+                        <input id="dle-sp-scribe-folder" type="text" class="text_pole" placeholder="Sessions" />
+                    </div>
+                </div>
+                <span class="dle-text-xs dle-muted">Connection settings: <a href="#" class="dle-goto-ai-connections">AI Connections</a> in Connection tab.</span>
+                <div class="flex-container">
+                    <div class="flex1" title="Messages to include as context. Default: 20.">
+                        <label for="dle-sp-scribe-scan-depth"><small>Messages to Include</small></label>
+                        <input id="dle-sp-scribe-scan-depth" type="number" class="text_pole" min="5" max="100" />
+                    </div>
+                </div>
+                <div title="Custom prompt for session summaries.">
+                    <div class="flex-container" style="align-items: center; gap: 6px;">
+                        <label for="dle-sp-scribe-prompt"><small>Custom Summary Prompt (empty = default)</small></label>
+                        <select class="dle-prompt-preset-select text_pole" data-tool="scribe" style="flex: 0 0 auto; width: auto; font-size: 0.85em;" title="Load a saved prompt preset"></select>
+                    </div>
+                    <textarea id="dle-sp-scribe-prompt" class="text_pole textarea_compact" rows="3" placeholder="Leave empty for default." data-prompt-tool="scribe"></textarea>
+                </div>
+            </div>
+            </div>
+            </div>
+
+            <!-- Sub-panel: Auto Lorebook -->
+            <div class="dle-features-subpanel" id="dle-sp-feat-auto-lorebook" data-features-subpanel="auto-lorebook"
+                 role="tabpanel" hidden>
+            <div class="dle-settings-section">
+            <h4>Auto Lorebook</h4>
+            <p class="dle-section-desc">AI analyzes chat for entities not in the lorebook and suggests new entries.</p>
+            <label class="checkbox_label" for="dle-sp-autosuggest-enabled" title="Suggestions appear in a popup for review before being written to Obsidian.">
+                <input id="dle-sp-autosuggest-enabled" type="checkbox" class="checkbox">
+                <span>Enable Auto Lorebook</span>
+            </label>
+            <div class="flex-container flexFlowColumn" id="dle-sp-autosuggest-controls">
+                <div class="flex-container">
+                    <div class="flex1" title="Trigger auto-suggest every N AI messages. Default: 10.">
+                        <label for="dle-sp-autosuggest-interval"><small>Interval (messages)</small></label>
+                        <input id="dle-sp-autosuggest-interval" type="number" class="text_pole" min="3" max="50" />
+                    </div>
+                    <div class="flex1" title="Obsidian folder where new entries are saved.">
+                        <label for="dle-sp-autosuggest-folder"><small>Target Folder</small></label>
+                        <input id="dle-sp-autosuggest-folder" type="text" class="text_pole" placeholder="Lorebook" />
+                    </div>
+                </div>
+                <label class="checkbox_label" for="dle-sp-autosuggest-skip-review" title="Write entries directly to Obsidian without showing review popup.">
+                    <input id="dle-sp-autosuggest-skip-review" type="checkbox" class="checkbox">
+                    <span>Write directly (skip review popup)</span>
+                </label>
+                <span class="dle-text-xs dle-muted">Connection settings: <a href="#" class="dle-goto-ai-connections">AI Connections</a> in Connection tab.</span>
+                <div title="Custom prompt for auto-suggest analysis. Leave empty for default.">
+                    <div class="flex-container" style="align-items: center; gap: 6px;">
+                        <label for="dle-sp-autosuggest-prompt"><small>Custom Prompt (empty = default)</small></label>
+                        <select class="dle-prompt-preset-select text_pole" data-tool="autoSuggest" style="flex: 0 0 auto; width: auto; font-size: 0.85em;" title="Load a saved prompt preset"></select>
+                    </div>
+                    <textarea id="dle-sp-autosuggest-prompt" class="text_pole textarea_compact" rows="3" placeholder="Leave empty for default." data-prompt-tool="autoSuggest"></textarea>
+                </div>
+            </div>
+            </div>
+            </div>
+
+            <!-- Sub-panel: Graph -->
+            <div class="dle-features-subpanel" id="dle-sp-feat-graph" data-features-subpanel="graph"
+                 role="tabpanel" hidden>
+            <div class="dle-settings-section">
+            <h4>Graph</h4>
+            <p class="dle-section-desc">Settings for the <code>/dle-graph</code> entry relationship graph.</p>
+
+            <div class="flex-container flexFlowColumn">
+                <div class="flex-container">
+                    <div class="flex1" title="Default node coloring mode when graph opens.">
+                        <label for="dle-sp-graph-color-mode"><small>Default Color Mode</small></label>
+                        <select id="dle-sp-graph-color-mode" class="text_pole">
+                            <option value="type">By Type</option>
+                            <option value="priority">By Priority</option>
+                            <option value="centrality">By Connections</option>
+                            <option value="frequency">By Frequency</option>
+                            <option value="community">By Community</option>
+                        </select>
+                    </div>
+                    <div class="flex1" title="How many hops from the hovered node stay vivid. Everything beyond dims. Default: 2.">
+                        <label for="dle-sp-graph-hover-dim-distance"><small>Hover Dim Distance (hops)</small></label>
+                        <input id="dle-sp-graph-hover-dim-distance" type="number" class="text_pole" min="0" max="8" />
+                    </div>
+                    <div class="flex1" title="How many hops to show in Focus Tree mode (double-click a node). Default: 2.">
+                        <label for="dle-sp-graph-focus-tree-depth"><small>Focus Tree Depth (hops)</small></label>
+                        <input id="dle-sp-graph-focus-tree-depth" type="number" class="text_pole" min="1" max="15" />
+                    </div>
+                </div>
+                <label class="checkbox_label" for="dle-sp-graph-show-labels" title="Show node title labels on the graph.">
+                    <input id="dle-sp-graph-show-labels" type="checkbox" class="checkbox">
+                    <span>Show Labels</span>
+                </label>
+
+                <p class="dle-section-desc" style="margin-top: 8px;"><small><i class="fa-solid fa-circle-info"></i> Most graph controls live in the graph window's own settings panel — open the graph to tune physics, focus depth, edge filtering, and presets.</small></p>
+            </div>
+            </div>
+            </div>
+
+            <!-- Sub-panel: Librarian -->
+            <div class="dle-features-subpanel" id="dle-sp-feat-librarian" data-features-subpanel="librarian"
+                 role="tabpanel" hidden>
+
+            <!-- Section 1: Tools (generation-time behavior) -->
+            <div class="dle-settings-section">
+            <h4>Tools</h4>
+            <p class="dle-section-desc">During each AI reply, these tools let the AI look up lore and flag anything missing from your vault.</p>
+
+            <div class="flex-container flexFlowColumn">
+                <div style="margin-bottom: 8px;">
+                    <button id="dle-sp-librarian-tour" type="button" class="menu_button" title="Open a Librarian session focused on writing-style guides for Emma.">
+                        <i class="fa-solid fa-book-open-reader" aria-hidden="true"></i>
+                        <span>Library Tour…</span>
+                    </button>
+                    <small style="display:block; opacity:0.7; margin-top:4px;">
+                        Open Emma the Librarian to write a meta/style guide. Guides are read by Emma only — never by the writing AI.
+                    </small>
+                </div>
+
+                <label class="checkbox_label" for="dle-sp-librarian-enabled" title="Enable the Librarian feature.">
+                    <input id="dle-sp-librarian-enabled" type="checkbox" class="checkbox">
+                    <span>Enable Librarian</span>
+                </label>
+
+                <div id="dle-sp-librarian-sub" class="flex-container flexFlowColumn" style="margin-left: 20px;">
+                    <label class="checkbox_label" for="dle-sp-librarian-search" title="Registers the search_lore tool. Lets the AI search the vault for entries the pipeline missed.">
+                        <input id="dle-sp-librarian-search" type="checkbox" class="checkbox">
+                        <span>Allow vault searches during generation</span>
+                    </label>
+                    <label class="checkbox_label" for="dle-sp-librarian-flag" title="Registers the flag_lore tool. Lets the AI flag gaps in the lore vault.">
+                        <input id="dle-sp-librarian-flag" type="checkbox" class="checkbox">
+                        <span>Allow flagging missing lore</span>
+                    </label>
+                    <label class="checkbox_label" for="dle-sp-librarian-show-tool-calls" title="Show a 'Consulted lore vault' dropdown on assistant messages when tool calls were used. Disable to hide all tool call traces from chat.">
+                        <input id="dle-sp-librarian-show-tool-calls" type="checkbox" class="checkbox">
+                        <span>Show tool call details on messages</span>
+                    </label>
+                    <label class="checkbox_label" for="dle-sp-librarian-per-message" title="Tie search/flag activity to messages. Gap records are cleared when a new generation starts and rebuilt from the new response. Keeps activity in sync with what's actually in the chat.">
+                        <input id="dle-sp-librarian-per-message" type="checkbox" class="checkbox">
+                        <span>Per-message activity (reset gaps on new generation)</span>
+                    </label>
+
+                    <div class="flex-container">
+                        <div class="flex1" title="Maximum vault searches per AI reply. Default: 2.">
+                            <label for="dle-sp-librarian-max-searches"><small>Searches per reply</small></label>
+                            <input id="dle-sp-librarian-max-searches" type="number" class="text_pole" min="1" max="10" />
+                        </div>
+                        <div class="flex1" title="Maximum entries returned per search call. Default: 5.">
+                            <label for="dle-sp-librarian-max-results"><small>Results per search</small></label>
+                            <input id="dle-sp-librarian-max-results" type="number" class="text_pole" min="1" max="20" />
+                        </div>
+                        <div class="flex1" title="Token budget for search results returned to the AI. Default: 1500.">
+                            <label for="dle-sp-librarian-token-budget"><small>Result size limit (tokens)</small></label>
+                            <input id="dle-sp-librarian-token-budget" type="number" class="text_pole" min="500" max="5000" step="100" />
+                        </div>
+                    </div>
+
+                    <p class="dle-section-desc" style="margin-top: 4px;"><small><i class="fa-solid fa-circle-info"></i> Requires a model that supports function calling (tool use).</small></p>
+                </div>
+            </div>
+            </div>
+
+            <!-- Section 2: Writing Sessions -->
+            <div class="dle-settings-section">
+            <h4>Writing Sessions</h4>
+            <p class="dle-section-desc">Controls for the Librarian's entry editor and AI assistant.</p>
+
+            <div class="flex-container flexFlowColumn">
+                <span class="dle-text-xs dle-muted">Connection settings: <a href="#" class="dle-goto-ai-connections">AI Connections</a> in Connection tab.</span>
+                <div class="flex-container">
+                    <div class="flex1" title="Folder path for written entries (relative to vault root). Leave blank for root.">
+                        <label for="dle-sp-librarian-write-folder"><small>Write Folder</small></label>
+                        <input id="dle-sp-librarian-write-folder" type="text" class="text_pole" placeholder="Root of vault" />
+                    </div>
+                </div>
+                <label class="checkbox_label" for="dle-sp-librarian-auto-send" title="Automatically send a draft prompt when opening a gap from the inbox.">
+                    <input id="dle-sp-librarian-auto-send" type="checkbox" class="checkbox">
+                    <span>Auto-draft when opening a gap</span>
+                </label>
+
+                <!-- Advanced (collapsible) -->
+                <div class="dle-advanced-toggle" data-section="sp_librarian_advanced" tabindex="0" role="button" aria-expanded="false">
+                    <i class="fa-solid fa-chevron-right fa-xs dle-advanced-chevron" aria-hidden="true"></i>
+                    <span>Show Advanced</span>
+                </div>
+                <div class="dle-advanced-content" data-section="sp_librarian_advanced" style="display: none;">
+                    <div class="flex-container">
+                        <div class="flex1" title="Maximum characters for the vault manifest section of the Librarian session prompt. Truncation is char-based (fast, sync). For natural-language content, divide by ~3.5 to estimate tokens (8000 chars ≈ 2300 tokens). Default: 8000.">
+                            <label for="dle-sp-librarian-manifest-max"><small>Manifest Budget (chars, ÷3.5 ≈ tokens)</small></label>
+                            <input id="dle-sp-librarian-manifest-max" type="number" class="text_pole" min="2000" max="30000" step="500" />
+                        </div>
+                        <div class="flex1" title="Maximum characters for related-entries context. Char-based truncation — divide by ~3.5 for a token estimate (4000 chars ≈ 1150 tokens). Default: 4000.">
+                            <label for="dle-sp-librarian-related-max"><small>Related Entries Budget (chars, ÷3.5 ≈ tokens)</small></label>
+                            <input id="dle-sp-librarian-related-max" type="number" class="text_pole" min="1000" max="10000" step="500" />
+                        </div>
+                    </div>
+                    <div class="flex-container">
+                        <div class="flex1" title="Maximum characters for chat context in the Librarian session prompt. Char-based truncation — divide by ~3.5 for a token estimate (4000 chars ≈ 1150 tokens). Default: 4000.">
+                            <label for="dle-sp-librarian-chat-context-max"><small>Chat Context Budget (chars, ÷3.5 ≈ tokens)</small></label>
+                            <input id="dle-sp-librarian-chat-context-max" type="number" class="text_pole" min="1000" max="10000" step="500" />
+                        </div>
+                        <div class="flex1" title="Maximum characters for the serialized draft JSON in the Librarian session prompt. Char-based truncation — divide by ~3.5 for a token estimate (4000 chars ≈ 1150 tokens). Default: 4000.">
+                            <label for="dle-sp-librarian-draft-max"><small>Draft Budget (chars, ÷3.5 ≈ tokens)</small></label>
+                            <input id="dle-sp-librarian-draft-max" type="number" class="text_pole" min="2000" max="10000" step="500" />
+                        </div>
+                    </div>
+
+                    <h5 class="dle-settings-subsection-label" style="margin-top: 12px;">System Prompt</h5>
+                    <div class="flex-container flexFlowColumn">
+                        <div class="radio_group">
+                            <label class="checkbox_label" title="Use the built-in entry writing guide.">
+                                <input type="radio" name="dle-sp-librarian-prompt-mode" value="default" class="checkbox"> Default
+                            </label>
+                            <label class="checkbox_label" title="Append custom text after the built-in guide.">
+                                <input type="radio" name="dle-sp-librarian-prompt-mode" value="append" class="checkbox"> Append
+                            </label>
+                            <label class="checkbox_label" title="Replace the entire system prompt with custom text.">
+                                <input type="radio" name="dle-sp-librarian-prompt-mode" value="override" class="checkbox"> Override
+                            </label>
+                        </div>
+                        <div class="flex-container" style="align-items: center; gap: 6px; display: none;" id="dle-sp-librarian-preset-row">
+                            <select class="dle-prompt-preset-select text_pole" data-tool="librarian" style="flex: 0 0 auto; width: auto; font-size: 0.85em;" title="Load a saved prompt preset"></select>
+                        </div>
+                        <textarea id="dle-sp-librarian-custom-prompt" class="text_pole" rows="6" placeholder="Custom system prompt text..." style="display: none;" data-prompt-tool="librarian"></textarea>
+                    </div>
+                </div>
+            </div>
+            </div>
+
+            <!-- Section 3: Analytics -->
+            <div class="dle-settings-section">
+            <h4>Analytics</h4>
+            <div class="dle-librarian-stats-panel">
+                <table class="dle-librarian-stats-table">
+                    <thead>
+                        <tr>
+                            <th></th>
+                            <th>Searches</th>
+                            <th>Flags</th>
+                            <th>Est. Tokens</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        <tr>
+                            <td>This Chat</td>
+                            <td id="dle-sp-lib-chat-searches">6</td>
+                            <td id="dle-sp-lib-chat-flags">5</td>
+                            <td id="dle-sp-lib-chat-tokens">14,780</td>
+                        </tr>
+                        <tr>
+                            <td>This Session</td>
+                            <td id="dle-sp-lib-session-searches">8</td>
+                            <td id="dle-sp-lib-session-flags">7</td>
+                            <td id="dle-sp-lib-session-tokens">22,640</td>
+                        </tr>
+                        <tr class="dle-librarian-stats-alltime">
+                            <td>All-Time</td>
+                            <td id="dle-sp-lib-all-searches">147</td>
+                            <td id="dle-sp-lib-all-flags">89</td>
+                            <td id="dle-sp-lib-all-tokens">—</td>
+                        </tr>
+                    </tbody>
+                </table>
+                <div id="dle-sp-lib-entries-written" class="dle-text-xs" style="margin-top: 6px; opacity: 0.6;">12 entries written from Librarian gaps</div>
+                <div id="dle-sp-lib-unmet-queries" style="margin-top: 8px;">
+                    <span class="dle-text-xs dle-muted">Unmet queries: </span>
+                    <span class="dle-text-xs">undercity tunnels (3×) · frostfire ale recipe (2×) · night watch schedule (1×)</span>
+                </div>
+            </div>
+            </div>
+
+            </div>
+        </div>
+
+        <!-- ═══════════════════════════════════════════════════════════════════
+             TAB: System
+             ═══════════════════════════════════════════════════════════════════ -->
+        <div class="dle-settings-panel" id="dle-sp-system" data-settings-panel="system"
+             role="tabpanel" aria-labelledby="dle-sp-tab-system" hidden>
+
+            <div class="dle-settings-section">
+            <h4>Index &amp; Cache</h4>
+
+            <div class="flex-container flexFlowColumn">
+                <div class="flex-container" style="gap: 6px;">
+                    <div id="dle-sp-refresh" class="menu_button menu_button_icon" role="button" tabindex="0" title="Clear cache and re-fetch all entries from Obsidian.">
+                        <i class="fa-solid fa-rotate"></i>
+                        <span>Refresh Index</span>
+                    </div>
+                    <div id="dle-sp-test-match" class="menu_button menu_button_icon" role="button" tabindex="0" title="Simulate which entries would be matched.">
+                        <i class="fa-solid fa-flask"></i>
+                        <span>Test Match</span>
+                    </div>
+                    <div id="dle-sp-browse-entries" class="menu_button menu_button_icon" role="button" tabindex="0" title="Browse all indexed entries.">
+                        <i class="fa-solid fa-list"></i>
+                        <span>Browse</span>
+                    </div>
+                </div>
+                <span id="dle-sp-index-stats" class="dle-text-xs">255 entries indexed · 87 tags · 9 folders · Cache age: 215s · Last rebuild: 3m ago</span>
+                <div class="dle-advanced-toggle" data-section="sp_index" tabindex="0" role="button" aria-expanded="false">
+                    <i class="fa-solid fa-chevron-right dle-advanced-icon" aria-hidden="true"></i> Show Advanced
+                </div>
+                <div class="dle-advanced-section" data-section="sp_index" style="display: none;">
+                    <div class="flex-container">
+                        <div class="flex1" title="How long (seconds) to cache the vault index. Default: 300.">
+                            <label for="dle-sp-cache-ttl"><small>Cache Duration (seconds)</small></label>
+                            <input id="dle-sp-cache-ttl" type="number" class="text_pole" min="0" max="86400" />
+                        </div>
+                        <div class="flex1" title="Re-check vault for changes every N seconds. 0 to disable.">
+                            <label for="dle-sp-sync-interval"><small>Auto-Sync Interval (0 = off)</small></label>
+                            <input id="dle-sp-sync-interval" type="number" class="text_pole" min="0" max="3600" />
+                        </div>
+                    </div>
+                    <label class="checkbox_label" for="dle-sp-show-sync-toasts" title="Show toast notifications when vault changes are detected.">
+                        <input id="dle-sp-show-sync-toasts" type="checkbox" class="checkbox">
+                        <span>Show Sync Change Toasts</span>
+                    </label>
+                    <hr class="dle-my-10">
+                    <div class="flex-container">
+                        <div class="flex1" title="Controls when the vault index is rebuilt.">
+                            <label for="dle-sp-index-rebuild-trigger"><small>Index Rebuild Trigger</small></label>
+                            <select id="dle-sp-index-rebuild-trigger" class="text_pole">
+                                <option value="ttl">Time-based (recheck after N seconds)</option>
+                                <option value="generation">Generation-based</option>
+                                <option value="manual">Manual only</option>
+                            </select>
+                        </div>
+                    </div>
+                    <div id="dle-sp-rebuild-trigger-desc" class="dle-mb-1">
+                        <span class="dle-text-xs dle-muted" id="dle-sp-rebuild-trigger-ttl-desc">Rebuild after a time interval (uses Cache Duration above). Best for most users.</span>
+                        <span class="dle-text-xs dle-muted" id="dle-sp-rebuild-trigger-gen-desc" style="display: none;">Rebuild every N generations (messages sent). Use if you edit vault entries mid-chat and want changes picked up quickly.</span>
+                        <span class="dle-text-xs dle-muted" id="dle-sp-rebuild-trigger-manual-desc" style="display: none;">Only rebuild when you use /dle-rebuild or reopen the chat. Best for stable vaults that rarely change.</span>
+                    </div>
+                    <div class="flex-container" id="dle-sp-rebuild-gen-interval-row" style="display: none;">
+                        <div class="flex1" title="Rebuild the index every N generations. Default: 10.">
+                            <label for="dle-sp-rebuild-gen-interval"><small>Rebuild Every N Generations</small></label>
+                            <input id="dle-sp-rebuild-gen-interval" type="number" class="text_pole" min="1" max="100" />
+                        </div>
+                    </div>
+                </div>
+            </div>
+            </div>
+
+            <div class="dle-settings-section">
+            <h4>Advanced</h4>
+
+            <div class="flex-container flexFlowColumn">
+                <div class="flex-container">
+                    <div class="flex1" title="Max response tokens for /dle-review. 0 = auto. Default: 0.">
+                        <label for="dle-sp-review-tokens"><small>Review Response Tokens (0 = auto)</small></label>
+                        <input id="dle-sp-review-tokens" type="number" class="text_pole" min="0" max="100000" />
+                    </div>
+                </div>
+                <label class="checkbox_label" for="dle-sp-debug" title="Log detailed match information to the browser console.">
+                    <input id="dle-sp-debug" type="checkbox" class="checkbox">
+                    <span>Debug Mode</span>
+                </label>
+            </div>
+            </div>
+
+            <div class="dle-settings-section">
+            <h4>Diagnostics</h4>
+            <div class="flex-container flexFlowColumn">
+                <small class="dle-muted">
+                    Export a self-contained diagnostic report to share when reporting bugs.
+                    The file is anonymized (API keys, IP addresses, hostnames, user paths are
+                    pseudonymized) and is designed to be readable by a flagship LLM for
+                    self-service triage. You're encouraged to verify the file before sharing.
+                </small>
+                <div class="flex-container" style="gap: 6px;">
+                    <div id="dle-sp-export-diagnostics" class="menu_button menu_button_icon" role="button" tabindex="0"
+                         title="Export an anonymized diagnostic report you can attach to a GitHub issue.">
+                        <i class="fa-solid fa-stethoscope"></i>
+                        <span id="dle-sp-export-diagnostics-label">Export Diagnostics</span>
+                    </div>
+                </div>
+            </div>
+            </div>
+
+        </div>
+
+        <!-- ═══════════════════════════════════════════════════════════════════
+             TAB: About
+             ═══════════════════════════════════════════════════════════════════ -->
+        <div class="dle-settings-panel active" id="dle-sp-about" data-settings-panel="about"
+             role="tabpanel" aria-labelledby="dle-sp-tab-about">
+
+            <div style="text-align: center;" class="dle-my-3">
+                <h3 style="margin: 0;">DeepLore Enhanced</h3>
+                <span class="dle-text-xs dle-muted" id="dle-sp-version">v1.0.0-beta</span>
+            </div>
+            <p class="dle-section-desc" style="text-align: center;">AI-powered Obsidian vault lorebook for SillyTavern with keyword and semantic search.</p>
+
+            <div class="dle-settings-section" style="text-align: center;">
+                <label class="checkbox_label" for="dle-sp-enabled" title="Master on/off switch. When disabled, no entries are matched, no AI calls are made, and no prompts are injected." style="display: inline-flex;">
+                    <input id="dle-sp-enabled" type="checkbox" class="checkbox">
+                    <span>Enable DeepLore Enhanced</span>
+                </label>
+            </div>
+
+            <div style="display: flex; flex-direction: column; align-items: center; gap: 8px; margin: 16px 0;">
+                <a href="https://github.com/pixelnull/sillytavern-DeepLore-Enhanced" target="_blank" rel="noopener noreferrer" class="menu_button menu_button_icon" style="display: inline-flex; gap: 6px; text-decoration: none;">
+                    <i class="fa-brands fa-github" aria-hidden="true"></i>
+                    <span>GitHub</span>
+                </a>
+                <a href="https://github.com/pixelnull/sillytavern-DeepLore-Enhanced/wiki" target="_blank" rel="noopener noreferrer" class="menu_button menu_button_icon" style="display: inline-flex; gap: 6px; text-decoration: none;">
+                    <i class="fa-solid fa-book" aria-hidden="true"></i>
+                    <span>Documentation Wiki</span>
+                </a>
+                <a href="https://infosec.exchange/@pixelnull" target="_blank" rel="noopener noreferrer" class="menu_button menu_button_icon" style="display: inline-flex; gap: 6px; text-decoration: none;">
+                    <i class="fa-brands fa-mastodon" aria-hidden="true"></i>
+                    <span>@pixelnull</span>
+                </a>
+            </div>
+
+            <div style="text-align: center;" class="dle-my-3">
+                <span class="dle-text-xs dle-muted">
+                    Made by <strong>pixelnull</strong> &middot; Licensed under <a href="https://github.com/pixelnull/sillytavern-DeepLore-Enhanced/blob/main/LICENSE" target="_blank" rel="noopener noreferrer">MIT</a>
+                </span>
+            </div>
+
+            <hr>
+            <h4>Slash Commands</h4>
+            <div class="dle-cmd-grid">
+                <div class="dle-cmd-grid-col">
+                    <span class="dle-cmd-grid-header">Browse &amp; Diagnose</span>
+                    <div class="dle-cmd-row"><code>/dle-help</code><span>List all commands</span></div>
+                    <div class="dle-cmd-row"><code>/dle-status</code><span>Connection &amp; index info</span></div>
+                    <div class="dle-cmd-row"><code>/dle-health</code><span>Audit entries</span></div>
+                    <div class="dle-cmd-row"><code>/dle-browse</code><span>Search all entries</span></div>
+                    <div class="dle-cmd-row"><code>/dle-graph</code><span>Relationship map</span></div>
+                    <div class="dle-cmd-row"><code>/dle-analytics</code><span>Usage statistics</span></div>
+                    <div class="dle-cmd-row"><code>/dle-simulate</code><span>Replay activation</span></div>
+                    <div class="dle-cmd-row"><code>/dle-why</code><span>Preview injections</span></div>
+                    <div class="dle-cmd-row"><code>/dle-inspect</code><span>Last pipeline trace</span></div>
+                </div>
+                <div class="dle-cmd-grid-col">
+                    <span class="dle-cmd-grid-header">Create &amp; Manage</span>
+                    <div class="dle-cmd-row"><code>/dle-refresh</code><span>Re-index vault</span></div>
+                    <div class="dle-cmd-row"><code>/dle-import</code><span>Import World Info JSON</span></div>
+                    <div class="dle-cmd-row"><code>/dle-setup</code><span>Setup wizard</span></div>
+                    <div class="dle-cmd-row"><code>/dle-notebook</code><span>Author Notebook editor</span></div>
+                    <div class="dle-cmd-row"><code>/dle-newlore</code><span>AI suggests entries</span></div>
+                    <div class="dle-cmd-row"><code>/dle-scribe</code><span>Session summary</span></div>
+                    <div class="dle-cmd-row"><code>/dle-scribe-history</code><span>Past session notes</span></div>
+                    <div class="dle-cmd-row"><code>/dle-review</code><span>AI vault review</span></div>
+                    <div class="dle-cmd-row"><code>/dle-optimize-keys</code><span>AI keyword tuning</span></div>
+                    <div class="dle-cmd-row"><code>/dle-summarize</code><span>Generate summaries</span></div>
+                </div>
+                <div class="dle-cmd-grid-col">
+                    <span class="dle-cmd-grid-header">Per-Chat Control</span>
+                    <div class="dle-cmd-row"><code>/dle-pin</code><span>Force-inject entry</span></div>
+                    <div class="dle-cmd-row"><code>/dle-unpin</code><span>Remove a pin</span></div>
+                    <div class="dle-cmd-row"><code>/dle-block</code><span>Suppress an entry</span></div>
+                    <div class="dle-cmd-row"><code>/dle-unblock</code><span>Remove a block</span></div>
+                    <div class="dle-cmd-row"><code>/dle-pins</code><span>Show pins &amp; blocks</span></div>
+                    <div class="dle-cmd-row"><code>/dle-set-era</code><span>Set active era</span></div>
+                    <div class="dle-cmd-row"><code>/dle-set-location</code><span>Set active location</span></div>
+                    <div class="dle-cmd-row"><code>/dle-set-scene</code><span>Set scene type</span></div>
+                    <div class="dle-cmd-row"><code>/dle-set-characters</code><span>Present characters</span></div>
+                    <div class="dle-cmd-row"><code>/dle-context-state</code><span>Show active filters</span></div>
+                </div>
+            </div>
+
+            <hr>
+            <h4>Danger Zone</h4>
+            <p class="dle-muted dle-mb-2" style="text-align: center; font-size: 0.85em;">
+                Your vault connections and AI connection profiles will be preserved. Everything else (matching, budget, injection, features) resets to defaults.
+            </p>
+            <div style="display: flex; flex-direction: column; align-items: center; gap: 8px; margin: 8px 0;">
+                <div id="dle-sp-reset-defaults" class="menu_button menu_button_icon dle-danger-btn" role="button" tabindex="0" title="Reset all DeepLore Enhanced settings to their defaults. Vault and AI connections are preserved.">
+                    <i class="fa-solid fa-arrow-rotate-left" aria-hidden="true"></i>
+                    <span>Reset All Settings to Defaults</span>
+                </div>
+            </div>
+        </div>
+
+    </div>
+</div>
