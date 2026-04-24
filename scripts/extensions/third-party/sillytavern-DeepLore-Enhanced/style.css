@@ -705,6 +705,10 @@ dle-notes { display: none !important; }
 .dle-browse-table-row:hover {
     background: var(--dle-bg-hover);
 }
+.dle-browse-table-row:focus-visible {
+    outline: 2px solid var(--dle-accent);
+    outline-offset: -2px;
+}
 .dle-browse-table-row td {
     padding: 4px 6px;
     border-bottom: 1px solid color-mix(in srgb, var(--dle-border) 40%, transparent);
@@ -799,6 +803,11 @@ dle-notes { display: none !important; }
 .dle-drawer-close:hover {
     opacity: 1;
 }
+.dle-drawer-close:focus-visible {
+    outline: 2px solid var(--dle-accent);
+    outline-offset: 2px;
+    opacity: 1;
+}
 .dle-drawer-settings {
     background: none;
     border: none;
@@ -815,6 +824,11 @@ dle-notes { display: none !important; }
 .dle-drawer-settings:hover {
     opacity: 1;
     color: var(--dle-info);
+}
+.dle-drawer-settings:focus-visible {
+    outline: 2px solid var(--dle-accent);
+    outline-offset: 2px;
+    opacity: 1;
 }
 .dle-drawer-help {
     background: none;

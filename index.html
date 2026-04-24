@@ -314,8 +314,9 @@ Constants: 3661 | AI: 458" data-demo-tip="This tracks how many tokens your injec
 
     
     <div class="dle-action-row" role="toolbar" aria-label="Quick actions" aria-orientation="horizontal">
-        <button class="menu_button menu_button_icon dle-action-btn interactable" data-action="refresh" title="Reload lore from Obsidian" aria-label="Reload lore from Obsidian — re-reads your vault and updates the local index so new or edited notes are available immediately" tabindex="0" role="button">
+        <button class="menu_button menu_button_icon dle-action-btn dle-action-btn-labeled interactable" data-action="refresh" title="Reload lore from Obsidian" aria-label="Reload lore from Obsidian — re-reads your vault and updates the local index so new or edited notes are available immediately" tabindex="0" role="button">
             <i class="fa-solid fa-sync" aria-hidden="true"></i>
+            <span class="dle-action-label">Refresh</span>
         </button>
         <button class="menu_button menu_button_icon dle-action-btn interactable" data-action="scribe" title="Run Session Scribe — AI summarizes the conversation and saves notes to Obsidian" aria-label="Run Session Scribe — AI reads the current conversation and writes a summary directly back to your Obsidian vault, building a persistent session log" tabindex="0" role="button">
             <i class="fa-solid fa-feather-pointed" aria-hidden="true"></i>
@@ -329,11 +330,13 @@ Constants: 3661 | AI: 458" data-demo-tip="This tracks how many tokens your injec
         <button class="menu_button menu_button_icon dle-action-btn interactable" data-action="graph" title="Open relationship graph" aria-label="Open relationship graph — interactive visualization of how your vault entries connect to each other" tabindex="0" role="button" data-demo-tip="Knowledge Graph — visualizes links, requires/excludes relationships, and cascade connections between your vault entries. Nodes are colored by type and injection frequency.">
             <i class="fa-solid fa-diagram-project" aria-hidden="true"></i>
         </button>
-        <button class="menu_button menu_button_icon dle-action-btn interactable" data-action="clear-picks" title="Clear AI search cache — next generation re-selects lore from scratch" aria-label="Clear AI search cache — forces the next generation to re-evaluate all lore candidates instead of using cached selections" tabindex="0" role="button" data-demo-tip="Clear Picks — wipes the AI search sliding window cache. Next message will do a full re-evaluation of all candidates instead of reusing recent selections.">
+        <button class="menu_button menu_button_icon dle-action-btn dle-action-btn-labeled interactable" data-action="clear-picks" title="Clear AI search cache — next generation re-selects lore from scratch" aria-label="Clear AI search cache — forces the next generation to re-evaluate all lore candidates instead of using cached selections" tabindex="0" role="button" data-demo-tip="Clear Picks — wipes the AI search sliding window cache. Next message will do a full re-evaluation of all candidates instead of reusing recent selections.">
             <i class="fa-solid fa-eraser" aria-hidden="true"></i>
+            <span class="dle-action-label">Clear AI Cache</span>
         </button>
-        <button class="menu_button menu_button_icon dle-action-btn interactable" data-action="skip-tools" title="Skip Librarian tools for next generation" aria-label="Skip Librarian tools for next generation — sends the next message without Librarian tool calling, useful when you want a plain AI response" tabindex="0" role="button" data-demo-tip="Skip Tools — temporarily disables Librarian tool calling for the next generation only. Useful when you want a quick response without the Librarian searching or flagging.">
+        <button class="menu_button menu_button_icon dle-action-btn dle-action-btn-labeled interactable" data-action="skip-tools" title="Skip Librarian tools for next generation" aria-label="Skip Librarian tools for next generation — sends the next message without Librarian tool calling, useful when you want a plain AI response" tabindex="0" role="button" data-demo-tip="Skip Tools — temporarily disables Librarian tool calling for the next generation only. Useful when you want a quick response without the Librarian searching or flagging.">
             <i class="fa-solid fa-ban" aria-hidden="true"></i>
+            <span class="dle-action-label">Skip Librarian</span>
         </button>
     </div>
 </div>
@@ -348,22 +351,27 @@ Constants: 3661 | AI: 458" data-demo-tip="This tracks how many tokens your injec
     <div class="dle-tab-bar" role="tablist" aria-label="DeepLore panels" aria-orientation="horizontal">
         <button class="dle-tab active" id="dle-tab-injection" data-tab="injection" role="tab" aria-selected="true" aria-controls="dle-panel-injection" aria-label="Injection — see which lore was included in the last message and why" tabindex="-1" data-demo-tip="Injection — After each AI response, this shows exactly which lore entries were injected and why DLE chose them. Great for debugging context or understanding what the AI &ldquo;knows&rdquo; at any given moment. The badge shows 12 entries were active for the last message.">
             <i class="fa-solid fa-circle-question" aria-hidden="true"></i>
+            <span class="dle-tab-text">Injection</span>
             <span class="dle-tab-badge" data-badge="injection" aria-hidden="true">12</span>
         </button>
         <button class="dle-tab" id="dle-tab-browse" data-tab="browse" role="tab" aria-selected="false" aria-controls="dle-panel-browse" aria-label="Browse — search and manage all lore entries in your vault" tabindex="-1" data-demo-tip="Browse your entire lore vault — all 255 entries from Obsidian, searchable and filterable. See which ones are active, which are gated out, and how often each one gets used. You can also edit entries directly from here.">
             <i class="fa-solid fa-book-open" aria-hidden="true"></i>
+            <span class="dle-tab-text">Browse</span>
             <span class="dle-tab-badge" data-badge="browse" aria-hidden="true">255</span>
         </button>
         <button class="dle-tab" id="dle-tab-gating" data-tab="gating" role="tab" aria-selected="false" aria-controls="dle-panel-gating" aria-label="Filters — set contextual gating fields" tabindex="-1" data-demo-tip="Gating lets you tag lore entries with conditions — era, location, faction, arc — and then set those values here. Entries that don't match the current context get silently excluded. Keeps the wrong-era lore out of scenes where it doesn't belong.">
             <i class="fa-solid fa-filter" aria-hidden="true"></i>
+            <span class="dle-tab-text">Filters</span>
             <span class="dle-tab-badge" data-badge="gating" aria-hidden="true">4</span>
         </button>
         <button class="dle-tab" id="dle-tab-librarian" data-tab="librarian" role="tab" aria-selected="false" aria-controls="dle-panel-librarian" aria-label="Librarian — lore gap inbox and draft review" tabindex="0" data-demo-tip="The Librarian watches your conversations and flags lore gaps — topics that came up but have no vault entry yet. Each flag shows urgency and frequency. Use the action buttons to open gaps in the editor, mark them done, or dismiss. The badge (5) is the number of open flags.">
             <i class="fa-solid fa-book-bookmark" aria-hidden="true"></i>
+            <span class="dle-tab-text">Librarian</span>
             <span class="dle-tab-badge dle-librarian-badge" data-badge="librarian" aria-hidden="true">5</span>
         </button>
         <button class="dle-tab" id="dle-tab-tools" data-tab="tools" role="tab" aria-selected="false" aria-controls="dle-panel-tools" aria-label="Tools — diagnostics, AI tools, and data management" tabindex="-1" data-demo-tip="Tools gives you diagnostics, vault health checks, the knowledge graph visualizer, and data export. If something looks wrong with your lore injection, this is where you go to find out why.">
             <i class="fa-solid fa-toolbox" aria-hidden="true"></i>
+            <span class="dle-tab-text">Tools</span>
         </button>
     </div>
 
