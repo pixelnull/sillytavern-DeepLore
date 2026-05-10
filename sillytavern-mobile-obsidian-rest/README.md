@@ -18,24 +18,24 @@ Desktop users should keep using Obsidian's Local REST API plugin. This bridge is
 From your SillyTavern folder:
 
 ```bash
-git clone https://github.com/pixelnull/sillytavern-DeepLore-Enhanced.git "$HOME/sillytavern-DeepLore-Enhanced"
 mkdir -p ./plugins
-ln -s "$HOME/sillytavern-DeepLore-Enhanced/sillytavern-mobile-obsidian-rest" ./plugins/sillytavern-mobile-obsidian-rest
+rm -f ./plugins/sillytavern-mobile-obsidian-rest
+ln -s "$(pwd)/data/default-user/extensions/sillytavern-DeepLore-Enhanced/sillytavern-mobile-obsidian-rest" ./plugins/sillytavern-mobile-obsidian-rest
 ```
 
-Keep the cloned repository on Termux's Linux filesystem, such as `$HOME`, not Android shared storage. Shared storage may reject symlinks.
+This assumes DeepLore Enhanced is already installed in `data/default-user/extensions/sillytavern-DeepLore-Enhanced`. The symlink target uses `$(pwd)` on purpose: relative symlink targets are resolved from the `plugins/` folder, not from the shell's current folder.
 
-To update later:
+If you prefer a relative symlink from the `plugins/` folder, use `../data/...`:
 
 ```bash
-cd "$HOME/sillytavern-DeepLore-Enhanced"
-git pull
+rm -f ./plugins/sillytavern-mobile-obsidian-rest
+ln -s "../data/default-user/extensions/sillytavern-DeepLore-Enhanced/sillytavern-mobile-obsidian-rest" ./plugins/sillytavern-mobile-obsidian-rest
 ```
 
 If your filesystem does not allow symlinks, copy the folder instead:
 
 ```bash
-cp -R "$HOME/sillytavern-DeepLore-Enhanced/sillytavern-mobile-obsidian-rest" ./plugins/sillytavern-mobile-obsidian-rest
+cp -R ./data/default-user/extensions/sillytavern-DeepLore-Enhanced/sillytavern-mobile-obsidian-rest ./plugins/sillytavern-mobile-obsidian-rest
 ```
 
 Then set `enableServerPlugins: true` in `config.yaml`.

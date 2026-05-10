@@ -21,7 +21,7 @@ Use the bridge only on mobile. Desktop users should use Obsidian's official Loca
 Recommended mobile setup:
 
 1. Run `termux-setup-storage` so Termux can access your Obsidian vault folder.
-2. Symlink `sillytavern-mobile-obsidian-rest/` from a Termux clone of this repository into `SillyTavern/plugins/`; see its README for the full command and copy fallback.
+2. Symlink `data/default-user/extensions/sillytavern-DeepLore-Enhanced/sillytavern-mobile-obsidian-rest/` into `SillyTavern/plugins/`; see its README for the exact absolute-path command and copy fallback.
 3. Set `enableServerPlugins: true` in `config.yaml`.
 4. Start SillyTavern with `OBSIDIAN_VAULT`, `OBSIDIAN_API_KEY`, and `OBSIDIAN_API_PORT=27123`.
 5. In DeepLore, add a vault connection with host `127.0.0.1`, port `27123`, HTTPS off, and the same API key.
