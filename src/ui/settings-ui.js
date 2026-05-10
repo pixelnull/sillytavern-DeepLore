@@ -12,7 +12,6 @@ import { buildAiChatContext } from '../../core/utils.js';
 import { getSettings, getPrimaryVault, DEFAULT_AI_SYSTEM_PROMPT, PROMPT_TAG_PREFIX, settingsConstraints, invalidateSettingsCache, defaultSettings, resolveConnectionConfig } from '../../settings.js';
 import { promptManager } from '../../../../../openai.js';
 import { testConnection, buildConnectionGuidanceHtml } from '../vault/obsidian-api.js';
-import { hasDuplicateEnabledVault } from '../vault/vault-config.js';
 import { testProxyConnection } from '../ai/proxy-api.js';
 import {
     vaultIndex,
@@ -140,7 +139,6 @@ function bindVaultListEvents(settings, $scope = null, $addBtn = null) {
         const primary = getPrimaryVault(settings);
         settings.obsidianPort = primary.port;
         settings.obsidianApiKey = primary.apiKey;
-        updateVaultDuplicateStatus(settings, row, idx);
         saveSettingsDebounced();
     });
 
@@ -149,21 +147,9 @@ function bindVaultListEvents(settings, $scope = null, $addBtn = null) {
         const idx = parseInt(row.data('index'), 10);
         if (isNaN(idx) || !settings.vaults[idx]) return;
         settings.vaults[idx].enabled = $(this).prop('checked');
-        if (hasDuplicateEnabledVault(settings.vaults, settings.vaults[idx], idx)) {
-            settings.vaults[idx].enabled = false;
-            $(this).prop('checked', false);
-            row.find('.dle-vault-status')
-                .text('Duplicate enabled vault')
-                .addClass('failure')
-                .removeClass('success');
-            toastr.warning('That vault connection duplicates an enabled row. Disable or remove the existing row first.', 'DeepLore Enhanced');
-            saveSettingsDebounced();
-            return;
-        }
         const primary = getPrimaryVault(settings);
         settings.obsidianPort = primary.port;
         settings.obsidianApiKey = primary.apiKey;
-        updateVaultDuplicateStatus(settings, row, idx);
         saveSettingsDebounced();
     });
 
@@ -194,7 +180,6 @@ function bindVaultListEvents(settings, $scope = null, $addBtn = null) {
             trustLink.hide();
             httpsNote.hide();
         }
-        updateVaultDuplicateStatus(settings, row, idx);
         saveSettingsDebounced();
     });
 
@@ -264,16 +249,6 @@ function bindVaultListEvents(settings, $scope = null, $addBtn = null) {
             saveSettingsDebounced();
             renderVaultList(settings, container[0]);
         });
-    }
-}
-
-function updateVaultDuplicateStatus(settings, row, idx) {
-    if (isNaN(idx) || !settings.vaults?.[idx]) return;
-    const $status = row.find('.dle-vault-status');
-    if (hasDuplicateEnabledVault(settings.vaults, settings.vaults[idx], idx)) {
-        $status.text('Duplicate enabled vault').addClass('failure').removeClass('success');
-    } else if ($status.text() === 'Duplicate enabled vault') {
-        $status.text('').removeClass('failure success');
     }
 }
 
@@ -1574,19 +1549,14 @@ function bindPopupEvents($container) {
             });
             if (picked) {
                 settings.vaults = settings.vaults || [];
-                const candidate = {
+                settings.vaults.push({
                     name: picked.vaultName || `Vault ${picked.port}`,
                     host: picked.host,
                     port: picked.port,
                     apiKey: first.apiKey || '',
                     https: picked.scheme === 'https',
                     enabled: true,
-                };
-                if (hasDuplicateEnabledVault(settings.vaults, candidate)) {
-                    toastr.info(`"${candidate.name}" is already configured for ${candidate.host}:${candidate.port}.`, 'DeepLore Enhanced');
-                    return;
-                }
-                settings.vaults.push(candidate);
+                });
                 saveSettingsDebounced();
                 bindVaultListEvents(settings, $c('#dle-sp-vault-list'), $c('#dle-sp-add-vault'));
                 toastr.success(`Added ${picked.vaultName} (${picked.host}:${picked.port}) — fill in the API key if needed.`, 'DeepLore Enhanced');
