@@ -1,0 +1,18 @@
+{
+  "name": "sillytavern-mobile-obsidian-rest",
+  "version": "0.1.0",
+  "description": "SillyTavern server plugin that exposes a mobile-compatible Obsidian Local REST API bridge for DeepLore Enhanced.",
+  "main": "index.js",
+  "type": "commonjs",
+  "scripts": {
+    "test": "node test/dle-compat.test.mjs"
+  },
+  "keywords": [
+    "sillytavern",
+    "server-plugin",
+    "obsidian",
+    "deeplore",
+    "termux"
+  ],
+  "license": "MIT"
+}

@@ -34,6 +34,8 @@
 !src/**
 !core/
 !core/**
+!sillytavern-mobile-obsidian-rest/
+!sillytavern-mobile-obsidian-rest/**
 
 # Code-level docs
 !docs/

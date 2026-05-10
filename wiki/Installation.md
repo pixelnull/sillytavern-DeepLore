@@ -5,12 +5,28 @@ Install steps for DeepLore. Install the extension, point it at an Obsidian vault
 ## Prerequisites
 
 - [SillyTavern](https://github.com/SillyTavern/SillyTavern) v1.12.14+
-- [Obsidian](https://obsidian.md/) with the [Local REST API](https://github.com/coddingtonbear/obsidian-local-rest-api) community plugin installed and enabled
+- [Obsidian](https://obsidian.md/) with either the [Local REST API](https://github.com/coddingtonbear/obsidian-local-rest-api) community plugin on desktop or the optional mobile bridge server plugin in Android / Termux
 - A vault for your lore. Your existing Obsidian vault works; `/dle-import` converts SillyTavern World Info JSON into vault entries
 - For AI search (optional): a saved Connection Manager profile in SillyTavern (any provider), or a custom proxy reachable via SillyTavern's CORS proxy
 
 > [!IMPORTANT]
 > If you previously ran the older standalone `sillytavern-DeepLore` extension, uninstall it first. Running both at once corrupts prompt injection.
+
+### Mobile / Termux users
+
+Obsidian's Local REST API community plugin does not run on Android. If you run SillyTavern inside Termux, install the optional **SillyTavern Mobile Obsidian REST Bridge** server plugin instead.
+
+Use the bridge only on mobile. Desktop users should use Obsidian's official Local REST API plugin.
+
+Recommended mobile setup:
+
+1. Run `termux-setup-storage` so Termux can access your Obsidian vault folder.
+2. Copy `sillytavern-mobile-obsidian-rest/` from this repository into `SillyTavern/plugins/` and see its README for the full Termux command.
+3. Set `enableServerPlugins: true` in `config.yaml`.
+4. Start SillyTavern with `OBSIDIAN_VAULT`, `OBSIDIAN_API_KEY`, and `OBSIDIAN_API_PORT=27123`.
+5. In DeepLore, add a vault connection with host `127.0.0.1`, port `27123`, HTTPS off, and the same API key.
+
+If you access the Termux SillyTavern server from a different device, bind the bridge to `0.0.0.0` and use the phone's LAN IP in DeepLore. Do this only on a trusted network.
 
 ---
 

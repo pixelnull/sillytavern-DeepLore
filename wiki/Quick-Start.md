@@ -4,7 +4,9 @@ Get DeepLore injecting lore in five minutes. This page covers the shortest path:
 
 ## Prerequisites
 
-1. **Obsidian** with the [Local REST API plugin](https://github.com/coddingtonbear/obsidian-local-rest-api) installed and enabled
+1. **Obsidian** with either:
+   - the [Local REST API plugin](https://github.com/coddingtonbear/obsidian-local-rest-api) installed and enabled on desktop, or
+   - the optional SillyTavern Mobile Obsidian REST Bridge server plugin when running SillyTavern in Android / Termux
 2. **SillyTavern** with DeepLore installed (see [[Installation]])
 
 ## Step 1: connect your vault
@@ -18,11 +20,11 @@ To configure manually instead:
 
 1. Open SillyTavern → Extensions → DeepLore
 2. Under **Vault Connections**, your default vault is preconfigured
-3. Enter the **Port** (default `27123` for HTTP) and **API Key** from the Local REST API plugin settings
+3. Enter the **Port** (default `27123` for HTTP) and **API Key** from either the Local REST API plugin settings or the mobile bridge configuration
 4. Click **Test All**. You should see a green checkmark
 
 > [!NOTE]
-> The API key lives in Obsidian Settings → Community Plugins → Local REST API → "API Key".
+> On desktop, the API key lives in Obsidian Settings → Community Plugins → Local REST API → "API Key". On mobile, use the `OBSIDIAN_API_KEY` value you gave the bridge.
 
 ## Step 2: create a test entry
 

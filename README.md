@@ -170,7 +170,8 @@ Diagnostics exports for bug reports are pseudonymized before they leave your mac
 ## Prerequisites
 
 - **SillyTavern 1.12.14+**
-- **Obsidian** with the **Local REST API** plugin enabled
+- **Obsidian** with the **Local REST API** plugin enabled on desktop
+- **Mobile / Termux alternative:** Android users can use the optional SillyTavern Mobile Obsidian REST Bridge server plugin in `sillytavern-mobile-obsidian-rest/` instead of Obsidian's Local REST API plugin, which is desktop-only
 - A lore vault (your existing one works; `/dle-import` converts World Info JSON into vault entries)
 - Optional: any LLM provider for AI search; keywords-only mode works without one
 
