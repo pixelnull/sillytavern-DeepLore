@@ -15,7 +15,13 @@ Desktop users should keep using Obsidian's Local REST API plugin. This bridge is
 
 ## Install In Termux
 
-From your SillyTavern folder:
+From the SillyTavern server folder that contains `config.yaml` and `data/`:
+
+```bash
+cd ~/NeoTavern-Frontend/backend
+```
+
+If your install path is different, use that server/backend folder instead. Then create the symlink:
 
 ```bash
 mkdir -p ./plugins
@@ -28,6 +34,7 @@ This assumes DeepLore Enhanced is already installed in `data/default-user/extens
 If you prefer a relative symlink from the `plugins/` folder, use `../data/...`:
 
 ```bash
+mkdir -p ./plugins
 rm -f ./plugins/sillytavern-mobile-obsidian-rest
 ln -s "../data/default-user/extensions/sillytavern-DeepLore-Enhanced/sillytavern-mobile-obsidian-rest" ./plugins/sillytavern-mobile-obsidian-rest
 ```
@@ -35,6 +42,8 @@ ln -s "../data/default-user/extensions/sillytavern-DeepLore-Enhanced/sillytavern
 If your filesystem does not allow symlinks, copy the folder instead:
 
 ```bash
+mkdir -p ./plugins
+rm -rf ./plugins/sillytavern-mobile-obsidian-rest
 cp -R ./data/default-user/extensions/sillytavern-DeepLore-Enhanced/sillytavern-mobile-obsidian-rest ./plugins/sillytavern-mobile-obsidian-rest
 ```
 
@@ -62,7 +71,7 @@ In DeepLore Enhanced, configure the vault connection as:
 | Variable | Default | Description |
 | --- | --- | --- |
 | `OBSIDIAN_VAULT` | required | Absolute path to the Obsidian vault folder. |
-| `OBSIDIAN_API_KEY` | required | Bearer token DLE sends to the bridge. Do not use `12345`. |
+| `OBSIDIAN_API_KEY` | required | Bearer token DLE sends to the bridge. `12345` is accepted for legacy loopback testing, but use a stronger key before binding to LAN. |
 | `OBSIDIAN_API_HOST` | `127.0.0.1` | Bind address. Use `0.0.0.0` only on a trusted LAN. |
 | `OBSIDIAN_API_PORT` | `27123` | HTTP port to expose for DLE. |
 | `OBSIDIAN_API_FALLBACK_FIELDS` | `1` | Serve `fields: []` for missing `DeepLore/field-definitions.yaml`. |

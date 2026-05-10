@@ -90,6 +90,11 @@ test('serves DLE vault listing and markdown reads', async (t) => {
     assert.match(await note.text(), /# Cosplay Mode/);
 });
 
+test('allows the legacy mobile shim default API key', () => {
+    assert.equal(plugin._private.shouldStartWithApiKey('12345'), true);
+    assert.equal(plugin._private.shouldStartWithApiKey(''), false);
+});
+
 test('supports DLE writes, fallback field definitions, tags, search, and path safety', async (t) => {
     const vault = await makeVault();
     t.after(() => fs.rm(vault, { recursive: true, force: true }));

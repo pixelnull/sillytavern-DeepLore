@@ -31,6 +31,10 @@ function readConfig(env = process.env) {
     return { vault, apiKey, host, port, fallbackFields, hideRootDotfiles, debug };
 }
 
+function shouldStartWithApiKey(apiKey) {
+    return typeof apiKey === 'string' && apiKey.length > 0;
+}
+
 async function init(router) {
     activeConfig = readConfig();
 
@@ -48,9 +52,12 @@ async function init(router) {
         console.warn('[mobile-obsidian-rest] OBSIDIAN_VAULT is not set; bridge server not started.');
         return;
     }
-    if (!activeConfig.apiKey || activeConfig.apiKey === '12345') {
-        console.warn('[mobile-obsidian-rest] Set OBSIDIAN_API_KEY to a non-default value; bridge server not started.');
+    if (!shouldStartWithApiKey(activeConfig.apiKey)) {
+        console.warn('[mobile-obsidian-rest] OBSIDIAN_API_KEY is not set; bridge server not started.');
         return;
+    }
+    if (activeConfig.apiKey === '12345') {
+        console.warn('[mobile-obsidian-rest] OBSIDIAN_API_KEY is using the legacy default value "12345". This is acceptable for loopback testing, but use a stronger key before binding to LAN.');
     }
 
     server = await startCompatibilityServer(activeConfig);
@@ -463,6 +470,7 @@ module.exports = {
     info,
     _private: {
         readConfig,
+        shouldStartWithApiKey,
         createRequestHandler,
         startCompatibilityServer,
         DEFAULT_FIELD_DEFINITIONS,
