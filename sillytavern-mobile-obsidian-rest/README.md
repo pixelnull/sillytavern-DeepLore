@@ -18,10 +18,24 @@ Desktop users should keep using Obsidian's Local REST API plugin. This bridge is
 From your SillyTavern folder:
 
 ```bash
-tmpdir="$(mktemp -d)"
-git clone https://github.com/pixelnull/sillytavern-DeepLore-Enhanced.git "$tmpdir/dle"
-cp -R "$tmpdir/dle/sillytavern-mobile-obsidian-rest" ./plugins/sillytavern-mobile-obsidian-rest
-rm -rf "$tmpdir"
+git clone https://github.com/pixelnull/sillytavern-DeepLore-Enhanced.git "$HOME/sillytavern-DeepLore-Enhanced"
+mkdir -p ./plugins
+ln -s "$HOME/sillytavern-DeepLore-Enhanced/sillytavern-mobile-obsidian-rest" ./plugins/sillytavern-mobile-obsidian-rest
+```
+
+Keep the cloned repository on Termux's Linux filesystem, such as `$HOME`, not Android shared storage. Shared storage may reject symlinks.
+
+To update later:
+
+```bash
+cd "$HOME/sillytavern-DeepLore-Enhanced"
+git pull
+```
+
+If your filesystem does not allow symlinks, copy the folder instead:
+
+```bash
+cp -R "$HOME/sillytavern-DeepLore-Enhanced/sillytavern-mobile-obsidian-rest" ./plugins/sillytavern-mobile-obsidian-rest
 ```
 
 Then set `enableServerPlugins: true` in `config.yaml`.
