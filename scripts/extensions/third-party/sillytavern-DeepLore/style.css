@@ -1,5 +1,5 @@
 /* ============================================================================
- * DeepLore Enhanced — Styles
+ * DeepLore — Styles
  * ============================================================================ */
 
 /* --- Theme-aware color variables (on :root so popups can inherit) --- */
@@ -9,12 +9,64 @@
     --dle-error: color-mix(in srgb, #f44336 70%, var(--SmartThemeQuoteColor, #f44336));
     --dle-warning: color-mix(in srgb, var(--SmartThemeQuoteColor, #ff9800) 70%, orange);
     --dle-info: var(--SmartThemeUnderlineColor, #2196f3);
-    --dle-accent: color-mix(in srgb, var(--SmartThemeUnderlineColor, #9c27b0) 60%, purple);
+    --dle-accent: color-mix(in srgb, var(--SmartThemeUnderlineColor, #9c27b0) 60%, purple); /* unslop-ignore: purple is DLE's deliberate brand accent, not an unspecified default */
     --dle-border: var(--SmartThemeBorderColor, #444);
     --dle-bg-surface: var(--SmartThemeBlurTintColor, #1a1a2e);
     --dle-bg-2: color-mix(in srgb, var(--SmartThemeBlurTintColor, #1a1a2e) 80%, var(--SmartThemeBodyColor, #fff));
     --dle-bg-hover: color-mix(in srgb, var(--SmartThemeBodyColor, #fff) 8%, transparent);
     --dle-text-muted: var(--SmartThemeEmColor, #aaa);
+
+    /* f057: single high-contrast keyboard-focus token. Previously the focus ring was
+       hardcoded three different ways (success/green, accent/purple, raw QuoteColor) across
+       ~35 :focus-visible rules with no contrast floor — a WCAG 2.4.7/2.4.11 hazard when the
+       user's theme color sits near their panel. Mix toward body color so the ring stays
+       visible against both the element fill and the surrounding surface in dark AND light.
+       Paired with --dle-focus-halo for a contrast-insurance second ring on the main blocks. */
+    --dle-focus: color-mix(in srgb, var(--SmartThemeUnderlineColor, #4c8dff) 65%, var(--SmartThemeBodyColor, #fff));
+    --dle-focus-halo: color-mix(in srgb, var(--dle-focus) 35%, transparent);
+
+    /* f058: text-safe foreground variants of the semantic palette. The base tokens above
+       are tuned for fills/borders/tints (orange/green) and fail WCAG AA as foreground text
+       on light themes (~2:1). These mix toward body color so they darken on light themes and
+       lighten on dark — mirrors the proven --dle-guide-fg split. Use for `color:` text;
+       keep the base tokens for background:/border:. */
+    --dle-success-fg: color-mix(in srgb, var(--dle-success) 65%, var(--SmartThemeBodyColor, #fff));
+    --dle-error-fg: color-mix(in srgb, var(--dle-error) 70%, var(--SmartThemeBodyColor, #fff));
+    --dle-warning-fg: color-mix(in srgb, var(--dle-warning) 65%, var(--SmartThemeBodyColor, #fff));
+    --dle-info-fg: color-mix(in srgb, var(--dle-info) 70%, var(--SmartThemeBodyColor, #fff));
+    --dle-accent-fg: color-mix(in srgb, var(--dle-accent) 70%, var(--SmartThemeBodyColor, #fff));
+
+    /* f060/f062: category identity hues promoted to named tokens so the graph tooltip
+       badges, browse temperature cues, and legend share one palette instead of each baking
+       its own hex. Fallbacks stay close to the prior inline values. */
+    --dle-cat-constant: var(--SmartThemeQuoteColor, #d4a847);
+    --dle-cat-seed: var(--SmartThemeUnderlineColor, #4c8dff);
+    --dle-cat-bootstrap: #9c6ade;
+    --dle-cat-error: var(--dle-error);
+    --dle-cat-warning: var(--dle-warning);
+    --dle-cat-pinned: var(--dle-info);
+
+    /* Wave A: previously-phantom surface/text tokens (consumed but never declared).
+       Theme-derived so light ST themes don't get a black island / wrong contrast.
+       On dark themes these resolve close to the prior inline fallbacks. */
+    --dle-bg-1: color-mix(in srgb, var(--SmartThemeBodyColor, #000) 12%, transparent);
+    --dle-bg-3: color-mix(in srgb, var(--SmartThemeBodyColor, #fff) 14%, transparent);
+    --dle-text: var(--SmartThemeBodyColor, #ddd);
+    /* f061: text drawn ON a filled semantic color. Previously --dle-on-accent was just the
+       body TEXT color, so on a LIGHT theme it became dark text on a saturated mid-tone accent
+       fill with no guaranteed contrast. DLE's accent/success/error fills are all saturated
+       mid-to-dark tones, so a near-white foreground is the contrast-safe pairing regardless
+       of theme. Shared so the scattered on-fill sites (accent button, librarian/error badges)
+       stop disagreeing (was: body-color vs raw SmartThemeBodyColor vs hardcoded #fff). The
+       small text-shadow keeps the glyph legible if a user's fill lands unusually light. */
+    --dle-on-accent: #fff;
+    /* f061 follow-up: --dle-success is a RAW passthrough of --SmartThemeQuoteColor (unlike
+       --dle-error/--dle-accent, which color-mix toward dark anchors), so it's often a pale
+       mid-tone on light themes — #fff text on it is unreadable (the pre-f061 code used
+       SmartThemeBodyColor here, which was contrast-correct). Track body color so the badge
+       text darkens on light themes and lightens on dark, restoring contrast on both. */
+    --dle-on-success: var(--SmartThemeBodyColor, #fff);
+    --dle-on-error: #fff;
 
     /* BUG-215: brand accents — derived from theme so light themes don't kill
        contrast. Fallbacks match the prior hardcoded values. */
@@ -27,12 +79,23 @@
     /* Type scale (minor third 1.2 ratio)
        BUG-213: bumped `--dle-text-xs` from 0.7em to 0.78em so at ST's default 14px
        base it renders ~10.9px → ~11px, above the old 9.8px floor. Still compact but
-       closer to WCAG 1.4.4 practical minimum. */
-    --dle-text-xs: 0.78em;
-    --dle-text-sm: 0.85em;
-    --dle-text-base: 1em;
-    --dle-text-lg: 1.1em;
-    --dle-text-xl: 1.25em;
+       closer to WCAG 1.4.4 practical minimum.
+       Settings-overhaul: re-anchored from em to calc(--mainFontSize × ratio) at the
+       SAME ratios. em resolved against each element's inherited size, so nested
+       small/.dle-text-sm contexts silently compounded (0.85 × 0.85 = 0.72 …); calc
+       against the root var yields ONE fixed size per token everywhere while still
+       tracking ST's font-scale slider (rem would not — ST sizes body, not html). */
+    --dle-text-xs: calc(var(--mainFontSize, 15px) * 0.78);
+    --dle-text-sm: calc(var(--mainFontSize, 15px) * 0.85);
+    --dle-text-base: var(--mainFontSize, 15px);
+    --dle-text-lg: calc(var(--mainFontSize, 15px) * 1.1);
+    --dle-text-xl: calc(var(--mainFontSize, 15px) * 1.25);
+
+    /* f068: single ST-aware monospace stack + code size token so every
+       code/command/tool-output surface shares one face and one size instead
+       of three drifting fallback stacks (bare `monospace`, full, and short). */
+    --dle-font-mono: var(--monoFontFamily, ui-monospace, SFMono-Regular, Menlo, Consolas, monospace);
+    --dle-text-code: var(--dle-text-sm);
 
     /* Spacing scale */
     --dle-space-1: 4px;
@@ -57,52 +120,19 @@
     --dle-opacity-faint: 0.45;
     --dle-opacity-ghost: 0.25;
     --dle-opacity-disabled: 0.4;
-}
 
-/* ============================================================================
- * Layout Stability Primitives
- * Utilities to eliminate layout shift from font-weight swaps, digit width
- * changes, hover borders, and toolbar overflow.
- * ============================================================================ */
-
-/* Fake-bold via text-shadow — no width change vs font-weight: 600 */
-.dle-stable-weight {
-    text-shadow:
-        0.4px 0 0 currentColor,
-        -0.4px 0 0 currentColor;
+    /* Transition-timing axis. Durations previously sprawled
+       100/120/150/200/250/300ms with no shared scale; v2.6 migrated the bulk
+       of transition/animation shorthands onto these three tokens so the whole
+       extension's motion tempo retunes from here.
+       Curve convention: incoming/reveal + hover feedback use `--dle-ease-out`
+       (strong decelerate); outgoing/dismiss motion uses `--dle-ease` (expo). */
+    --dle-dur-fast: 120ms;
+    --dle-dur-base: 200ms;
+    --dle-dur-slow: var(--animation-duration-slow, 320ms);
+    --dle-ease: cubic-bezier(0.32, 0.72, 0, 1);
+    --dle-ease-out: cubic-bezier(0.16, 1, 0.3, 1);
 }
-
-/* Tabular numerals — keep digit columns from reflowing as values change */
-.dle-num,
-.dle-num-slot {
-    font-variant-numeric: tabular-nums;
-    font-feature-settings: "tnum";
-}
-
-/* Toolbar that wraps gracefully instead of clipping or pushing siblings */
-.dle-toolbar {
-    display: flex;
-    flex-wrap: wrap;
-    gap: var(--dle-space-2);
-    min-width: 0;
-    align-items: center;
-}
-.dle-toolbar > * {
-    flex-shrink: 0;
-}
-
-/* Button that never breaks mid-word and never shrinks below content */
-.dle-btn-stable {
-    white-space: nowrap;
-    flex-shrink: 0;
-}
-
-/* Reserve border space so hover-colored borders don't cause 1px shift */
-.dle-border-reserve {
-    border: 1px solid transparent;
-}
-
-/* ============================================================================ */
 
 /* --- Utility classes --- */
 .dle-settings .dle-header-badge {
@@ -114,17 +144,27 @@
 .dle-open-settings-btn { margin-top: 8px; }
 
 .dle-settings .dle-text-sm {
-    font-size: 0.85em;
+    font-size: var(--dle-text-sm);
 }
 
 .dle-settings .dle-muted {
     color: var(--dle-text-muted);
 }
 
-.dle-settings .dle-section-desc {
-    font-size: 0.85em;
-    color: var(--dle-text-muted);
-    margin: 2px 0 6px;
+/* f007: single source of truth for section descriptions across BOTH surfaces —
+   the drawer stub (.dle-settings) and the real tabbed popup (.dle-settings-panel,
+   which holds every actual description). One font-size, one margin pair on the
+   token grid, and a muted COLOR (never opacity) so embedded <code>/<a> inside the
+   description keep their own full-strength color. Zone tiers vary only
+   --desc-emphasis (a mix toward the panel background), so lower tiers dim the
+   description text without fading its inline links/code. Replaces the old
+   duplicate .dle-settings-panel rule that used opacity:0.6 (which faded links). */
+.dle-settings .dle-section-desc,
+.dle-settings-panel .dle-section-desc {
+    --desc-emphasis: 0%;
+    font-size: var(--dle-text-sm);
+    color: color-mix(in srgb, var(--dle-text-muted), var(--dle-bg-surface) var(--desc-emphasis));
+    margin: var(--dle-space-1) 0 var(--dle-space-2);
 }
 .dle-settings-subsection-label {
     font-size: var(--dle-text-sm);
@@ -141,7 +181,7 @@
 .dle-settings .dle-status {
     display: inline-block;
     margin-left: 10px;
-    font-size: 0.85em;
+    font-size: var(--dle-text-sm);
 }
 
 .dle-settings .dle-status.success {
@@ -160,6 +200,63 @@
     content: '\2717 ';
 }
 
+/* Prompts tab uses a data-tone convention (ok|warn|info|err) for the status
+   line and the per-row badges. Map it onto the same colour + glyph language as
+   the .success/.failure class API above so the two status systems read
+   identically across the settings popup. `ok`/`err` mirror success/failure;
+   `warn` and `info` add the missing middle tones. */
+.dle-settings .dle-status[data-tone="ok"] {
+    color: var(--dle-success);
+}
+.dle-settings .dle-status[data-tone="ok"]::before {
+    content: '\2713 ';
+}
+.dle-settings .dle-status[data-tone="err"] {
+    color: var(--dle-error);
+}
+.dle-settings .dle-status[data-tone="err"]::before {
+    content: '\2717 ';
+}
+.dle-settings .dle-status[data-tone="warn"] {
+    color: var(--dle-warning-fg);
+}
+.dle-settings .dle-status[data-tone="warn"]::before {
+    content: '\26A0 ';
+}
+.dle-settings .dle-status[data-tone="info"] {
+    color: var(--dle-text-muted);
+}
+.dle-settings .dle-status[data-tone="info"]::before {
+    content: '\24D8 ';
+}
+
+/* Prompts grid table — give it the card aesthetic the rest of the settings
+   popup uses instead of relying on inline style attributes. Zebra rows, a
+   weighted header, consistent cell padding. */
+.dle-settings .dle-prompts-grid-table {
+    width: 100%;
+    border-collapse: collapse;
+    font-size: var(--dle-text-sm);
+}
+.dle-settings .dle-prompts-grid-table thead th {
+    font-weight: 700;
+    padding: 4px 8px;
+    border-bottom: 1px solid var(--dle-border);
+    color: var(--dle-text-muted);
+}
+.dle-settings .dle-prompts-grid-table tbody td {
+    padding: 4px 8px;
+    vertical-align: middle;
+}
+.dle-settings .dle-prompts-grid-table tbody tr:nth-child(even) {
+    background: color-mix(in srgb, var(--SmartThemeBorderColor) 12%, transparent);
+}
+.dle-settings .dle-prompts-grid-table th,
+.dle-settings .dle-prompts-grid-table td { text-align: left; }
+.dle-settings .dle-prompts-grid-table .dle-col-actions { text-align: right; }
+.dle-settings .dle-prompts-grid-section { margin-top: var(--dle-space-2); }
+.dle-prompt-row-error { margin-left: var(--dle-space-1); color: var(--dle-error); }
+
 /* BUG-161: `.dle-settings .dle-ai-stats` removed — dead rule, `.dle-ai-stats`
    only exists in drawer.html, never rendered inside `.dle-settings`. Drawer
    definition at the bottom of this file is now the sole source. */
@@ -168,7 +265,7 @@
 .dle-settings .dle-advanced-toggle {
     cursor: pointer;
     color: var(--dle-accent);
-    font-size: 0.85em;
+    font-size: var(--dle-text-sm);
     font-weight: 500;
     margin: 6px 0;
     user-select: none;
@@ -193,7 +290,7 @@
     border-radius: var(--dle-radius-md);
     padding: 8px;
     margin-bottom: 6px;
-    transition: background 0.15s;
+    transition: background var(--dle-dur-fast, 120ms) var(--dle-ease-out, ease-out);
 }
 
 .dle-settings .dle-vault-row:hover {
@@ -211,6 +308,15 @@
     pointer-events: none;
 }
 
+/* --- Diagnostics export button: ~20% larger to match its prominence --- */
+#dle-sp-export-diagnostics {
+    font-size: 1.2em;
+    padding: 7px 14px;
+}
+#dle-sp-export-diagnostics i {
+    font-size: 1.1em;
+}
+
 /* --- Focus-visible styles (accessibility) --- */
 .dle-settings button:focus-visible,
 .dle-settings input:focus-visible,
@@ -218,8 +324,9 @@
 .dle-settings textarea:focus-visible,
 .dle-settings .menu_button:focus-visible,
 .dle-settings [tabindex="0"]:focus-visible {
-    outline: 2px solid var(--dle-success);
+    outline: 2px solid var(--dle-focus);
     outline-offset: 2px;
+    box-shadow: 0 0 0 4px var(--dle-focus-halo);
 }
 
 /* --- Focus-visible styles (drawer + popup) --- */
@@ -240,8 +347,9 @@
 .dle-graph-legend-item:focus-visible,
 .dle-browse-nav-btn:focus-visible,
 .dle-carto-browse-btn:focus-visible {
-    outline: 2px solid var(--dle-success);
+    outline: 2px solid var(--dle-focus);
     outline-offset: 2px;
+    box-shadow: 0 0 0 4px var(--dle-focus-halo);
 }
 
 /* --- Reduced motion support --- */
@@ -258,18 +366,51 @@
         animation-duration: 0.01ms !important;
         animation-iteration-count: 1 !important;
     }
-    /* Explicitly disable budget pulse and status dot animations */
-    .dle-token-bar-container.dle-budget-critical .dle-token-bar,
-    .dle-entries-bar-container.dle-budget-critical .dle-entries-bar,
+    /* Explicitly disable status dot animation. (B1: the header token/entries-bar hazard
+       classes that used to be listed here were removed — those bars no longer animate.
+       The footer context-critical state uses a static glow only, so nothing to disable.) */
     .dle-status-dot.dle-status-active {
         animation: none !important;
     }
     .dle-shimmer { animation: none; opacity: 0.6; }
+    /* f091: skeleton stays a static neutral block (no shimmer, no opacity penalty) so it
+       still reads as "reserved, loading" rather than dim/error under reduced motion. */
+    .dle-skeleton {
+        animation: none !important;
+        background: color-mix(in srgb, var(--SmartThemeBorderColor) 22%, transparent);
+    }
+    /* #20: explicit motion-kill list (idempotent with the shimmer/skeleton kills above
+       and the wildcard duration clamp; named so the intent is unambiguous). */
+    .dle-shimmer, .dle-skeleton, .dle-indexing-shimmer,
+    .dle-entries-bar-container.dle-indexing-shimmer, .dle-stat-refreshing::after,
+    .dle-lib-status-thinking::after, .dle-pulse, .dle-pulse-attention, .dle-wizard-pulse,
+    .dle-librarian-badge.dle-visible, .dle-skip-tools-pulse,
+    .dle-status-dot.dle-status-changed, .dle-why-entry.dle-why-new { animation: none !important; }
+    .dle-shimmer { opacity: 0.6; }
+    .dle-skeleton { background: color-mix(in srgb, var(--SmartThemeBorderColor) 22%, transparent); }
+    .dle-indexing-shimmer, .dle-entries-bar-container.dle-indexing-shimmer { background-position: 0 0; }
     /* BUG-202: drop backdrop-filter when user requested reduced motion */
     #deeplore-panel.dle-overlay-mode {
         backdrop-filter: none !important;
     }
+    /* Wave G: explicit kill for the new tab-panel fade (the wildcard above already
+       clamps its duration; this makes the intent unambiguous). The :active press
+       feedback is an instantaneous state change, not timed motion, so it is left
+       intact under reduced motion by design. NOTE: this block is the canonical
+       motion-kill for the .dle-settings / #deeplore-drawer / .dle-popup subtrees;
+       the only DLE motion living OUTSIDE them is #dle-pipeline-status (in #form_sheld),
+       which carries its own reduced-motion block near its definition. */
+    .dle-tab-panel.active { animation: none !important; }
 }
+
+/* #21: stepped working-pulse — placed AFTER the #20 kill block so the wildcard
+   iteration-count:1 clamp doesn't neuter the deliberate reduced-motion heartbeat. */
+@media (prefers-reduced-motion: reduce) {
+    .dle-status-dot.dle-status-active goo-spinner[data-motion-state="reduced"] {
+        animation: dle-rm-working-pulse 2s steps(2, jump-none) infinite;
+    }
+}
+@keyframes dle-rm-working-pulse { 0%{opacity:.55} 50%{opacity:1} 100%{opacity:.55} }
 
 /* --- Section spacing between settings groups --- */
 .dle-settings .inline-drawer-content > hr {
@@ -343,7 +484,7 @@
 .dle-why-timers-toggle i { margin-right: var(--dle-space-1); }
 /* BUG-193: `<summary>` is natively keyboard-focusable — just add a focus ring. */
 .dle-why-timers-toggle:focus-visible {
-    outline: 2px solid var(--dle-accent);
+    outline: 2px solid var(--dle-focus);
     outline-offset: 2px;
     border-radius: var(--dle-radius-sm);
 }
@@ -361,12 +502,32 @@
 }
 .dle-shimmer { animation: dle-shimmer 1.5s ease-in-out infinite; color: var(--dle-text-muted); }
 
-/* --- Semantic color classes --- */
-.dle-success { color: var(--dle-success); }
-.dle-error { color: var(--dle-error); }
-.dle-warning { color: var(--dle-warning); }
-.dle-info { color: var(--dle-info); }
-.dle-accent { color: var(--dle-accent); }
+/* f091: content-shaped skeleton primitive. Reserves the eventual content's footprint
+   so the real number doesn't reflow the tile on first paint, and sweeps a neutral
+   gradient (reusing the dle-indexing-shimmer keyframe defined later in this file)
+   so the empty state reads as "reserved, loading" rather than a dim "…/error". */
+.dle-skeleton {
+    display: inline-block;
+    vertical-align: middle;
+    height: 0.9em;
+    width: 2.2em;
+    border-radius: var(--dle-radius-sm, 3px);
+    background: linear-gradient(90deg,
+        color-mix(in srgb, var(--SmartThemeBorderColor) 22%, transparent) 25%,
+        color-mix(in srgb, var(--dle-accent) 24%, transparent) 50%,
+        color-mix(in srgb, var(--SmartThemeBorderColor) 22%, transparent) 75%) center / 200% auto;
+    animation: dle-indexing-shimmer 1.4s linear infinite;
+}
+
+/* --- Semantic color classes ---
+   f058: these are foreground TEXT, so they use the contrast-safe -fg variants (which mix
+   toward body color) instead of the raw fill tokens, which fail WCAG AA as text on light
+   themes. Base tokens remain for fills/borders elsewhere. */
+.dle-success { color: var(--dle-success-fg); }
+.dle-error { color: var(--dle-error-fg); }
+.dle-warning { color: var(--dle-warning-fg); }
+.dle-info { color: var(--dle-info-fg); }
+.dle-accent { color: var(--dle-accent-fg); }
 
 /* --- Connection card (visual grouping for repeated connection config blocks) --- */
 .dle-connection-card {
@@ -385,7 +546,7 @@
     font-size: var(--dle-text-xs);
     cursor: pointer;
     opacity: 0.7;
-    transition: opacity 120ms ease;
+    transition: opacity var(--dle-dur-fast, 120ms) var(--dle-ease-out, ease-out);
 }
 .dle-connection-card .dle-copy-ai-btn:hover {
     opacity: 1;
@@ -408,7 +569,7 @@
 }
 /* BUG-186: focus ring for keyboard users */
 .dle-card-header:focus-visible {
-    outline: 2px solid var(--dle-accent);
+    outline: 2px solid var(--dle-focus);
     outline-offset: 2px;
 }
 
@@ -479,6 +640,19 @@ dle-notes { display: none !important; }
     border-radius: var(--dle-radius-sm);
 }
 
+/* --- Cartographer token bar (per-entry, distinct from drawer's container/fill) --- */
+.dle-carto-token-bar {
+    height: 6px;
+    background: var(--dle-border);
+    border-radius: var(--dle-radius-sm);
+    overflow: hidden;
+    margin: 4px 0;
+}
+.dle-carto-token-bar-fill {
+    height: 100%;
+    border-radius: var(--dle-radius-sm);
+}
+
 /* --- Keyword highlight --- */
 .dle-highlight {
     background: color-mix(in srgb, var(--SmartThemeQuoteColor) 30%, transparent);
@@ -510,7 +684,7 @@ dle-notes { display: none !important; }
     cursor: pointer;
     color: var(--SmartThemeBodyColor);
     opacity: 0.85;
-    transition: opacity 0.2s;
+    transition: opacity var(--dle-dur-base, 200ms) var(--dle-ease-out, ease-out);
 }
 .dle-about-logo:hover { opacity: 1; }
 .dle-about-logo svg { width: 100%; height: 100%; fill: currentColor; }
@@ -629,16 +803,18 @@ dle-notes { display: none !important; }
 .dle-settings h4[data-zone="a"] {
     font-size: var(--dle-text-lg);
 }
-.dle-settings h4[data-zone="a"] + .dle-section-desc {
-    opacity: 1;
+.dle-settings h4[data-zone="a"] + .dle-section-desc,
+.dle-settings-panel h4[data-zone="a"] + .dle-section-desc {
+    --desc-emphasis: 0%;
 }
 
 /* Tier 2: Key Light — core matching (Search Mode, Matching, Injection, Cartographer) */
 .dle-settings h4[data-zone="b"] {
     font-size: var(--dle-text-base);
 }
-.dle-settings h4[data-zone="b"] + .dle-section-desc {
-    opacity: 0.8;
+.dle-settings h4[data-zone="b"] + .dle-section-desc,
+.dle-settings-panel h4[data-zone="b"] + .dle-section-desc {
+    --desc-emphasis: 18%;
 }
 
 /* Tier 3: Ambient — AI & automation, infrastructure, reference */
@@ -647,8 +823,10 @@ dle-notes { display: none !important; }
     font-size: 0.95em;
 }
 .dle-settings h4[data-zone="c"] + .dle-section-desc,
-.dle-settings h4[data-zone="d"] + .dle-section-desc {
-    opacity: var(--dle-opacity-muted);
+.dle-settings h4[data-zone="d"] + .dle-section-desc,
+.dle-settings-panel h4[data-zone="c"] + .dle-section-desc,
+.dle-settings-panel h4[data-zone="d"] + .dle-section-desc {
+    --desc-emphasis: 32%;
 }
 
 /* Zone boundary separators (thicker hr between major zones) */
@@ -670,12 +848,12 @@ dle-notes { display: none !important; }
 /* Advanced section expand/collapse */
 .dle-settings .dle-advanced-section {
     overflow: hidden;
-    transition: max-height 200ms ease-out, opacity 200ms ease-out;
+    transition: max-height var(--dle-dur-base, 200ms) var(--dle-ease-out, ease-out), opacity var(--dle-dur-base, 200ms) var(--dle-ease-out, ease-out);
 }
 
 /* Entry card expand in popups */
 .dle-card {
-    transition: border-color 150ms ease;
+    transition: border-color var(--dle-dur-fast, 120ms) var(--dle-ease-out, ease-out);
 }
 
 /* --- Browse popup table --- */
@@ -700,13 +878,13 @@ dle-notes { display: none !important; }
 }
 .dle-browse-table-row {
     cursor: pointer;
-    transition: background-color 120ms;
+    transition: background-color var(--dle-dur-fast, 120ms) var(--dle-ease-out, ease-out);
 }
 .dle-browse-table-row:hover {
     background: var(--dle-bg-hover);
 }
 .dle-browse-table-row:focus-visible {
-    outline: 2px solid var(--dle-accent);
+    outline: 2px solid var(--dle-focus);
     outline-offset: -2px;
 }
 .dle-browse-table-row td {
@@ -729,7 +907,7 @@ dle-notes { display: none !important; }
 
 /* Focus-visible transition */
 .dle-settings [tabindex="0"] {
-    transition: outline-color 100ms ease;
+    transition: outline-color var(--dle-dur-fast, 120ms) var(--dle-ease-out, ease-out);
 }
 
 /* ============================================================================
@@ -748,6 +926,10 @@ dle-notes { display: none !important; }
    100dvh via the @supports gate below. */
 #deeplore-panel.openDrawer {
     height: calc(100% - var(--topBarBlockSize, 35px));
+    /* Issue #39: in inline (fillRight) mode the panel isn't position:fixed, so over-scroll
+       at a sub-list's edge chains into ST's chat log behind it. Contain it. */
+    overscroll-behavior: contain;
+    touch-action: pan-y;
 }
 @supports (height: 100dvh) {
     #deeplore-panel.openDrawer {
@@ -794,8 +976,8 @@ dle-notes { display: none !important; }
     color: var(--SmartThemeBodyColor, #ccc);
     cursor: pointer;
     opacity: 0.7;
-    transition: opacity 120ms ease;
-    padding: 2px;
+    transition: opacity var(--dle-dur-fast, 120ms) var(--dle-ease-out, ease-out);
+    padding: 8px;
     font-size: inherit;
     font-family: inherit;
     line-height: 1;
@@ -804,7 +986,7 @@ dle-notes { display: none !important; }
     opacity: 1;
 }
 .dle-drawer-close:focus-visible {
-    outline: 2px solid var(--dle-accent);
+    outline: 2px solid var(--dle-focus);
     outline-offset: 2px;
     opacity: 1;
 }
@@ -815,8 +997,8 @@ dle-notes { display: none !important; }
     color: var(--SmartThemeBodyColor, #ccc);
     cursor: pointer;
     opacity: 0.5;
-    transition: opacity 120ms ease;
-    padding: 2px;
+    transition: opacity var(--dle-dur-fast, 120ms) var(--dle-ease-out, ease-out), color var(--dle-dur-fast, 120ms) var(--dle-ease-out, ease-out);
+    padding: 8px;
     font-size: inherit;
     font-family: inherit;
     line-height: 1;
@@ -826,28 +1008,10 @@ dle-notes { display: none !important; }
     color: var(--dle-info);
 }
 .dle-drawer-settings:focus-visible {
-    outline: 2px solid var(--dle-accent);
+    outline: 2px solid var(--dle-focus);
     outline-offset: 2px;
     opacity: 1;
 }
-.dle-drawer-help {
-    background: none;
-    border: none;
-    margin: 0;
-    color: var(--SmartThemeBodyColor, #ccc);
-    cursor: pointer;
-    opacity: 0.5;
-    transition: opacity 120ms ease;
-    padding: 2px;
-    font-size: inherit;
-    font-family: inherit;
-    line-height: 1;
-}
-.dle-drawer-help:hover {
-    opacity: 1;
-    color: var(--dle-info);
-}
-
 /* --- Two-zone architecture --- */
 #deeplore-drawer {
     line-height: 1.4;
@@ -863,6 +1027,25 @@ dle-notes { display: none !important; }
     margin: var(--dle-space-1) 0;
 }
 
+/* Wave C: the divider inside the status zone groups the two budget bars into one cluster.
+   Tighter margin than the main between-zones divider so it reads as an in-zone subdivision. */
+.dle-budget-divider {
+    margin: var(--dle-space-1) 0 0;
+    opacity: var(--dle-opacity-muted);
+}
+/* Tiny muted cluster heading above the budget bars. Calm, lowercase-weight, theme-derived. */
+.dle-budget-cluster-label {
+    font-size: var(--dle-text-xs);
+    font-weight: 600;
+    letter-spacing: 0.03em;
+    text-transform: uppercase;
+    /* f059: single dimming mechanism — was color:muted + opacity:0.65 stacked, which
+       multiplied effective contrast down to ~2:1. Bake the de-emphasis into the color
+       (mix toward surface) and drop the opacity so the text stays above the contrast floor. */
+    color: color-mix(in srgb, var(--dle-text-muted) 80%, var(--dle-bg-surface));
+    margin: 0 0 calc(-1 * var(--dle-space-1));
+}
+
 /* --- Zone 1: Fixed Status --- */
 .dle-zone-status {
     display: flex;
@@ -874,7 +1057,11 @@ dle-notes { display: none !important; }
     padding: var(--dle-space-3);
 }
 
-/* Merged status + stats row */
+/* Merged status + stats row. f028: the live phase label and the static stats are now two
+   separate flex groups so a width-changing localized phase string ("Narrowing categories…",
+   de/ru variants) can never reflow the entries/mode readouts. The activity group claims the
+   first line and grows; the stats group wraps to a second line AS A WHOLE when space is tight,
+   rather than letting individual stats jump around mid-generation. */
 .dle-status-row {
     display: flex;
     align-items: center;
@@ -882,14 +1069,41 @@ dle-notes { display: none !important; }
     flex-wrap: wrap;
 }
 
+.dle-status-activity {
+    display: flex;
+    align-items: center;
+    gap: var(--dle-space-2);
+    /* Grow to fill the first line; allow shrink so the label's ellipsis can engage. */
+    flex: 1 1 auto;
+    min-width: 0;
+}
+
+.dle-status-stats {
+    display: flex;
+    align-items: center;
+    gap: var(--dle-space-2);
+    /* Stay together as one unit and never internally wrap — wraps to a second line whole. */
+    flex: 0 0 auto;
+    flex-wrap: nowrap;
+}
+
 .dle-pipeline-label {
     font-size: calc(var(--dle-text-xl) * 1.25);
     font-weight: 700;
+    /* f028: reserve room and clamp so the longest localized phase can't shove its neighbors.
+       The label fills its activity group and ellipses rather than pushing the stats around. */
+    flex: 1 1 auto;
+    min-width: 0;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
 }
 
 .dle-stat-divider {
-    color: var(--dle-text-muted);
-    opacity: var(--dle-opacity-disabled);
+    /* f059: was color:muted + opacity:0.4 stacked. It's a decorative divider glyph, so a
+       single faint color is enough — drop the redundant opacity to avoid pushing it below
+       the visible floor in unpredictable theme/background combinations. */
+    color: color-mix(in srgb, var(--dle-text-muted) 60%, var(--dle-bg-surface));
     font-size: calc(var(--dle-text-xs) * 1.25);
 }
 
@@ -899,6 +1113,27 @@ dle-notes { display: none !important; }
     display: flex;
     align-items: center;
     gap: 3px;
+}
+
+/* f093: quiet "refreshing in background" adornment on the entry-count stat.
+   Keeps the last-known number visible (optimistic UI) while a reuse-sync re-index
+   runs — a faint pulsing dot signals freshening without implying data loss. */
+.dle-stat-refreshing::after {
+    content: "";
+    width: 5px;
+    height: 5px;
+    border-radius: 50%;
+    background: var(--dle-accent, var(--SmartThemeQuoteColor, #aac8ff));
+    flex-shrink: 0;
+    margin-left: 1px;
+    animation: dle-stat-refreshing-pulse 1.2s ease-in-out infinite;
+}
+@keyframes dle-stat-refreshing-pulse {
+    0%, 100% { opacity: 0.25; }
+    50% { opacity: 0.9; }
+}
+@media (prefers-reduced-motion: reduce) {
+    .dle-stat-refreshing::after { animation: none; opacity: 0.6; }
 }
 
 /* Active filters (compact chips in status zone) */
@@ -933,10 +1168,13 @@ dle-notes { display: none !important; }
     height: 100%;
 }
 
-.dle-status-ok { color: var(--dle-success); }
-.dle-status-degraded { color: var(--dle-warning); }
+/* f072: the fa-spinner status glyph was replaced by goo-spinner in Wave I; its sizing
+   rule and the reduced-motion opt-out were dead CSS and have been removed. */
+
+.dle-status-ok { color: var(--dle-success-fg); }
+.dle-status-degraded { color: var(--dle-warning-fg); }
 .dle-status-limited { color: color-mix(in srgb, var(--SmartThemeQuoteColor, #ff8c00) 70%, #f44336); }
-.dle-status-offline { color: var(--dle-error); }
+.dle-status-offline { color: var(--dle-error-fg); }
 
 /* --- Zone 2: Tabs --- */
 .dle-zone-tabs {
@@ -971,6 +1209,18 @@ dle-notes { display: none !important; }
     display: flex;
     align-items: center;
     justify-content: center;
+    gap: 6px;
+}
+
+/* Inline tab text — shown by default, hidden in compact mode */
+.dle-tab-text {
+    font-size: var(--dle-text-sm);
+    font-weight: 500;
+    white-space: nowrap;
+}
+
+.dle-tab-bar.dle-compact-tabs .dle-tab-text {
+    display: none;
 }
 
 .dle-tab:hover {
@@ -981,6 +1231,11 @@ dle-notes { display: none !important; }
     color: var(--SmartThemeBodyColor, #eee);
     text-shadow: 0.4px 0 0 currentColor, -0.4px 0 0 currentColor;
     border-bottom-color: var(--dle-accent);
+}
+
+.dle-tab:focus-visible {
+    outline: 2px solid var(--dle-focus);
+    outline-offset: -2px;
 }
 
 /* (tab icons inherit font-size from .dle-tab) */
@@ -1025,6 +1280,14 @@ dle-notes { display: none !important; }
 .dle-tab-panel.active {
     display: flex;
     flex-direction: column;
+    /* Wave G: gentle fade/rise on tab switch (re-fires whenever the panel regains
+       .active). In-drawer, so the broad prefers-reduced-motion block neutralizes it;
+       an explicit kill is also listed there for clarity. */
+    animation: dle-tab-fade var(--dle-dur-base, 200ms) var(--dle-ease-out, ease-out);
+}
+@keyframes dle-tab-fade {
+    from { opacity: 0; transform: translateY(4px); }
+    to   { opacity: 1; transform: none; }
 }
 
 /* Panel toolbar (shared across tabs: label + diff + expand) */
@@ -1066,9 +1329,9 @@ dle-notes { display: none !important; }
     color: var(--dle-text-muted);
     cursor: pointer;
     padding: 4px;
-    font-size: 0.75rem;
-    opacity: 0.6;
-    transition: opacity 0.15s;
+    font-size: var(--dle-text-xs);
+    opacity: var(--dle-opacity-muted);
+    transition: opacity var(--dle-dur-fast, 120ms) var(--dle-ease-out, ease-out), color var(--dle-dur-fast, 120ms) var(--dle-ease-out, ease-out);
     line-height: 1;
 }
 
@@ -1085,15 +1348,21 @@ dle-notes { display: none !important; }
     color: var(--dle-text-muted);
     cursor: pointer;
     padding: 4px;
-    font-size: 0.75rem;
-    opacity: 0.6;
-    transition: opacity 0.15s;
+    font-size: var(--dle-text-xs);
+    opacity: var(--dle-opacity-muted);
+    transition: opacity var(--dle-dur-fast, 120ms) var(--dle-ease-out, ease-out), color var(--dle-dur-fast, 120ms) var(--dle-ease-out, ease-out);
     line-height: 1;
 }
 
 .dle-tab-expand:hover {
     opacity: 1;
     color: var(--SmartThemeBodyColor, #eee);
+}
+
+.dle-tab-expand:focus-visible {
+    outline: 2px solid var(--dle-focus);
+    outline-offset: 2px;
+    opacity: 1;
 }
 
 /* --- Token bar (drawer version) --- */
@@ -1108,31 +1377,20 @@ dle-notes { display: none !important; }
 
 .dle-token-bar-container .dle-token-bar {
     height: 100%;
-    background: linear-gradient(90deg, var(--dle-success), color-mix(in srgb, var(--dle-success) 70%, white));
+    /* B4: calm NEUTRAL fill (was green = "good"). This header bar shows "this round's lore
+       selection" — full ≠ good/bad/health, just the limiter working. Theme-derived gray. */
+    background: color-mix(in srgb, var(--SmartThemeBodyColor, #b0b0b0) 42%, var(--dle-border));
     border-radius: var(--dle-radius-sm);
     /* BUG-168: width transition dropped — was forcing layout recalc + paint every
        frame for 300ms on every pipeline run. Background/shadow still transition
        since they don't reflow. */
-    transition: background 300ms ease, box-shadow 300ms ease;
+    transition: background var(--dle-dur-slow, 320ms) var(--dle-ease-out, ease-out), box-shadow var(--dle-dur-slow, 320ms) var(--dle-ease-out, ease-out);
     margin: 0;
 }
 
-/* Budget urgency states */
-.dle-token-bar-container.dle-budget-high .dle-token-bar {
-    background:
-        repeating-linear-gradient(45deg, transparent 0 6px, rgba(255,255,255,0.18) 6px 10px),
-        linear-gradient(90deg, var(--dle-warning), var(--dle-error));
-    box-shadow: 0 0 6px color-mix(in srgb, var(--dle-warning) 40%, transparent);
-}
-.dle-token-bar-container.dle-budget-critical .dle-token-bar {
-    background:
-        repeating-linear-gradient(45deg, transparent 0 4px, rgba(255,255,255,0.32) 4px 8px),
-        var(--dle-error);
-    box-shadow: 0 0 8px color-mix(in srgb, var(--dle-error) 50%, transparent);
-    /* BUG-170: infinite box-shadow keyframe removed — caused per-frame repaint storm
-       while budget-critical state was active. Solid red background + static glow
-       still signals the critical state without animating a paint property. */
-}
+/* B1: header bars never go red. The .dle-budget-high/.dle-budget-critical hazard rules
+   were removed here — drawer-render-status.js no longer applies those classes to the token
+   or entries bars. Earned red lives ONLY on the footer context bar (overflow). */
 
 .dle-token-bar-label {
     position: absolute;
@@ -1159,24 +1417,30 @@ dle-notes { display: none !important; }
 
 .dle-entries-bar-container .dle-entries-bar {
     height: 100%;
-    background: linear-gradient(90deg, var(--dle-info), color-mix(in srgb, var(--dle-info) 70%, white));
+    /* B4: calm NEUTRAL fill (was blue/info). Same rationale as the token bar above. */
+    background: color-mix(in srgb, var(--SmartThemeBodyColor, #b0b0b0) 42%, var(--dle-border));
     border-radius: var(--dle-radius-sm);
     /* BUG-168: see token-bar rule — width transition dropped to avoid reflow storm. */
-    transition: background 300ms ease, box-shadow 300ms ease;
+    transition: background var(--dle-dur-slow, 320ms) var(--dle-ease-out, ease-out), box-shadow var(--dle-dur-slow, 320ms) var(--dle-ease-out, ease-out);
     margin: 0;
 }
-.dle-entries-bar-container.dle-budget-high .dle-entries-bar {
-    background:
-        repeating-linear-gradient(45deg, transparent 0 6px, rgba(255,255,255,0.18) 6px 10px),
-        linear-gradient(90deg, var(--dle-warning), var(--dle-error));
-    box-shadow: 0 0 6px color-mix(in srgb, var(--dle-warning) 40%, transparent);
+/* B1: entries-bar hazard rules removed — see token-bar note above. */
+
+/* Wave C: calm NEAR-CAP pre-truncation cue (>=85% fill). Distinct but NOT red — a subtle warning
+   TINT on the fill plus a faint warning hairline on the container, so the user sees lore is about
+   to be trimmed before any cut happens. Honors "footer earns red / calm header": warning, never
+   error. Applied by drawer-render-status.js via .dle-budget-near; cleared below cap. */
+.dle-token-bar-container.dle-budget-near {
+    box-shadow: inset 0 0 0 1px color-mix(in srgb, var(--dle-warning) 40%, transparent);
 }
-.dle-entries-bar-container.dle-budget-critical .dle-entries-bar {
-    background:
-        repeating-linear-gradient(45deg, transparent 0 4px, rgba(255,255,255,0.32) 4px 8px),
-        var(--dle-error);
-    box-shadow: 0 0 8px color-mix(in srgb, var(--dle-error) 50%, transparent);
-    /* BUG-170: see token-bar rule above. Same repaint-storm fix. */
+.dle-token-bar-container.dle-budget-near .dle-token-bar {
+    background: color-mix(in srgb, var(--dle-warning) 38%, var(--dle-border));
+}
+.dle-entries-bar-container.dle-budget-near {
+    box-shadow: inset 0 0 0 1px color-mix(in srgb, var(--dle-warning) 40%, transparent);
+}
+.dle-entries-bar-container.dle-budget-near .dle-entries-bar {
+    background: color-mix(in srgb, var(--dle-warning) 38%, var(--dle-border));
 }
 
 .dle-entries-bar-label {
@@ -1192,6 +1456,20 @@ dle-notes { display: none !important; }
     font-weight: 600;
 }
 
+/* B2: soft "cap trimmed lore" note under the header bars. Gentle, non-alarm: a muted
+   info-tinted line, NOT warning-orange or error-red, NO hatch/glow. It only appears when a
+   cap actually cost lore ("N of M shown" / "trimmed to fit") — calm acknowledgement that the
+   limiter did its job, never an alarm. .dle-hidden toggled by drawer-render-status.js. */
+.dle-bar-note {
+    font-size: var(--dle-text-xs);
+    line-height: 1.3;
+    margin: 1px 0 0 2px;
+    color: color-mix(in srgb, var(--dle-info, #6b9bd1) 70%, var(--SmartThemeBodyColor, #aaa));
+    opacity: 0.85;
+    font-style: italic;
+}
+.dle-bar-note.dle-hidden { display: none; }
+
 /* --- Chips (gating filters, tags) --- */
 
 .dle-chip {
@@ -1204,7 +1482,7 @@ dle-notes { display: none !important; }
     background: color-mix(in srgb, var(--dle-accent) 20%, transparent);
     border: 1px solid color-mix(in srgb, var(--dle-accent) 40%, transparent);
     color: var(--SmartThemeBodyColor, #eee);
-    transition: opacity 150ms ease-in, transform 150ms ease-in;
+    transition: opacity var(--dle-dur-fast, 120ms) var(--dle-ease, ease-in), transform var(--dle-dur-fast, 120ms) var(--dle-ease, ease-in);
 }
 /* BUG-216: use a keyframe animation with forwards fill-mode so rapid
    class toggles can't strand the chip mid-fade. */
@@ -1213,7 +1491,7 @@ dle-notes { display: none !important; }
     to   { opacity: 0; transform: scale(0.8); }
 }
 .dle-chip.dle-chip-removing {
-    animation: dle-chip-remove 150ms ease-in forwards;
+    animation: dle-chip-remove var(--dle-dur-fast, 120ms) var(--dle-ease, ease-in) forwards;
     pointer-events: none;
 }
 
@@ -1222,7 +1500,7 @@ button.dle-chip-x {
     font-size: var(--dle-text-xs);
     cursor: pointer;
     opacity: 0.6;
-    transition: opacity 120ms;
+    transition: opacity var(--dle-dur-fast, 120ms) var(--dle-ease-out, ease-out);
     background: none;
     border: none;
     color: inherit;
@@ -1245,6 +1523,13 @@ button.dle-chip-x:hover {
     border-bottom: 1px solid var(--dle-border);
 }
 
+/* D4 (v2.5 Wave 3): quick-actions toolbar lives in its own zone, lifted out of the
+   role="status" live region. Horizontal padding matches the status box (space-3) so the
+   buttons stay visually aligned under it; the row keeps its own flex layout below. */
+.dle-zone-actions {
+    padding: var(--dle-space-2) var(--dle-space-3);
+}
+
 .dle-action-row {
     display: flex;
     gap: var(--dle-space-1);
@@ -1258,6 +1543,22 @@ button.dle-chip-x:hover {
     justify-content: center;
 }
 
+.dle-action-btn-labeled {
+    gap: 6px;
+    padding-left: 8px;
+    padding-right: 8px;
+}
+
+.dle-action-label {
+    font-size: var(--dle-text-sm);
+    white-space: nowrap;
+}
+
+.dle-action-btn:focus-visible {
+    outline: 2px solid var(--dle-focus);
+    outline-offset: 2px;
+}
+
 /* --- Collapsible section headers --- */
 .dle-section-header {
     display: flex;
@@ -1266,6 +1567,7 @@ button.dle-chip-x:hover {
     cursor: pointer;
     padding: var(--dle-space-1) 0;
     user-select: none;
+    transition: color var(--dle-dur-fast, 120ms) var(--dle-ease-out, ease-out);
 }
 
 .dle-section-header:hover {
@@ -1274,14 +1576,14 @@ button.dle-chip-x:hover {
 /* BUG-185: defensive focus ring for any future use; class is not currently
    emitted by any HTML/JS but the selector is reserved. */
 .dle-section-header:focus-visible {
-    outline: 2px solid var(--dle-accent);
+    outline: 2px solid var(--dle-focus);
     outline-offset: 2px;
     border-radius: var(--dle-radius-sm);
 }
 
 .dle-section-chevron {
     font-size: var(--dle-text-xs);
-    transition: transform 200ms ease;
+    transition: transform var(--dle-dur-base, 200ms) var(--dle-ease-out, ease-out);
     width: 12px;
     text-align: center;
 }
@@ -1318,7 +1620,7 @@ button.dle-chip-x:hover {
     cursor: pointer;
     padding: 1px 8px;
     font-size: var(--dle-text-xs);
-    transition: background-color 120ms ease, color 120ms ease, border-color 120ms ease;
+    transition: background-color var(--dle-dur-fast, 120ms) var(--dle-ease-out, ease-out), color var(--dle-dur-fast, 120ms) var(--dle-ease-out, ease-out), border-color var(--dle-dur-fast, 120ms) var(--dle-ease-out, ease-out);
 }
 .dle-why-filter-btn.active {
     background: color-mix(in srgb, var(--dle-accent) 20%, transparent);
@@ -1327,6 +1629,11 @@ button.dle-chip-x:hover {
 }
 .dle-why-filter-btn:hover:not(.active) {
     background: var(--dle-bg-hover);
+}
+
+.dle-why-filter-btn:focus-visible {
+    outline: 2px solid var(--dle-focus);
+    outline-offset: 2px;
 }
 
 /* --- Why? tab entries --- */
@@ -1342,7 +1649,7 @@ button.dle-chip-x:hover {
     align-items: center;
     padding: 3px var(--dle-space-2);
     border-radius: var(--dle-radius-sm);
-    transition: background-color 120ms;
+    transition: background-color var(--dle-dur-fast, 120ms) var(--dle-ease-out, ease-out);
     animation: dle-entry-in 200ms ease-out both;
     animation-delay: calc(var(--i, 0) * 30ms);
     /* BUG-200: `will-change` removed — browser auto-promotes composited animations.
@@ -1440,6 +1747,71 @@ button.dle-chip-x:hover {
     color: var(--dle-success);
 }
 
+/* Wave C: KEY › AI breadcrumb for two-stage picks. Reuses the .dle-why-match chips (their
+   data-match-type colors carry over); the separator is a quiet muted chevron. */
+.dle-why-breadcrumb {
+    display: inline-flex;
+    align-items: center;
+    gap: 3px;
+}
+.dle-why-bc-sep {
+    color: var(--dle-text-muted);
+    font-size: var(--dle-text-xs);
+    opacity: var(--dle-opacity-muted);
+}
+
+/* Wave C: source-vault chip on injected rows (only when 2+ vaults enabled). Extends the
+   .dle-why-match chip idiom — muted/info-tinted, theme-derived, with a small db glyph. */
+.dle-why-vault {
+    display: inline-flex;
+    align-items: center;
+    gap: 3px;
+    font-size: var(--dle-text-xs);
+    padding: 0 4px;
+    border-radius: var(--dle-radius-sm);
+    background: color-mix(in srgb, var(--dle-info) 14%, transparent);
+    color: color-mix(in srgb, var(--dle-info) 70%, var(--SmartThemeBodyColor, #ccc));
+    max-width: 9em;
+    overflow: hidden;
+    white-space: nowrap;
+    text-overflow: ellipsis;
+}
+.dle-why-vault > i {
+    font-size: var(--dle-text-sm);
+    opacity: var(--dle-opacity-muted);
+}
+
+/* Wave C: verdict funnel header — N matched › N picked › N injected. A quiet DLE strip (like a
+   chip row, not a banner): info-tinted hairline border + faint fill, theme-derived. */
+.dle-why-funnel {
+    display: flex;
+    align-items: center;
+    flex-wrap: wrap;
+    gap: var(--dle-space-1) var(--dle-space-2);
+    margin: 0 0 var(--dle-space-2);
+    padding: var(--dle-space-1) var(--dle-space-2);
+    border-radius: var(--dle-radius-sm);
+    background: color-mix(in srgb, var(--dle-info) 8%, transparent);
+    border: 1px solid color-mix(in srgb, var(--dle-info) 22%, transparent);
+    font-size: var(--dle-text-xs);
+    color: var(--dle-text-muted);
+}
+.dle-why-funnel[hidden] { display: none; }
+.dle-funnel-seg {
+    display: inline-flex;
+    align-items: baseline;
+    gap: 4px;
+}
+.dle-funnel-n {
+    font-weight: 600;
+    color: color-mix(in srgb, var(--dle-info) 75%, var(--SmartThemeBodyColor, #ddd));
+}
+.dle-funnel-label { color: var(--dle-text-muted); }
+.dle-funnel-arrow {
+    color: var(--dle-text-muted);
+    opacity: var(--dle-opacity-muted);
+}
+
 .dle-why-new-badge {
     font-weight: 600;
     font-size: var(--dle-text-xs);
@@ -1473,8 +1845,84 @@ button.dle-chip-x:hover {
 
 .dle-why-not-reason {
     font-size: var(--dle-text-xs);
-    color: var(--dle-warning);
+    color: var(--dle-warning-fg);
     background: color-mix(in srgb, var(--dle-warning) 20%, transparent);
+}
+
+/* Wave C: Fix-It pin on a filtered-out row. HOVER/FOCUS-REVEAL (hidden until the row is hovered
+   or anything inside it is keyboard-focused — :focus-within keeps it keyboard-reachable). Mirrors
+   the .dle-lib-msg-action reveal idiom but adds the focus path the chat actions lack. Calm
+   accent-tinted pill; theme-derived. Goes active (info tint) once clicked. */
+.dle-why-fixit {
+    display: inline-flex;
+    align-items: center;
+    gap: 4px;
+    font-size: var(--dle-text-xs);
+    padding: 1px 6px;
+    border-radius: var(--dle-radius-sm);
+    border: 1px solid color-mix(in srgb, var(--dle-accent) 35%, transparent);
+    background: color-mix(in srgb, var(--dle-accent) 14%, transparent);
+    color: color-mix(in srgb, var(--dle-accent) 75%, var(--SmartThemeBodyColor, #ddd));
+    cursor: pointer;
+    opacity: 0;
+    transition: opacity var(--dle-dur-fast, 120ms) var(--dle-ease-out, ease-out), background var(--dle-dur-fast, 120ms) var(--dle-ease-out, ease-out);
+    white-space: nowrap;
+}
+.dle-why-not-entry:hover .dle-why-fixit,
+.dle-why-not-entry:focus-within .dle-why-fixit {
+    opacity: 1;
+}
+.dle-why-fixit:hover {
+    background: color-mix(in srgb, var(--dle-accent) 24%, transparent);
+}
+.dle-why-fixit:focus-visible {
+    opacity: 1;
+    outline: 2px solid var(--dle-focus);
+    outline-offset: 1px;
+}
+.dle-why-fixit.dle-why-fixit-active {
+    opacity: 1;
+    border-color: color-mix(in srgb, var(--dle-info) 45%, transparent);
+    background: color-mix(in srgb, var(--dle-info) 20%, transparent);
+    color: color-mix(in srgb, var(--dle-info) 80%, var(--SmartThemeBodyColor, #ddd));
+}
+.dle-why-fixit > i { font-size: var(--dle-text-sm); }
+/* Touch / no-hover devices can't hover-reveal — keep the Fix-It affordance visible-but-quiet. */
+@media (hover: none) {
+    .dle-why-fixit { opacity: var(--dle-opacity-muted); }
+}
+
+/* ============================================================================
+ * Coarse-pointer (touch) hit-area floor — Issue #39 / WCAG 2.5.5 / Apple HIG
+ * Desktop (fine pointer) is untouched. This block ONLY grows hit areas to a
+ * 44px floor; visual padding and glyph sizes are preserved (icon buttons use a
+ * centered flexbox so the glyph stays small while the tap target grows).
+ * ============================================================================ */
+@media (pointer: coarse) {
+    /* Tabs / nav rows: keep visual padding, just guarantee a 44px tall hit area. */
+    .dle-tab,
+    .dle-settings-tab,
+    .dle-nav-group-header,
+    .dle-librarian-sub-tab {
+        min-height: 44px;
+    }
+
+    /* Pill / text action buttons: lift the floor without changing label size. */
+    .dle-tool-btn {
+        min-height: 44px;
+    }
+
+    /* Small icon-only buttons: expand to a 44x44 tap target, centered so the glyph
+       stays its original size. */
+    button.dle-chip-x,
+    .dle-drawer-close,
+    .dle-tab-expand {
+        min-width: 44px;
+        min-height: 44px;
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+    }
 }
 
 /* --- Browse panel --- */
@@ -1497,15 +1945,26 @@ button.dle-chip-x:hover {
 
 .dle-browse-filters {
     display: flex;
+    flex-wrap: wrap;
     gap: var(--dle-space-1);
 }
 
 .dle-browse-filter-select,
 .dle-browse-sort-select {
-    flex: 1;
+    /* Reflow to 2-up, then 1-up, as the drawer narrows instead of crushing every
+       select to an illegible ~50px sliver (f031). min-width keeps option labels and
+       their live counts readable; longer DE/RU labels just bump the row count. */
+    flex: 1 1 calc(50% - var(--dle-space-1));
     font-size: var(--dle-text-xs);
     padding: 2px 4px;
-    min-width: 0;
+    min-width: 7rem;
+}
+
+/* Keep Sort on its own full-width line once the row has wrapped on a narrow drawer. */
+@media (max-width: 480px) {
+    .dle-browse-sort-select {
+        flex-basis: 100%;
+    }
 }
 
 .dle-browse-input {
@@ -1520,6 +1979,7 @@ button.dle-chip-x:hover {
        to min-content and the container can grow unbounded. */
     min-height: 0;
     overflow-y: auto;
+    overscroll-behavior: contain; /* Issue #39: keep over-scroll from chaining into ST chat */
 }
 
 .dle-browse-entry {
@@ -1529,12 +1989,12 @@ button.dle-chip-x:hover {
     padding: 2px var(--dle-space-2);
     border-radius: var(--dle-radius-sm);
     overflow: hidden;
-    height: 32px; /* must match BROWSE_ROW_HEIGHT in drawer-state.js */
+    height: 38px; /* must match BROWSE_ROW_HEIGHT in drawer-state.js */
     box-sizing: border-box;
 }
 
 .dle-browse-entry {
-    transition: height 200ms ease-out, background 120ms;
+    transition: height var(--dle-dur-base, 200ms) var(--dle-ease-out, ease-out), background var(--dle-dur-fast, 120ms) var(--dle-ease-out, ease-out);
 }
 .dle-browse-entry:hover {
     background: var(--dle-bg-hover);
@@ -1545,28 +2005,31 @@ button.dle-chip-x:hover {
     border-left: 2px solid var(--dle-success);
 }
 
-/* Entry temperature indicator — cell filter tint by injection frequency */
-/* HOT: red — saturation and strength scale with --dle-temp */
+/* Entry temperature indicator — cell filter tint by injection frequency.
+   f062: express temperature THEME-RELATIVE instead of hardcoding dark-tuned hex/HSL
+   lightness. Previously HOT used hsl reds locked at 25-35% lightness and COLD used fixed
+   indigo (#1a2255/#223388/#4455bb), so on a LIGHT theme the "hot" tint was a dark smudge
+   and the cold border read as a near-black glitch rather than a cue. Now the hue comes from
+   the theme tokens (--dle-error / --dle-info) and only the ALPHA scales with --dle-temp, so
+   the cue is a light wash on light themes and a glow on dark. --dle-temp stays the intensity
+   knob; the category hues come from the shared --dle-cat-* palette so the legend matches. */
+/* HOT: theme red — strength scales with --dle-temp */
 .dle-browse-entry.dle-temp-hot {
-    background: color-mix(in srgb,
-        hsl(0, calc(var(--dle-temp, 0) * 30%), calc(25% + var(--dle-temp, 0) * 5%))
-        calc(var(--dle-temp, 0) * 22%), transparent);
-    border-left: 3px solid color-mix(in srgb,
-        hsl(0, calc(var(--dle-temp, 0) * 30%), 35%)
-        calc(var(--dle-temp, 0) * 55%), transparent);
+    background: color-mix(in srgb, var(--dle-cat-error) calc(var(--dle-temp, 0) * 22%), transparent);
+    border-left: 3px solid color-mix(in srgb, var(--dle-cat-error) calc(var(--dle-temp, 0) * 33%), transparent);
 }
 .dle-browse-entry.dle-temp-hot .dle-browse-title {
-    color: color-mix(in srgb, color-mix(in srgb, var(--SmartThemeQuoteColor) 20%, #cc4444) calc(var(--dle-temp, 0) * 12%), currentColor);
+    color: color-mix(in srgb, var(--dle-error-fg) calc(var(--dle-temp, 0) * 22%), currentColor);
 }
-/* COLD: deep indigo blue — saturation and strength scale with --dle-temp */
+/* COLD: theme blue — strength scales with COLDNESS (lower --dle-temp = colder = stronger).
+   Cold hue is tempScore < 0.8, so coldness = (0.8 - --dle-temp); +floor keeps the faintest
+   cold entries visible and the coldest (--dle-temp→0) gets the strongest wash. */
 .dle-browse-entry.dle-temp-cold {
-    background: color-mix(in srgb,
-        color-mix(in srgb, var(--SmartThemeQuoteColor) 20%, #1a2255) calc(var(--dle-temp, 0) * 25%), transparent);
-    border-left: 3px solid color-mix(in srgb,
-        color-mix(in srgb, var(--SmartThemeQuoteColor) 20%, #223388) calc(var(--dle-temp, 0) * 60%), transparent);
+    background: color-mix(in srgb, var(--dle-cat-seed) calc(12% + (0.8 - var(--dle-temp, 0)) * 32%), transparent);
+    border-left: 3px solid color-mix(in srgb, var(--dle-cat-seed) calc(28% + (0.8 - var(--dle-temp, 0)) * 65%), transparent);
 }
 .dle-browse-entry.dle-temp-cold .dle-browse-title {
-    color: color-mix(in srgb, color-mix(in srgb, var(--SmartThemeQuoteColor) 20%, #4455bb) calc(var(--dle-temp, 0) * 14%), currentColor);
+    color: color-mix(in srgb, var(--dle-info-fg) calc(var(--dle-temp, 0) * 22%), currentColor);
 }
 
 .dle-browse-info {
@@ -1588,9 +2051,9 @@ button.dle-chip-x:hover {
 .dle-browse-keys {
     font-size: var(--dle-text-xs);
     color: var(--dle-text-muted);
-    line-height: 1;
+    line-height: 1.3; /* real leading so descenders aren't clipped (f035) */
     letter-spacing: 0.02em;
-    margin-top: -1px;
+    margin-top: 1px;
     white-space: nowrap;
     overflow: hidden;
     text-overflow: ellipsis;
@@ -1661,7 +2124,7 @@ button.dle-chip-x:hover {
     display: inline-block;
     margin-left: 6px;
     padding: 1px 6px;
-    font-size: 0.75em;
+    font-size: var(--dle-text-xs);
     font-weight: 600;
     border-radius: 8px;
     background: var(--dle-guide-bg);
@@ -1706,6 +2169,101 @@ button.dle-browse-block.dle-block-active {
     color: var(--dle-error);
 }
 
+/* --- Browse batch toolbar (#13 folder grouping + #26 batch optimize) --- */
+.dle-browse-batch-toolbar {
+    display: flex;
+    align-items: center;
+    gap: var(--dle-space-1);
+    padding: 2px 0;
+    flex-wrap: wrap;
+}
+.dle-browse-batch-toolbar .menu_button {
+    padding: 2px 8px;
+    font-size: var(--dle-text-xs);
+    min-height: 26px;
+    display: inline-flex;
+    align-items: center;
+    gap: 4px;
+}
+.dle-browse-batch-toolbar .dle-toolbar-label {
+    font-size: var(--dle-text-xs);
+}
+.dle-browse-group-toggle[data-pressed="true"],
+.dle-browse-select-toggle[data-pressed="true"] {
+    background: var(--dle-bg-hover);
+    color: var(--dle-accent);
+    border-color: var(--dle-accent);
+}
+.dle-browse-optimize-selected {
+    margin-left: auto;
+}
+.dle-browse-optimize-selected:not([hidden]) {
+    background: var(--dle-accent);
+    color: var(--dle-on-accent, #fff);
+}
+
+/* Folder header rows (only present when grouping is on) */
+.dle-browse-folder-header {
+    display: flex;
+    align-items: center;
+    gap: var(--dle-space-1);
+    height: 38px; /* MUST match BROWSE_ROW_HEIGHT */
+    padding: 0 var(--dle-space-2);
+    box-sizing: border-box;
+    background: color-mix(in srgb, var(--SmartThemeQuoteColor, #444) 8%, transparent);
+    border-left: 3px solid var(--dle-accent);
+    cursor: pointer;
+    user-select: none;
+    font-weight: 600;
+    font-size: var(--dle-text-sm);
+}
+.dle-browse-folder-header:hover {
+    background: var(--dle-bg-hover);
+}
+.dle-browse-folder-caret {
+    transition: transform var(--dle-dur-fast, 120ms) var(--dle-ease-out, ease-out);
+    opacity: 0.7;
+    width: 12px;
+    text-align: center;
+}
+.dle-browse-folder-header[data-expanded="true"] .dle-browse-folder-caret {
+    transform: rotate(90deg);
+}
+.dle-browse-folder-name {
+    flex: 1 1 auto;
+    min-width: 0;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+}
+.dle-browse-folder-count {
+    font-size: var(--dle-text-xs);
+    color: var(--dle-text-muted);
+    font-weight: normal;
+    white-space: nowrap;
+}
+/* f036: tint the count chip to echo the folder checkbox tri-state in select mode. */
+.dle-browse-folder-count-partial {
+    color: color-mix(in srgb, var(--dle-accent) 70%, var(--SmartThemeBodyColor, #ccc));
+}
+.dle-browse-folder-count-all {
+    color: var(--dle-accent);
+    font-weight: 600;
+}
+.dle-browse-folder-select {
+    flex-shrink: 0;
+}
+
+/* Row selection checkbox (visible only in select mode) */
+.dle-browse-row-select {
+    flex-shrink: 0;
+    margin-right: 4px;
+    cursor: pointer;
+}
+.dle-browse-entry.dle-browse-selected {
+    background: color-mix(in srgb, var(--dle-accent) 12%, transparent);
+}
+
 /* --- Contextual Gating --- */
 .dle-gating-fields-container {
     display: flex;
@@ -1723,7 +2281,7 @@ button.dle-browse-block.dle-block-active {
     gap: var(--dle-space-2);
     padding: var(--dle-space-2) var(--dle-space-1);
     border-radius: var(--dle-radius-sm, 4px);
-    transition: background-color 120ms ease;
+    transition: background-color var(--dle-dur-fast, 120ms) var(--dle-ease-out, ease-out);
 }
 .dle-gating-group:hover {
     background: var(--dle-bg-hover);
@@ -1744,7 +2302,10 @@ button.dle-browse-block.dle-block-active {
     font-size: 10px;
     line-height: 1;
     font-weight: 700;
-    color: var(--dle-bg-1, #000);
+    /* Wave A: glyph (✓) color on the colored dot. NOT the --dle-bg-1 surface
+       token — that is a translucent tint and would make the check vanish.
+       Solid dark keeps contrast on the --dle-success fill across themes. */
+    color: rgba(0, 0, 0, 0.85);
 }
 .dle-gating-dot-active {
     background: var(--dle-success);
@@ -1830,21 +2391,8 @@ button.dle-browse-block.dle-block-active {
     font-family: 'Font Awesome 6 Free';
     font-weight: 900;
     margin-right: 2px;
-    font-size: 0.85em;
+    font-size: var(--dle-text-sm);
 }
-/* Folder badge chip in status zone */
-.dle-folder-badge-chip {
-    cursor: pointer;
-}
-.dle-folder-badge-chip:hover {
-    opacity: 0.8;
-}
-/* BUG-188: focus ring for keyboard users */
-.dle-folder-badge-chip:focus-visible {
-    outline: 2px solid var(--dle-accent);
-    outline-offset: 2px;
-}
-
 /* --- Entry Timers (cooldown / decay / warmup) --- */
 .dle-gating-divider {
     border-top: 1px solid var(--dle-border);
@@ -1906,7 +2454,7 @@ button.dle-browse-block.dle-block-active {
 
 .dle-timer-badge.dle-timer-stale {
     background: color-mix(in srgb, var(--dle-warning) 25%, transparent);
-    color: var(--dle-warning);
+    color: var(--dle-warning-fg);
 }
 
 .dle-timer-badge.dle-timer-frequent {
@@ -1928,7 +2476,7 @@ button.dle-browse-block.dle-block-active {
 
 /* --- Tools tab --- */
 .dle-tools-group {
-    margin-bottom: 6px;
+    margin-bottom: var(--dle-space-2);
 }
 
 .dle-tools-group:last-child {
@@ -1950,15 +2498,15 @@ button.dle-browse-block.dle-block-active {
 .dle-tools-grid {
     display: grid;
     grid-template-columns: repeat(3, 1fr);
-    gap: 3px;
+    gap: var(--dle-space-1);
 }
 
 .dle-tool-btn {
     display: flex;
     align-items: center;
-    gap: 4px;
-    font-size: 0.78rem;
-    padding: 3px 6px;
+    gap: var(--dle-space-1);
+    font-size: var(--dle-text-xs);
+    padding: var(--dle-space-1) var(--dle-space-2);
     justify-content: flex-start;
     white-space: nowrap;
     min-height: 24px;
@@ -1966,7 +2514,9 @@ button.dle-browse-block.dle-block-active {
 }
 
 .dle-tool-btn i {
-    font-size: 0.85rem;
+    /* f067: was the lone `rem` in an otherwise em-relative file; normalized
+       onto the matching token so the icon tracks the same scale as its label. */
+    font-size: var(--dle-text-sm);
     width: 14px;
     text-align: center;
     flex-shrink: 0;
@@ -1985,7 +2535,11 @@ button.dle-browse-block.dle-block-active {
     .dle-zone-status .dle-token-bar-container,
     .dle-zone-status .dle-entries-bar-container,
     .dle-zone-status .dle-active-filters,
-    .dle-zone-status .dle-action-row {
+    /* Wave C: collapse the budget cluster's divider + label with its bars in compact height. */
+    .dle-zone-status .dle-budget-divider,
+    .dle-zone-status .dle-budget-cluster-label,
+    /* D4: the action toolbar now lives in its own zone (lifted out of .dle-zone-status). */
+    .dle-zone-actions {
         display: none;
     }
     .dle-zone-status {
@@ -1997,6 +2551,26 @@ button.dle-browse-block.dle-block-active {
     }
     .dle-tab-label {
         display: none;
+    }
+}
+
+/* Issue #39: on a narrow drawer the wrapping tab bar climbs onto 2-3 rows and eats scarce
+   vertical space. Keep it a single scannable row that scrolls horizontally instead of wrapping.
+   Labels stay available (better for i18n/discoverability than forcing icon-only). */
+@container (max-width: 360px) {
+    .dle-tab-bar {
+        flex-wrap: nowrap;
+        overflow-x: auto;
+        overscroll-behavior-x: contain;
+        scroll-snap-type: x proximity;
+        scrollbar-width: none; /* Firefox — keep the row clean */
+    }
+    .dle-tab-bar::-webkit-scrollbar {
+        display: none;
+    }
+    .dle-tab {
+        flex: 0 0 auto; /* don't squeeze tabs; let them keep natural width and scroll */
+        scroll-snap-align: start;
     }
 }
 
@@ -2048,6 +2622,8 @@ button.dle-browse-block.dle-block-active {
 /* --- Empty states (class-based visibility for animation) --- */
 .dle-empty-state {
     display: none;
+    opacity: 0;
+    transform: translateY(-4px);
     flex-direction: column;
     align-items: center;
     justify-content: center;
@@ -2059,9 +2635,18 @@ button.dle-browse-block.dle-block-active {
     border: 1px dashed color-mix(in srgb, var(--dle-border) 50%, transparent);
     border-radius: var(--dle-radius-md);
     margin: var(--dle-space-2) 0;
+    /* #19: animated reveal — display:allow-discrete + @starting-style fade/slide. */
+    transition: opacity var(--dle-dur-base, 200ms) var(--dle-ease-out, ease-out),
+                transform var(--dle-dur-base, 200ms) var(--dle-ease-out, ease-out),
+                display var(--dle-dur-base, 200ms) allow-discrete;
 }
 .dle-empty-state.dle-visible {
     display: flex;
+    opacity: 1;
+    transform: translateY(0);
+}
+@starting-style {
+    .dle-empty-state.dle-visible { opacity: 0; transform: translateY(-4px); }
 }
 
 .dle-empty-state i {
@@ -2102,15 +2687,80 @@ button.dle-browse-block.dle-block-active {
     margin-top: var(--dle-space-2);
     opacity: 0.7;
 }
-
-/* --- Pipeline activity animation --- */
-@keyframes dle-pulse {
-    0%, 100% { opacity: 1; }
-    50% { opacity: var(--dle-opacity-disabled); }
+/* f082: button-first CTA row in the pre-setup Injection/Browse empty guides. */
+.dle-empty-cta-row {
+    display: flex;
+    flex-wrap: wrap;
+    gap: var(--dle-space-2);
+    margin-top: var(--dle-space-3);
+}
+.dle-empty-cta-btn {
+    flex: 1 1 auto;
+    justify-content: center;
+    white-space: nowrap;
+}
+.dle-empty-cta-row + .dle-empty-commands {
+    margin-top: var(--dle-space-2);
+}
+/* f077: post-setup-idle one-liner for the Injection empty state. */
+.dle-empty-guide-idle {
+    max-width: 320px;
+    margin-top: var(--dle-space-2);
+    font-size: var(--dle-text-xs);
+    line-height: 1.6;
+    opacity: 0.8;
+}
+.dle-empty-browse-link {
+    color: var(--dle-accent, var(--SmartThemeQuoteColor, #6c8cff));
+    text-decoration: underline;
+    cursor: pointer;
 }
 
+/* --- Pipeline activity animation --- */
+/* F13: amplitude halved — opacity swing from 1.0→0.7 (was 1.0→0.4) */
+@keyframes dle-pulse {
+    0%, 100% { opacity: 1; }
+    50% { opacity: var(--dle-opacity-muted); }
+}
+
+/* F13: brief strong flash on status transitions — JS adds/removes .dle-status-changed */
+@keyframes dle-status-flash {
+    0%   { transform: scale(1);    box-shadow: 0 0 0 currentColor; }
+    50%  { transform: scale(1.15); box-shadow: 0 0 12px currentColor; }
+    100% { transform: scale(1);    box-shadow: 0 0 4px currentColor; }
+}
+
+/* Wave I: the goo-spinner inside the dot IS the motion now — no container pulse
+   (double-animation read as chaotic). f027: the dot now also carries a calm resting
+   vs. working appearance so idle is unmistakable. Idle = dimmed + desaturated gel
+   (the spinner is stopped at speed 0 from JS); active = full-strength accent tint.
+   No container pulse — just a steady color/opacity shift across the state boundary. */
+.dle-status-dot {
+    color: color-mix(in srgb, var(--dle-text-muted, #888) 70%, transparent);
+    opacity: 0.55;
+    filter: saturate(0.4);
+    transition: color var(--animation-duration-slow, 375ms) ease,
+                opacity var(--animation-duration-slow, 375ms) ease,
+                filter var(--animation-duration-slow, 375ms) ease;
+}
 .dle-status-dot.dle-status-active {
-    animation: dle-pulse 1.5s ease-in-out infinite;
+    color: var(--dle-accent, var(--SmartThemeQuoteColor, #aac8ff));
+    opacity: 1;
+    filter: none;
+}
+
+/* f027: the phase label echoes the same binary — muted at rest, full-strength accent
+   while a phase runs — so the working state is anchored by more than spinner motion. */
+.dle-pipeline-label {
+    color: var(--dle-text-muted, #888);
+    transition: color var(--animation-duration-slow, 375ms) ease;
+}
+.dle-pipeline-label.dle-status-active {
+    color: var(--dle-accent, var(--SmartThemeQuoteColor, #aac8ff));
+}
+
+.dle-status-dot.dle-status-changed {
+    animation: dle-status-flash 400ms ease-out 1;
 }
 
 /* ═══════════════════════════════════════════════════════════════════════════
@@ -2135,7 +2785,7 @@ button.dle-browse-block.dle-block-active {
     position: relative;
     background: var(--dle-border);
     border-radius: var(--dle-radius-sm);
-    height: 16px;
+    height: 18px;
     overflow: hidden;
 }
 
@@ -2156,7 +2806,14 @@ button.dle-browse-block.dle-block-active {
     bottom: 0;
     left: 0;
     width: 0;
-    background: color-mix(in srgb, var(--SmartThemeBodyColor, #e0e0e0) 40%, transparent);
+    /* A4: the reply reservation is ghosted AND hatched so it reads as "held, not consumed" —
+       visually distinct from the solid used fill. It is never counted as used (split aria in
+       drawer-render-footer.js announces used vs reserved separately). */
+    background: repeating-linear-gradient(
+        45deg,
+        color-mix(in srgb, var(--SmartThemeBodyColor, #e0e0e0) 32%, transparent) 0 5px,
+        transparent 5px 10px
+    );
     /* BUG-168: width/left transitions dropped — reflow/repaint per frame. Bar snaps instead. */
 }
 
@@ -2167,7 +2824,7 @@ button.dle-browse-block.dle-block-active {
     right: 0;
     text-align: center;
     font-size: var(--dle-text-xs);
-    line-height: 16px;
+    line-height: 18px;
     color: var(--SmartThemeBodyColor, #ccc);
     text-shadow: 0 1px 2px rgba(0,0,0,0.9);
     pointer-events: none;
@@ -2176,6 +2833,32 @@ button.dle-browse-block.dle-block-active {
     text-overflow: ellipsis;
     font-weight: 600;
 }
+
+/* A3: the footer context bar is the ONE bar where red is EARNED — overflow (used + reserved
+   approaching max) means the conversation is about to lose history. At rest it's calm green
+   (healthy room); high → orange; critical → red + hatch + static glow. Header bars never do
+   this (B1). Static glow only — no animation (BUG-170 repaint-storm lesson). The USED segment
+   carries the color; the reserved hatch (A4) is left ghosted. */
+.dle-context-bar-container.dle-context-high .dle-context-bar-context {
+    background: var(--dle-warning, #d97706);
+}
+.dle-context-bar-container.dle-context-critical .dle-context-bar-context {
+    background:
+        repeating-linear-gradient(45deg, transparent 0 4px, rgba(255,255,255,0.30) 4px 8px),
+        var(--dle-error, #dc2626);
+    box-shadow: 0 0 8px color-mix(in srgb, var(--dle-error, #dc2626) 50%, transparent);
+}
+
+/* A2: real Librarian token I/O of the last agentic turn — sits just under the context bar.
+   Muted/secondary so it reads as supplementary info, not a primary metric or a health signal.
+   .dle-hidden toggled by drawer-render-footer.js (hidden until a Librarian turn runs). */
+.dle-librarian-usage {
+    font-size: var(--dle-text-xs);
+    line-height: 1.4;
+    margin: 2px 0 0 2px;
+    color: color-mix(in srgb, var(--SmartThemeBodyColor, #aaa) 65%, transparent);
+}
+.dle-librarian-usage.dle-hidden { display: none; }
 
 /* --- Footer row (health icons left, AI stats right) --- */
 .dle-footer-row {
@@ -2191,6 +2874,11 @@ button.dle-browse-block.dle-block-active {
     align-items: center;
     gap: 4px;
     flex-shrink: 0;
+    /* #3: footer diagnostics dock framing. */
+    padding: 2px;
+    border: 1px solid color-mix(in srgb, var(--dle-border) 60%, transparent);
+    border-radius: var(--dle-radius-md);
+    background: color-mix(in srgb, var(--dle-bg-surface, var(--SmartThemeBlurTintColor,#222)) 50%, transparent);
 }
 
 .dle-health-icon {
@@ -2198,13 +2886,13 @@ button.dle-browse-block.dle-block-active {
     align-items: center;
     justify-content: center;
     position: relative;
-    width: 20px;
-    height: 20px;
+    width: 28px;
+    height: 28px;
     font-size: var(--dle-text-base);
     cursor: pointer;
     text-decoration: none;
     border-radius: var(--dle-radius-sm);
-    transition: filter 150ms ease, color 300ms ease;
+    transition: filter var(--dle-dur-fast, 120ms) var(--dle-ease-out, ease-out), color var(--dle-dur-slow, 320ms) var(--dle-ease-out, ease-out);
     color: var(--dle-text-muted);
     /* Button reset (changed from <a> to <button> for keyboard accessibility) */
     background: none;
@@ -2214,6 +2902,12 @@ button.dle-browse-block.dle-block-active {
 
 .dle-health-icon:hover {
     filter: brightness(1.3);
+    background: var(--dle-bg-hover); /* #3: dock hover fill */
+}
+
+.dle-health-icon:focus-visible {
+    outline: 2px solid var(--dle-focus);
+    outline-offset: 2px;
 }
 
 .dle-health-icon.dle-health-ok {
@@ -2228,29 +2922,41 @@ button.dle-browse-block.dle-block-active {
     color: var(--dle-error, #f44336);
 }
 
-/* Accessibility: shape indicator on health icons (not color-only) */
+/* Accessibility: shape indicator on health icons (not color-only).
+   f046: promoted from a bare ~9px corner glyph layered on the FA icon to a solid
+   badge chip — a filled status-colored circle with a high-contrast glyph and a 1px
+   ring in the panel background, so the redundant encoding stays legible on any
+   parent glyph and never blends into a same-tinted edge. */
 .dle-health-icon.dle-health-ok::after,
 .dle-health-icon.dle-health-warn::after,
 .dle-health-icon.dle-health-error::after {
     position: absolute;
-    bottom: -1px;
+    bottom: -2px;
     right: -2px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    width: 14px;
+    height: 14px;
+    border-radius: 50%;
     font-size: var(--dle-text-xs);
     font-weight: bold;
     line-height: 1;
+    color: #fff;
+    box-shadow: 0 0 0 1px var(--dle-bg-2, var(--SmartThemeBlurTintColor, #222));
     pointer-events: none;
 }
 .dle-health-icon.dle-health-ok::after {
     content: '\2713'; /* checkmark */
-    color: var(--dle-success, #4caf50);
+    background: var(--dle-success, #4caf50);
 }
 .dle-health-icon.dle-health-warn::after {
-    content: '\2013'; /* en-dash / minus */
-    color: var(--dle-warning, #ff9800);
+    content: '\0021'; /* exclamation mark — reads cleaner than ⚠ at chip size */
+    background: var(--dle-warning, #ff9800);
 }
 .dle-health-icon.dle-health-error::after {
     content: '\00d7'; /* multiplication sign / x */
-    color: var(--dle-error, #f44336);
+    background: var(--dle-error, #f44336);
 }
 
 /* --- AI stats --- */
@@ -2269,6 +2975,22 @@ button.dle-browse-block.dle-block-active {
     white-space: nowrap;
 }
 
+/* D5 (v2.5 Wave 3): session-scope marker. A small uppercase divider chip that flags the AI
+   stats as session-cumulative (all chats) so they don't read as this-chat next to the per-chat
+   health icons. Quieter than the figures it labels. */
+.dle-ai-stats-scope {
+    font-size: var(--dle-text-xs);
+    font-weight: 600;
+    text-transform: uppercase;
+    letter-spacing: 0.04em;
+    color: var(--dle-text-muted);
+    opacity: 0.7;
+    padding-right: 6px;
+    margin-right: 2px;
+    border-right: 1px solid var(--dle-border);
+    white-space: nowrap;
+}
+
 /* Stat flash — brief accent highlight when value changes */
 .dle-stat-changed {
     animation: dle-stat-flash 300ms ease-out;
@@ -2280,11 +3002,118 @@ button.dle-browse-block.dle-block-active {
 
 .dle-settings-popup {
     display: grid;
-    grid-template-columns: 190px minmax(0, 1fr);
+    /* f003: clamp the sidebar so it can grow toward content for long de/ru labels
+       ('Verbindung', 'Übereinstimmung', 'Инжекция', 'AI Connections') instead of a
+       hard 190px that forces clipping. Labels also wrap (below) so nothing is lost. */
+    grid-template-columns: clamp(160px, 22%, 236px) minmax(0, 1fr);
+    /* Header strip spans both columns; sidebar + content share the second row. */
+    grid-template-rows: auto minmax(0, 1fr);
     /* Fill the ST popup container — popup-content is flex-grow:1 inside the 90vh dialog */
     height: 100%;
-    min-height: 400px;
+    /* Clamp the floor so short/landscape phone viewports never force the dialog taller than the screen (Issue #39) */
+    min-height: min(400px, 80dvh);
+    /* Settings-overhaul: bolder type jumps SCOPED to the popup so the drawer,
+       graph, and popups keep the old restrained scale (no blast radius). */
+    --dle-text-lg: calc(var(--mainFontSize, 15px) * 1.25);
+    --dle-text-xl: calc(var(--mainFontSize, 15px) * 1.6);
+    --dle-rhythm: var(--dle-space-4);
 }
+
+/* ── Header strip: brand + master enable + help ── */
+.dle-settings-header {
+    grid-column: 1 / -1;
+    display: flex;
+    align-items: center;
+    gap: var(--dle-space-3);
+    padding: var(--dle-space-3) var(--dle-space-4);
+    border-bottom: 1px solid var(--dle-border);
+    background: color-mix(in srgb, var(--SmartThemeBodyColor, #ccc) 4%, transparent);
+}
+.dle-brand {
+    display: flex;
+    align-items: center;
+    gap: var(--dle-space-2);
+    min-width: 0;
+}
+.dle-brand-logo {
+    width: 27px;
+    height: 27px;
+    color: var(--SmartThemeBodyColor, #ccc);
+    display: flex;
+    align-items: center;
+    flex-shrink: 0;
+}
+.dle-brand-logo svg { width: 100%; height: 100%; display: block; }
+.dle-brand-name {
+    font-size: var(--dle-text-lg);
+    font-weight: 600;
+    white-space: nowrap;
+}
+.dle-version-chip {
+    font-size: var(--dle-text-xs);
+    color: var(--dle-text-muted);
+    border: 1px solid var(--dle-border);
+    border-radius: var(--dle-radius-pill);
+    padding: 1px 9px;
+    white-space: nowrap;
+}
+.dle-header-spacer { margin-left: auto; }
+.dle-master-toggle {
+    display: flex;
+    align-items: center;
+    gap: var(--dle-space-2);
+    font-size: var(--dle-text-sm);
+    color: var(--dle-text-muted);
+    margin: 0;
+    cursor: pointer;
+    user-select: none;
+}
+.dle-master-toggle:hover { color: var(--SmartThemeBodyColor, #ccc); }
+.dle-switch {
+    position: relative;
+    width: 42px;
+    height: 23px;
+    flex-shrink: 0;
+}
+.dle-switch input {
+    opacity: 0;
+    width: 0;
+    height: 0;
+    position: absolute;
+}
+.dle-switch .track {
+    position: absolute;
+    inset: 0;
+    background: var(--dle-border);
+    border-radius: var(--dle-radius-pill);
+    transition: background var(--dle-dur-base) var(--dle-ease-out);
+}
+.dle-switch .track::before {
+    content: "";
+    position: absolute;
+    height: 17px;
+    width: 17px;
+    left: 3px;
+    top: 3px;
+    background: #fff;
+    border-radius: 50%;
+    transition: transform var(--dle-dur-base) var(--dle-ease-out);
+    box-shadow: 0 1px 2px rgba(0, 0, 0, 0.35);
+}
+.dle-switch input:checked + .track { background: var(--dle-success); }
+.dle-switch input:checked + .track::before { transform: translateX(19px); }
+.dle-switch input:focus-visible + .track {
+    outline: 2px solid var(--dle-focus);
+    outline-offset: 2px;
+}
+.dle-header-icon {
+    color: var(--dle-text-muted);
+    cursor: pointer;
+    padding: 5px;
+    border-radius: var(--dle-radius-sm);
+    transition: color var(--dle-dur-fast) var(--dle-ease-out);
+}
+.dle-header-icon:hover { color: var(--SmartThemeBodyColor, #ccc); }
 
 /* BUG-162: collapse sidebar to a compact rail on narrow popups so content column keeps room */
 @media (max-width: 600px) {
@@ -2300,6 +3129,32 @@ button.dle-browse-block.dle-block-active {
     cursor: not-allowed;
 }
 
+/* f018/f019: single source of truth for native-control tinting across DLE surfaces.
+   Previously range sliders had no accent (OS-default blue thumb) while a couple of graph
+   sliders used --dle-info and a few Librarian checkboxes used --dle-accent — three divergent
+   treatments. Scope one accent to every native range/checkbox in the popup + drawer so they
+   all read as DLE-themed in both dark and light. Per-component overrides below are removed. */
+.dle-settings-popup input[type="range"],
+.dle-settings-popup input[type="checkbox"],
+#deeplore-drawer input[type="range"],
+#deeplore-drawer input[type="checkbox"] {
+    accent-color: var(--dle-accent);
+}
+
+/* f020: disable at the row level so the label fades with the input. JS adds .dle-control-disabled
+   on the field wrapper (in addition to the input's own disabled attr, which still blocks input). */
+.dle-settings-popup .dle-control-disabled {
+    opacity: 0.5;
+}
+.dle-settings-popup .dle-control-disabled label,
+.dle-settings-popup .dle-control-disabled small {
+    opacity: 1;
+}
+.dle-settings-popup .dle-control-disabled,
+.dle-settings-popup .dle-control-disabled input {
+    cursor: not-allowed;
+}
+
 .dle-settings-preview-banner {
     position: sticky;
     top: 0;
@@ -2307,22 +3162,37 @@ button.dle-browse-block.dle-block-active {
 }
 
 .dle-settings-sidebar {
+    /* f010: nav-rail geometry on the token grid. Shared icon width + icon-gap
+       drive a DERIVED sub-tab indent (parent padding-left + icon + gap) so the
+       sub-tab icon sits directly under the parent label start instead of an
+       eyeballed 30px. Change once here; both tiers follow. */
+    --dle-nav-pad-x: var(--dle-space-3);
+    --dle-nav-icon-w: 16px;
+    --dle-nav-icon-gap: var(--dle-space-2);
+    --dle-nav-indent: calc(var(--dle-nav-pad-x) + var(--dle-nav-icon-w) + var(--dle-nav-icon-gap));
     display: flex;
     flex-direction: column;
     border-right: 1px solid var(--dle-border);
     background: var(--dle-bg-surface);
-    padding: 8px 0;
-    gap: 2px;
+    padding: var(--dle-space-2) 0;
+    gap: var(--dle-space-1);
     overflow-y: auto;
     overflow-x: hidden;
     min-width: 0;
+    scrollbar-width: thin;
+    scrollbar-color: color-mix(in srgb, var(--SmartThemeBodyColor, #ccc) 22%, transparent) transparent;
+}
+.dle-settings-sidebar::-webkit-scrollbar { width: 8px; }
+.dle-settings-sidebar::-webkit-scrollbar-thumb {
+    background: color-mix(in srgb, var(--SmartThemeBodyColor, #ccc) 18%, transparent);
+    border-radius: 4px;
 }
 
 .dle-settings-tab {
     display: flex;
     align-items: center;
-    gap: 8px;
-    padding: 10px 14px;
+    gap: var(--dle-nav-icon-gap);
+    padding: var(--dle-space-2) var(--dle-nav-pad-x);
     border: none;
     background: none;
     color: var(--SmartThemeBodyColor, #ccc);
@@ -2330,30 +3200,19 @@ button.dle-browse-block.dle-block-active {
     text-align: left;
     font-size: var(--dle-text-base);
     font-family: inherit;
-    transition: background 150ms ease, border-color 150ms ease;
+    transition: background var(--dle-dur-fast, 120ms) var(--dle-ease-out, ease-out), border-color var(--dle-dur-fast, 120ms) var(--dle-ease-out, ease-out);
     border-left: 3px solid transparent;
-    white-space: nowrap;
-    overflow: hidden;
-    text-overflow: ellipsis;
+    /* f003: wrap long de/ru labels to a second line instead of ellipsis-clipping them.
+       The nav-rail was hard-clipping with no tooltip; wrapping keeps every label fully
+       readable at both 190px (clamp) and the 140px narrow rail. */
+    white-space: normal;
+    overflow-wrap: anywhere;
+    line-height: 1.2;
     min-width: 0;
 }
 
 .dle-settings-tab:hover {
     background: var(--dle-bg-hover);
-}
-
-/* BUG-225: pointer-events:none doesn't remove the <button> from tab order.
-   CSS alone can't reach tabindex; the proper fix is JS adding tabindex="-1".
-   Until then, at least make focus visible so a keyboard user lands on the
-   header explicitly rather than silently. */
-.dle-settings-tab--header {
-    cursor: default;
-    opacity: 0.7;
-    pointer-events: none;
-}
-.dle-settings-tab--header:focus-visible {
-    outline: 2px solid var(--dle-accent);
-    outline-offset: -2px;
 }
 
 .dle-settings-tab.active {
@@ -2363,7 +3222,7 @@ button.dle-browse-block.dle-block-active {
 }
 
 .dle-settings-tab i {
-    width: 16px;
+    width: var(--dle-nav-icon-w);
     text-align: center;
     font-size: var(--dle-text-base);
     flex-shrink: 0;
@@ -2371,7 +3230,14 @@ button.dle-browse-block.dle-block-active {
 
 .dle-settings-content {
     overflow-y: auto;
-    padding: 16px 20px;
+    padding: var(--dle-space-4) var(--dle-space-5);
+    scrollbar-width: thin;
+    scrollbar-color: color-mix(in srgb, var(--SmartThemeBodyColor, #ccc) 22%, transparent) transparent;
+}
+.dle-settings-content::-webkit-scrollbar { width: 8px; }
+.dle-settings-content::-webkit-scrollbar-thumb {
+    background: color-mix(in srgb, var(--SmartThemeBodyColor, #ccc) 18%, transparent);
+    border-radius: 4px;
 }
 
 .dle-settings-panel {
@@ -2379,129 +3245,264 @@ button.dle-browse-block.dle-block-active {
     position: relative;
 }
 
+@keyframes dle-panel-in {
+    from { opacity: 0; transform: translateY(4px); }
+    to { opacity: 1; transform: none; }
+}
 .dle-settings-panel.active {
     display: block;
+    animation: dle-panel-in 160ms var(--dle-ease-out) 1;
 }
 
-/* ── Connection sidebar children (indented under Connection parent) ── */
-.dle-connection-children {
+/* ── Panel orientation header: big title + one-line subtitle ── */
+.dle-panel-header {
+    margin: 0 0 var(--dle-rhythm, var(--dle-space-4));
+    padding-bottom: var(--dle-space-3);
+    border-bottom: 1px solid var(--dle-border);
+}
+.dle-panel-title {
+    font-size: var(--dle-text-xl);
+    font-weight: 600;
+    line-height: 1.15;
+    margin: 0 0 var(--dle-space-1);
+    letter-spacing: -0.01em;
+}
+.dle-panel-subtitle {
+    font-size: var(--dle-text-sm);
+    color: var(--dle-text-muted);
+    line-height: 1.55;
+    margin: 0;
+}
+.dle-merge-note {
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+    font-size: var(--dle-text-xs);
+    color: var(--dle-accent-fg);
+    background: color-mix(in srgb, var(--dle-accent) 14%, transparent);
+    border: 1px solid color-mix(in srgb, var(--dle-accent) 32%, transparent);
+    border-radius: var(--dle-radius-pill);
+    padding: 2px 10px;
+    margin-left: var(--dle-space-2);
+    white-space: nowrap;
+    vertical-align: middle;
+}
+
+/* ── Shared content vocabulary (About hero, button rows, note blocks) ── */
+.dle-btn-row {
+    display: flex;
+    gap: var(--dle-space-2);
+    flex-wrap: wrap;
+    align-items: center;
+}
+.dle-btn-row .menu_button {
+    width: auto;
+    white-space: nowrap;
+    margin: 0;
+}
+.dle-btn-row a.menu_button { text-decoration: none; }
+.dle-about-hero {
     display: flex;
     flex-direction: column;
-    gap: 1px;
-}
-
-.dle-connection-children[hidden] { display: none; }
-
-.dle-connection-subtab {
-    display: flex;
     align-items: center;
-    gap: 8px;
-    padding: 7px 14px 7px 30px;
-    border: none;
-    background: none;
-    color: var(--SmartThemeBodyColor, #ccc);
-    cursor: pointer;
-    text-align: left;
-    font-size: var(--dle-text-sm);
-    font-family: inherit;
-    transition: background 150ms ease, border-color 150ms ease;
-    border-left: 3px solid transparent;
-    white-space: nowrap;
-    overflow: hidden;
-    text-overflow: ellipsis;
-    min-width: 0;
-}
-
-.dle-connection-subtab:hover { background: var(--dle-bg-hover); }
-
-.dle-connection-subtab.active {
-    background: var(--dle-bg-hover);
-    border-left-color: var(--SmartThemeQuoteColor, #4caf50);
-    text-shadow: 0.4px 0 0 currentColor, -0.4px 0 0 currentColor;
-}
-
-.dle-connection-subtab i {
-    width: 14px;
     text-align: center;
+    gap: var(--dle-space-2);
+    padding: var(--dle-space-4) var(--dle-space-4) var(--dle-space-3);
+}
+.dle-about-hero .dle-about-logo { margin: 0; }
+.dle-about-links {
+    display: flex;
+    gap: var(--dle-space-2);
+    flex-wrap: wrap;
+    justify-content: center;
+}
+.dle-about-links .menu_button {
+    width: auto;
+    white-space: nowrap;
+    text-decoration: none;
+}
+.dle-about-credits {
+    font-size: var(--dle-text-xs);
+    color: var(--dle-text-muted);
+    margin: 0;
+}
+.dle-about-credits a { color: var(--dle-accent-fg); }
+.dle-note-block {
     font-size: var(--dle-text-sm);
-    flex-shrink: 0;
+    color: var(--dle-text-muted);
+    line-height: 1.55;
+    margin: 0;
+}
+.dle-about-footnote {
+    font-size: var(--dle-text-xs);
+    color: var(--dle-text-muted);
+    font-style: italic;
+    text-align: center;
+    line-height: 1.5;
+    margin: var(--dle-space-3) 0 0;
 }
 
-/* Connection sub-panels */
-.dle-connection-subpanel {
+/* ── Sidebar: search → pinned About → accordion groups ──
+   Plain nav + aria-current pattern (the old two-tier tablist with
+   presentation headers is gone; groups replaced both header rows). */
+.dle-nav-search {
+    padding: 2px var(--dle-space-2) var(--dle-space-1);
+    position: relative;
+}
+.dle-nav-search input.text_pole {
+    margin: 0;
+    padding: 4px 8px 4px 27px;
+    font-size: var(--dle-text-sm);
+}
+.dle-nav-search .fa-magnifying-glass {
+    position: absolute;
+    left: calc(var(--dle-space-2) + 9px);
+    top: 50%;
+    transform: translateY(-50%);
+    font-size: var(--dle-text-xs);
+    color: var(--dle-text-muted);
+    pointer-events: none;
+}
+.dle-nav-noresults {
     display: none;
+    padding: var(--dle-space-3);
+    font-size: var(--dle-text-xs);
+    color: var(--dle-text-muted);
+    line-height: 1.5;
+    text-align: center;
 }
+.dle-nav-noresults.dle-visible { display: block; }
 
-.dle-connection-subpanel.active {
-    display: block;
-}
-
-/* ── Features sidebar children (indented under Features parent) ── */
-.dle-features-children {
+.dle-nav-pinned {
     display: flex;
     flex-direction: column;
-    gap: 1px;
+    border-bottom: 1px solid color-mix(in srgb, var(--dle-border) 60%, transparent);
+    padding-bottom: var(--dle-space-1);
+    margin-bottom: var(--dle-space-1);
+}
+/* pinned About shares the exact leaf-tab geometry — one icon column everywhere */
+.dle-nav-pinned .dle-settings-tab {
+    padding-left: calc(var(--dle-nav-pad-x) + var(--dle-space-2));
 }
 
-.dle-features-children[hidden] { display: none; }
-
-.dle-features-subtab {
+.dle-nav-group {
+    display: flex;
+    flex-direction: column;
+}
+.dle-nav-group-header {
     display: flex;
     align-items: center;
-    gap: 8px;
-    padding: 7px 14px 7px 30px;
+    justify-content: space-between;
+    width: 100%;
+    padding: var(--dle-space-2) var(--dle-nav-pad-x);
     border: none;
     background: none;
-    color: var(--SmartThemeBodyColor, #ccc);
     cursor: pointer;
-    text-align: left;
-    font-size: var(--dle-text-sm);
     font-family: inherit;
-    transition: background 150ms ease, border-color 150ms ease;
-    border-left: 3px solid transparent;
-    white-space: nowrap;
+    font-size: var(--dle-text-xs);
+    font-weight: 600;
+    text-transform: uppercase;
+    letter-spacing: 0.06em;
+    color: var(--dle-text-muted);
+    text-align: left;
+    margin: 0;
+    border-radius: var(--dle-radius-sm);
+    transition: color var(--dle-dur-fast) var(--dle-ease-out);
+}
+.dle-nav-group-header:hover { color: var(--SmartThemeBodyColor, #ccc); }
+.dle-nav-group-header .chev {
+    filter: brightness(75%);
+    transition: transform var(--dle-dur-fast) var(--dle-ease-out);
+    font-size: 1.05em;
+}
+.dle-nav-group.collapsed .chev { transform: rotate(-90deg); }
+.dle-nav-group-items {
+    display: flex;
+    flex-direction: column;
+    gap: 2px;
+    padding-bottom: var(--dle-space-1);
+}
+.dle-nav-group.collapsed .dle-nav-group-items { display: none; }
+
+/* leaf tabs: indented under their group label (icon column starts at the
+   group-label text start) */
+.dle-nav-group-items .dle-settings-tab {
+    padding-left: calc(var(--dle-nav-pad-x) + var(--dle-space-2));
+}
+/* items animate in when a group expands (DLE @starting-style idiom) */
+.dle-nav-group:not(.collapsed) .dle-nav-group-items .dle-settings-tab {
+    transition: opacity var(--dle-dur-base) var(--dle-ease-out), transform var(--dle-dur-base) var(--dle-ease-out);
+}
+@starting-style {
+    .dle-nav-group:not(.collapsed) .dle-nav-group-items .dle-settings-tab {
+        opacity: 0;
+        transform: translateY(-3px);
+    }
 }
 
-.dle-features-subtab:hover { background: var(--dle-bg-hover); }
-
-.dle-features-subtab.active {
-    background: var(--dle-bg-hover);
-    border-left-color: var(--SmartThemeQuoteColor, #4caf50);
-    text-shadow: 0.4px 0 0 currentColor, -0.4px 0 0 currentColor;
-}
-
-.dle-features-subtab i {
-    width: 14px;
-    text-align: center;
-    font-size: var(--dle-text-sm);
+/* ── Settings search filter states ── */
+.dle-search-badge {
+    margin-left: auto;
+    font-size: var(--dle-text-xs);
+    color: var(--dle-accent-fg);
+    background: color-mix(in srgb, var(--dle-accent) 16%, transparent);
+    border-radius: var(--dle-radius-pill);
+    padding: 0 7px;
     flex-shrink: 0;
 }
+.dle-settings-tab.dle-filtered-out { display: none; }
+.dle-nav-group.dle-filtered-out { display: none; }
 
-/* Features sub-panels */
-.dle-features-subpanel {
-    display: none;
+/* search hit highlight in the target panel (flash + settle) */
+@keyframes dle-hit-flash {
+    0% {
+        outline-color: var(--dle-accent);
+        background: color-mix(in srgb, var(--dle-accent) 10%, transparent);
+    }
+    100% {
+        outline-color: transparent;
+        background: transparent;
+    }
 }
-
-.dle-features-subpanel.active {
-    display: block;
+.dle-search-hit {
+    outline: 2px solid transparent;
+    outline-offset: 3px;
+    border-radius: var(--dle-radius-sm);
+    animation: dle-hit-flash 1.8s var(--dle-ease-out) 1;
 }
 
 /* Settings section card (groups related controls visually) */
 .dle-settings-section {
-    border: 1px solid color-mix(in srgb, var(--dle-border) 60%, transparent);
-    border-radius: var(--dle-radius-md);
-    padding: var(--dle-space-3);
-    margin-bottom: var(--dle-space-3);
-    background: color-mix(in srgb, var(--dle-bg-surface) 20%, transparent);
+    border: 1px solid var(--dle-border);
+    border-radius: var(--dle-radius-lg);
+    padding: var(--dle-space-3) var(--dle-space-4) var(--dle-space-4);
+    margin-bottom: var(--dle-rhythm, var(--dle-space-4));
+    background: color-mix(in srgb, var(--SmartThemeBodyColor, #ccc) 3%, transparent);
 }
+.dle-settings-section:last-child { margin-bottom: var(--dle-space-2); }
 .dle-settings-section > h4:first-child {
     margin-top: 0;
+    display: flex;
+    align-items: center;
+    gap: var(--dle-space-2);
 }
+/* context-aware accent tick on section headings */
+.dle-settings-section > h4:first-child::before {
+    content: "";
+    width: 3px;
+    height: 1.05em;
+    flex-shrink: 0;
+    background: var(--dle-accent);
+    border-radius: 2px;
+}
+.dle-danger-zone > h4:first-child::before { background: var(--dle-error); }
 
 /* Section spacing inside panels */
 .dle-settings-panel h4 {
     margin: 0 0 4px;
     font-size: var(--dle-text-lg);
+    font-weight: 600;
+    line-height: 1.25;
 }
 
 .dle-settings-panel h4:not(:first-child) {
@@ -2518,11 +3519,21 @@ button.dle-browse-block.dle-block-active {
 .dle-settings-section + hr,
 .dle-settings-section + .dle-settings-section { /* reset margin for adjacent sections */ }
 
-.dle-settings-panel .dle-section-desc {
-    font-size: var(--dle-text-sm);
-    opacity: 0.6;
-    margin: 0 0 8px;
+/* f008: paired toggle+value rows (e.g. "Unlimited Entries" + "Max Entries").
+   The left column is a single-line .checkbox_label; the right column is a
+   label-over-input stack. ST's .flex-container centers items, so the checkbox
+   floated to the vertical middle of the taller column and read as orphaned.
+   align-items:flex-end drops the checkbox onto the SAME bottom baseline as the
+   input (the value control), so the toggle visually pairs with its field. */
+.dle-toggle-value-row {
+    align-items: flex-end;
 }
+
+/* f007: the old .dle-settings-panel .dle-section-desc block (opacity:0.6,
+   margin:0 0 8px) was folded into the canonical rule near the top of this file,
+   which now lists BOTH .dle-settings and .dle-settings-panel as the single source
+   of truth (token-grid margins + muted color, no opacity so inline links/code
+   stay crisp). */
 
 /* Connection cards inside popup */
 .dle-settings-panel .dle-connection-card {
@@ -2558,13 +3569,13 @@ button.dle-browse-block.dle-block-active {
 /* BUG-187: explicit focus ring in accent blue so focus is distinguishable from
    the green `.dle-status-ok` / connected state used elsewhere. */
 .dle-conn-accordion-header:focus-visible {
-    outline: 2px solid var(--dle-accent);
+    outline: 2px solid var(--dle-focus);
     outline-offset: -2px;
 }
 .dle-conn-tool-icon { width: 16px; text-align: center; flex-shrink: 0; opacity: var(--dle-opacity-muted); }
 .dle-conn-tool-name { font-weight: 600; font-size: var(--dle-text-sm); }
 .dle-conn-badge { margin-left: auto; font-size: var(--dle-text-xs); opacity: 0.7; white-space: nowrap; }
-.dle-conn-chevron { flex-shrink: 0; font-size: 0.75em; transition: transform 200ms ease; }
+.dle-conn-chevron { flex-shrink: 0; font-size: 0.75em; transition: transform var(--dle-dur-base, 200ms) var(--dle-ease-out, ease-out); }
 .dle-conn-accordion-header[aria-expanded="true"] .dle-conn-chevron { transform: rotate(90deg); }
 .dle-conn-accordion-body {
     padding: var(--dle-space-2) var(--dle-space-3) var(--dle-space-3);
@@ -2658,6 +3669,23 @@ button.dle-browse-block.dle-block-active {
 }
 .dle-goto-tab-link:hover { opacity: 0.8; }
 
+/* f021: brief flash when a typed-in number is auto-corrected to the field's
+   min/max/step, so the clamp is visible rather than silent. Accent-tinted
+   background + ring; theme-safe via --dle-accent (color-mix degrades gracefully). */
+.dle-input-clamped {
+    animation: dle-input-clamp-flash 500ms ease-out;
+}
+@keyframes dle-input-clamp-flash {
+    from {
+        background-color: color-mix(in srgb, var(--dle-accent) 35%, transparent);
+        box-shadow: 0 0 0 2px var(--dle-accent);
+    }
+    to {
+        background-color: transparent;
+        box-shadow: 0 0 0 2px transparent;
+    }
+}
+
 /* --- Container query: hide footer in collapsed drawers --- */
 @container (max-height: 250px) {
     .dle-zone-footer {
@@ -2688,7 +3716,7 @@ button.dle-browse-block.dle-block-active {
 }
 
 .dle-why-entry.dle-why-exit {
-    animation: dle-entry-out 180ms ease-in forwards !important;
+    animation: dle-entry-out var(--dle-dur-base, 200ms) var(--dle-ease, ease-in) forwards !important;
     pointer-events: none;
     overflow: hidden;
 }
@@ -2719,8 +3747,9 @@ button.dle-browse-block.dle-block-active {
 .dle-ctx-detail {
     display: grid;
     grid-template-rows: 0fr;
+    grid-auto-rows: 0fr;
     opacity: 0;
-    transition: grid-template-rows 250ms ease-out, opacity 200ms ease;
+    transition: grid-template-rows var(--dle-dur-base, 200ms) var(--dle-ease-out, ease-out), grid-auto-rows var(--dle-dur-base, 200ms) var(--dle-ease-out, ease-out), opacity var(--dle-dur-base, 200ms) var(--dle-ease-out, ease-out);
 }
 .dle-ctx-detail > * {
     min-height: 0;
@@ -2728,6 +3757,7 @@ button.dle-browse-block.dle-block-active {
 }
 .dle-ctx-detail.dle-ctx-expanded {
     grid-template-rows: 1fr;
+    grid-auto-rows: 1fr;
     opacity: 1;
     margin-top: var(--dle-space-1);
 }
@@ -2741,7 +3771,7 @@ button.dle-browse-block.dle-block-active {
     display: grid;
     grid-template-rows: 0fr;
     opacity: 0;
-    transition: grid-template-rows 250ms ease-out, opacity 200ms ease, padding 200ms ease;
+    transition: grid-template-rows var(--dle-dur-base, 200ms) var(--dle-ease-out, ease-out), opacity var(--dle-dur-base, 200ms) var(--dle-ease-out, ease-out), padding var(--dle-dur-base, 200ms) var(--dle-ease-out, ease-out);
     background: color-mix(in srgb, var(--dle-warning) 5%, transparent);
     border-left: 3px solid color-mix(in srgb, var(--dle-warning) 40%, transparent);
     border-radius: 0 var(--dle-radius-md) var(--dle-radius-md) 0;
@@ -2766,9 +3796,9 @@ button.dle-browse-block.dle-block-active {
 }
 
 /* Browse refresh spinner (inline, next to search input) */
+/* f069: no color/font-size here — the goo-spinner is colored by the single global
+   accent rule (currentColor) and sized by its `size` attribute, NOT font-size. */
 .dle-browse-refresh-spinner {
-    font-size: var(--dle-text-sm);
-    color: var(--dle-text-muted);
     flex-shrink: 0;
 }
 
@@ -2785,7 +3815,7 @@ button.dle-browse-block.dle-block-active {
     padding: 1px 3px;
     font-size: 0.75em;
     opacity: 0.5;
-    transition: opacity 150ms, color 150ms;
+    transition: opacity var(--dle-dur-fast, 120ms) var(--dle-ease-out, ease-out), color var(--dle-dur-fast, 120ms) var(--dle-ease-out, ease-out);
     vertical-align: middle;
 }
 .dle-browse-nav-btn:hover,
@@ -2835,19 +3865,43 @@ button.dle-browse-block.dle-block-active {
 }
 
 /* -- Interactive legend -- */
-.dle-graph-legend {
-    display: flex;
-    gap: 10px;
-    flex-wrap: wrap;
-    font-size: var(--dle-text-xs, 0.7em);
-    margin-bottom: var(--dle-space-1, 4px);
+/* #1: the old flex-strip is now the unified docked panel. Sub-class rules
+   (.dle-graph-legend-panel-*) below; .dle-graph-legend-item rules kept intact. */
+.dle-graph-legend,
+.dle-graph-legend-panel {
+    position: absolute; top: 8px; left: 8px; z-index: 12;
+    max-width: 320px; max-height: calc(100% - 16px); overflow: auto;
+    padding: 8px 10px;
+    background: color-mix(in srgb, var(--SmartThemeBlurTintColor, #15151a) 88%, transparent);
+    border: 1px solid var(--dle-border, #444); border-radius: 6px;
+    box-shadow: 0 6px 20px rgba(0,0,0,0.35);
+    font-size: var(--dle-text-xs, 0.7em); color: var(--SmartThemeBodyColor, #ddd);
+    pointer-events: auto;
+}
+.dle-graph-legend-panel-heading {
+    font-weight: 700; text-transform: uppercase; letter-spacing: 0.4px;
+    font-size: 0.92em; margin-bottom: 6px; color: var(--dle-text-muted, #aaa);
+}
+.dle-graph-legend-section { margin-bottom: 6px; }
+.dle-graph-legend-section:last-child { margin-bottom: 0; }
+.dle-graph-legend-section-label {
+    font-weight: 600; font-size: 0.85em; margin-bottom: 3px; color: var(--dle-text-muted, #999);
+}
+.dle-graph-legend-edges { display: flex; flex-wrap: wrap; gap: 8px; }
+.dle-graph-legend-dash { font-weight: 700; }
+.dle-graph-legend-color { display: flex; flex-wrap: wrap; gap: 8px; align-items: center; }
+.dle-graph-legend-color:not(.dle-graph-legend-color--expanded) { max-height: 4.6em; overflow: hidden; }
+.dle-graph-legend-color--expanded { max-height: none; }
+@media (max-width:600px){
+    .dle-graph-legend,
+    .dle-graph-legend-panel { position:static; max-width:none; margin-bottom:4px; }
 }
 
 .dle-graph-legend-item {
     cursor: pointer;
     padding: 1px 4px;
     border-radius: 3px;
-    transition: opacity 150ms, background-color 150ms;
+    transition: opacity var(--dle-dur-fast, 120ms) var(--dle-ease-out, ease-out), background-color var(--dle-dur-fast, 120ms) var(--dle-ease-out, ease-out);
     user-select: none;
 }
 
@@ -2894,13 +3948,20 @@ button.dle-browse-block.dle-block-active {
     letter-spacing: 0.3px;
 }
 
-.dle-graph-tooltip-badge--constant { background: color-mix(in srgb, var(--SmartThemeQuoteColor) 40%, rgba(255, 198, 102, 0.25)); color: color-mix(in srgb, var(--SmartThemeQuoteColor) 40%, #ffc666); }
-.dle-graph-tooltip-badge--seed { background: color-mix(in srgb, var(--SmartThemeQuoteColor) 40%, rgba(122, 196, 248, 0.25)); color: color-mix(in srgb, var(--SmartThemeQuoteColor) 40%, #7ac4f8); }
-.dle-graph-tooltip-badge--bootstrap { background: color-mix(in srgb, var(--SmartThemeQuoteColor) 40%, rgba(201, 131, 212, 0.25)); color: color-mix(in srgb, var(--SmartThemeQuoteColor) 40%, #c983d4); }
-.dle-graph-tooltip-badge--regular { background: color-mix(in srgb, var(--SmartThemeQuoteColor) 40%, rgba(153, 212, 156, 0.25)); color: color-mix(in srgb, var(--SmartThemeQuoteColor) 40%, #99d49c); }
-.dle-graph-tooltip-badge--error { background: color-mix(in srgb, var(--SmartThemeQuoteColor) 40%, rgba(244, 67, 54, 0.25)); color: color-mix(in srgb, var(--SmartThemeQuoteColor) 40%, #ef5350); }
-.dle-graph-tooltip-badge--warning { background: color-mix(in srgb, var(--SmartThemeQuoteColor) 40%, rgba(255, 152, 0, 0.25)); color: color-mix(in srgb, var(--SmartThemeQuoteColor) 40%, #ffb74d); }
-.dle-graph-tooltip-badge--pinned { background: color-mix(in srgb, var(--SmartThemeQuoteColor) 40%, rgba(255, 255, 255, 0.15)); color: color-mix(in srgb, var(--SmartThemeQuoteColor) 40%, #fff); }
+/* f060: decouple the two axes. Previously every badge mixed a fixed 40% of the SAME theme
+   color (--SmartThemeQuoteColor) into BOTH bg and fg, which (a) pulled all 7 categories
+   toward one hue so they stopped being distinguishable, and (b) converged bg and fg on a
+   near-identical color, dropping text contrast below 4.5:1. Now each badge keeps its identity
+   hue: a light tint of the category hue for the background, and text derived from the same
+   hue mixed toward body color so it adapts to dark AND light themes. Hues come from the
+   shared --dle-cat-* palette so graph, browse temperature, and legend stay in sync. */
+.dle-graph-tooltip-badge--constant { background: color-mix(in srgb, var(--dle-cat-constant) 22%, transparent); color: color-mix(in srgb, var(--dle-cat-constant) 55%, var(--SmartThemeBodyColor, #fff)); }
+.dle-graph-tooltip-badge--seed { background: color-mix(in srgb, var(--dle-cat-seed) 22%, transparent); color: color-mix(in srgb, var(--dle-cat-seed) 55%, var(--SmartThemeBodyColor, #fff)); }
+.dle-graph-tooltip-badge--bootstrap { background: color-mix(in srgb, var(--dle-cat-bootstrap) 22%, transparent); color: color-mix(in srgb, var(--dle-cat-bootstrap) 55%, var(--SmartThemeBodyColor, #fff)); }
+.dle-graph-tooltip-badge--regular { background: color-mix(in srgb, var(--dle-success) 22%, transparent); color: color-mix(in srgb, var(--dle-success) 55%, var(--SmartThemeBodyColor, #fff)); }
+.dle-graph-tooltip-badge--error { background: color-mix(in srgb, var(--dle-cat-error) 22%, transparent); color: color-mix(in srgb, var(--dle-cat-error) 55%, var(--SmartThemeBodyColor, #fff)); }
+.dle-graph-tooltip-badge--warning { background: color-mix(in srgb, var(--dle-cat-warning) 22%, transparent); color: color-mix(in srgb, var(--dle-cat-warning) 55%, var(--SmartThemeBodyColor, #fff)); }
+.dle-graph-tooltip-badge--pinned { background: color-mix(in srgb, var(--dle-cat-pinned) 22%, transparent); color: color-mix(in srgb, var(--dle-cat-pinned) 55%, var(--SmartThemeBodyColor, #fff)); }
 
 .dle-graph-tooltip-stats {
     color: var(--dle-text-muted, #aaa);
@@ -2935,17 +3996,17 @@ button.dle-browse-block.dle-block-active {
     display: flex;
     align-items: center;
     justify-content: center;
-    background: rgba(0, 0, 0, 0.4);
+    background: color-mix(in srgb, var(--SmartThemeBlurTintColor, #000) 55%, transparent);
     z-index: 10;
     pointer-events: all;
     border-radius: inherit;
 }
 .dle-graph-layout-overlay-text {
-    color: #fff;
+    color: var(--SmartThemeBodyColor, #fff);
     font-size: var(--dle-text-xl);
     padding: 16px 24px;
     border-radius: 8px;
-    background: rgba(0, 0, 0, 0.7);
+    background: color-mix(in srgb, var(--SmartThemeBlurTintColor, #000) 80%, transparent);
     display: flex;
     align-items: center;
     gap: 10px;
@@ -2981,7 +4042,7 @@ button.dle-browse-block.dle-block-active {
 .dle-graph-ctx-item {
     padding: 5px 12px;
     cursor: pointer;
-    transition: background 100ms;
+    transition: background var(--dle-dur-fast, 120ms) var(--dle-ease-out, ease-out);
     white-space: nowrap;
 }
 
@@ -2992,7 +4053,7 @@ button.dle-browse-block.dle-block-active {
 }
 /* BUG-190: explicit focus ring for menu items (focus-visible overrides hover) */
 .dle-graph-ctx-item[role="menuitem"]:focus-visible {
-    outline: 2px solid var(--dle-accent);
+    outline: 2px solid var(--dle-focus);
     outline-offset: -2px;
 }
 
@@ -3036,7 +4097,7 @@ button.dle-browse-block.dle-block-active {
     cursor: grab;
     border-bottom: 1px solid var(--dle-border, #444);
     border-radius: 8px 8px 0 0;
-    background: rgba(255,255,255,0.04);
+    background: color-mix(in srgb, var(--SmartThemeBodyColor, #fff) 5%, transparent);
 }
 
 .dle-graph-settings-titlebar:active {
@@ -3055,7 +4116,7 @@ button.dle-browse-block.dle-block-active {
     font-size: var(--dle-text-lg);
     line-height: 1;
     padding: 0 2px;
-    transition: color 100ms;
+    transition: color var(--dle-dur-fast, 120ms) var(--dle-ease-out, ease-out);
 }
 
 .dle-graph-settings-close:hover,
@@ -3064,7 +4125,7 @@ button.dle-browse-block.dle-block-active {
 }
 /* BUG-191: explicit focus ring */
 .dle-graph-settings-close:focus-visible {
-    outline: 2px solid var(--dle-accent);
+    outline: 2px solid var(--dle-focus);
     outline-offset: 2px;
     border-radius: 3px;
 }
@@ -3093,6 +4154,30 @@ button.dle-browse-block.dle-block-active {
     white-space: nowrap;
 }
 
+/* f056: stacked label + persistent micro-caption so terse slider labels read at a glance
+   and on touch (where title-tooltips are invisible). The stack takes the row's flex slot. */
+.dle-graph-settings-row .dle-gs-label-stack {
+    flex: 1;
+    display: flex;
+    flex-direction: column;
+    gap: 1px;
+    min-width: 0;
+}
+
+.dle-graph-settings-row .dle-gs-label-stack label {
+    flex: none;
+}
+
+.dle-graph-settings-row .dle-gs-caption {
+    font-size: var(--dle-text-2xs, 10px);
+    line-height: 1.2;
+    color: var(--dle-text-muted, #777);
+    opacity: 0.8;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+}
+
 .dle-graph-settings-row input[type="number"],
 .dle-graph-settings-row input[type="range"] {
     width: 70px;
@@ -3101,7 +4186,10 @@ button.dle-browse-block.dle-block-active {
 
 .dle-graph-settings-row input[type="range"] {
     width: 90px;
-    accent-color: var(--dle-info, #2196f3);
+    /* f018/f019: graph mounts in a generic ST popup (callGenericPopup), outside #deeplore-drawer,
+       so it can't inherit the global accent rule above. Keep an explicit accent here but unify it
+       on --dle-accent (was --dle-info) so every native control shares one tint. */
+    accent-color: var(--dle-accent);
 }
 
 .dle-graph-settings-row .dle-gs-value {
@@ -3133,14 +4221,11 @@ button.dle-browse-block.dle-block-active {
 /* --- Utility classes for inline style migration --- */
 
 /* Text utilities */
-.dle-text-warning { color: var(--dle-warning); }
-.dle-text-info { color: var(--dle-info); }
+.dle-text-warning { color: var(--dle-warning-fg); }
 .dle-text-muted { color: var(--dle-text-muted); }
 .dle-text-pre { white-space: pre-wrap; font-size: 0.9em; }
 .dle-text-center { text-align: center; }
 .dle-text-right { text-align: right; }
-.dle-text-left { text-align: left; }
-/* .dle-text-mono removed — all popups use inherited/theme font */
 
 /* Spacing utilities */
 .dle-mb-1 { margin-bottom: var(--dle-space-1); }
@@ -3153,10 +4238,8 @@ button.dle-browse-block.dle-block-active {
 /* Layout utilities */
 .dle-flex { display: flex; }
 .dle-flex-col { display: flex; flex-direction: column; }
-.dle-flex-center { display: flex; align-items: center; }
 .dle-flex-between { display: flex; justify-content: space-between; align-items: center; }
 .dle-gap-1 { gap: var(--dle-space-1); }
-.dle-gap-2 { gap: var(--dle-space-2); }
 .dle-hidden { display: none; }
 .dle-cursor-pointer { cursor: pointer; }
 
@@ -3188,10 +4271,6 @@ button.dle-browse-block.dle-block-active {
 /* --- Popup component classes (inline style migration) --- */
 
 /* Layout utilities */
-.dle-flex-row { display: flex; gap: var(--dle-space-2); }
-.dle-flex-row--wrap { flex-wrap: wrap; }
-.dle-flex-1 { flex: 1; }
-.dle-flex-2 { flex: 2; }
 .dle-w-full { width: 100%; }
 
 /* Copy button */
@@ -3203,9 +4282,11 @@ button.dle-browse-block.dle-block-active {
 .dle-browse-filter { flex: 1; min-width: 120px; }
 .dle-browse-sort { flex: 1; min-width: 140px; }
 
-/* Browse temperature border (set via data-temp attribute) */
-.dle-browse-table-row[data-temp="hot"] { border-left: 3px solid var(--dle-error, #cc4444); }
-.dle-browse-table-row[data-temp="cold"] { border-left: 3px solid var(--dle-info, #223388); }
+/* Browse temperature border (set via data-temp attribute).
+   f062: share the --dle-cat-* hues with the .dle-temp-hot/cold rows above so the legend
+   swatch and the row tint are the same theme-relative blue/red. */
+.dle-browse-table-row[data-temp="hot"] { border-left: 3px solid var(--dle-cat-error); }
+.dle-browse-table-row[data-temp="cold"] { border-left: 3px solid var(--dle-cat-seed); }
 
 /* "Why not?" compact button */
 .dle-whynot-btn { padding: 2px 8px; }
@@ -3223,6 +4304,9 @@ button.dle-browse-block.dle-block-active {
 
 /* Cartographer popup */
 .dle-carto-heading { margin: var(--dle-space-3) 0 var(--dle-space-1); }
+.dle-carto-heading--muted { color: var(--dle-text-muted); }
+.dle-carto-divider { border-color: var(--dle-border); }
+.dle-carto-section-icon { margin-right: var(--dle-space-1); }
 .dle-carto-obsidian-link { color: var(--SmartThemeQuoteColor, #aac8ff); text-decoration: none; }
 .dle-carto-obsidian-link:hover { text-decoration: underline; }
 .dle-carto-rejected { opacity: var(--dle-opacity-muted); }
@@ -3243,14 +4327,49 @@ button.dle-browse-block.dle-block-active {
 .dle-health-list { margin: 4px 0 8px 20px; }
 .dle-health-section-heading { margin: var(--dle-space-3) 0 var(--dle-space-1); }
 
+/* f084: lint fix-it hint — actionable guidance, set apart from the warning list
+   below it. Accent left-border + 'Fix' lead-in chip + muted-but-legible body.
+   Backtick code spans in the hint render as <code> (see renderHintHtml). */
+.dle-hint {
+    margin: var(--dle-space-1) 0 var(--dle-space-2) 20px;
+    padding: var(--dle-space-1) var(--dle-space-2);
+    border-left: 3px solid var(--dle-accent);
+    background: color-mix(in srgb, var(--dle-accent) 8%, transparent);
+    border-radius: 0 var(--dle-radius-sm) var(--dle-radius-sm) 0;
+    color: var(--dle-text-muted);
+    font-size: var(--dle-text-sm);
+    line-height: 1.4;
+}
+.dle-hint-label {
+    display: inline-block;
+    margin-right: var(--dle-space-2);
+    padding: 0 var(--dle-space-1);
+    border-radius: var(--dle-radius-sm);
+    background: var(--dle-accent);
+    color: var(--dle-on-accent);
+    font-size: var(--dle-text-xs);
+    font-weight: 600;
+    text-transform: uppercase;
+    letter-spacing: 0.04em;
+    vertical-align: baseline;
+}
+.dle-hint code {
+    font-family: var(--dle-font-mono);
+    font-size: var(--dle-text-code);
+    padding: 0 0.3em;
+    border-radius: var(--dle-radius-sm);
+    background: color-mix(in srgb, var(--dle-text-muted) 18%, transparent);
+    color: var(--dle-text);
+}
+
 /* Commands-vault import textarea */
-.dle-import-textarea { height: 200px; font-size: 0.85em; }
+.dle-import-textarea { height: 200px; font-size: var(--dle-text-sm); }
 
 /* Commands-ai summary textarea */
 .dle-summary-textarea { height: 100px; font-size: 0.9em; }
 
 /* Rule-builder description */
-.dle-rb-desc { opacity: 0.7; margin-top: 4px; }
+.dle-rb-desc { opacity: var(--dle-opacity-muted); margin-top: var(--dle-space-1); }
 
 /* Graph legend swatches */
 .dle-graph-legend-swatch { display: inline-flex; align-items: center; gap: 4px; margin-right: 10px; max-width: 130px; }
@@ -3267,7 +4386,7 @@ button.dle-browse-block.dle-block-active {
     white-space: normal;
     max-height: 3.5em;
     overflow: hidden;
-    transition: max-height 0.2s ease;
+    transition: max-height var(--dle-dur-base, 200ms) var(--dle-ease-out, ease-out);
     align-items: flex-start;
 }
 .dle-graph-tooltip--legend.dle-graph-tooltip--expanded { max-height: 50%; }
@@ -3278,7 +4397,7 @@ button.dle-browse-block.dle-block-active {
     font-size: 0.7em;
     padding: 0 6px;
     user-select: none;
-    transition: opacity 150ms;
+    transition: opacity var(--dle-dur-fast, 120ms) var(--dle-ease-out, ease-out), transform var(--dle-dur-base, 200ms) var(--dle-ease-out, ease-out);
     flex-shrink: 0;
 }
 .dle-graph-legend-toggle:hover { opacity: 1; }
@@ -3309,6 +4428,9 @@ button.dle-browse-block.dle-block-active {
 .dle-graph-hop-btn { padding: 2px 6px; }
 .dle-graph-depth-display { font-size: var(--dle-text-sm); font-weight: bold; min-width: 1.5em; text-align: center; }
 .dle-graph-back-btn { max-width: 300px; overflow: hidden; text-overflow: ellipsis; }
+/* Promote the focus-mode exit button so the exit path is impossible to miss (R1 f050). */
+.dle-graph-back-btn--accent { border: 1px solid var(--dle-accent); font-weight: bold; }
+.dle-graph-back-caption { font-size: var(--dle-text-sm); font-weight: normal; opacity: 0.75; margin-left: 4px; }
 
 /* Graph detail panel (entry details side panel) */
 .dle-graph-detail-panel {
@@ -3350,13 +4472,22 @@ button.dle-browse-block.dle-block-active {
     border-radius: var(--dle-radius-sm, 4px);
 }
 .dle-sp-narrow-input { width: 60px; }
-.dle-sp-command-table { width: 100%; font-size: 0.85em; border-collapse: collapse; }
+/* f011: cap bounded numeric fields so a 1-2 digit integer doesn't render as a
+   full-width text_pole spanning the whole flex1 column. max-width (not width)
+   lets the field shrink to fit yet honours the explicit .dle-sp-narrow-input
+   width:60px override. 12ch holds the widest bounded value (6 digits) plus the
+   native spinner. Left-aligned in its column; text/path/select stay full-width,
+   and type=range sliders are untouched (different input type). */
+.dle-settings-popup input[type="number"].text_pole {
+    max-width: 12ch;
+}
+.dle-sp-command-table { width: 100%; font-size: var(--dle-text-sm); border-collapse: collapse; }
 .dle-sp-command-table th { padding: 4px; text-align: center; border-bottom: 1px solid var(--SmartThemeBorderColor); }
 .dle-sp-command-table td { padding: 2px 4px; }
 
 /* Compact slash command reference grid (About tab) */
 /* BUG-211: auto-fit columns so narrow settings popups don't overflow */
-.dle-cmd-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(180px, 1fr)); gap: 6px 14px; font-size: 0.78em; }
+.dle-cmd-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(180px, 1fr)); gap: 6px 14px; font-size: var(--dle-text-xs); }
 .dle-cmd-grid-col { display: flex; flex-direction: column; gap: 1px; }
 .dle-cmd-grid-header { font-weight: 600; padding: 2px 0 4px; border-bottom: 1px solid var(--SmartThemeBorderColor); margin-bottom: 3px; opacity: 0.85; }
 .dle-cmd-row { display: flex; align-items: baseline; gap: 6px; line-height: 1.3; }
@@ -3406,11 +4537,21 @@ button.dle-browse-block.dle-block-active {
     align-items: center;
     gap: var(--dle-space-2);
     margin-bottom: var(--dle-space-2);
+    flex-wrap: wrap;
+}
+/* Keep the four icon buttons together and push them to the right so they wrap
+   as a unit below the name/label inputs when the row runs out of room (narrow
+   popups, or once tooltips become localized labels — DE/RU expand heavily). */
+.dle-rb-field-tools {
+    display: flex;
+    align-items: center;
+    gap: var(--dle-space-2);
+    margin-left: auto;
 }
 .dle-rb-field-num {
     font-weight: bold;
     font-size: var(--dle-text-sm);
-    opacity: 0.5;
+    opacity: var(--dle-opacity-faint);
     min-width: 24px;
 }
 .dle-rb-field-header .text_pole { flex: 1; min-width: 0; }
@@ -3442,15 +4583,15 @@ button.dle-browse-block.dle-block-active {
     border: 1px solid var(--dle-border);
     border-radius: var(--dle-radius-sm, 4px);
     color: inherit;
-    transition: background-color 120ms ease, border-color 120ms ease;
+    transition: background-color var(--dle-dur-fast, 120ms) var(--dle-ease-out, ease-out), border-color var(--dle-dur-fast, 120ms) var(--dle-ease-out, ease-out);
 }
 .dle-rb-select:hover { border-color: var(--dle-accent); }
-.dle-rb-select:focus-visible { outline: 2px solid var(--dle-accent); outline-offset: -2px; }
+.dle-rb-select:focus-visible { outline: 2px solid var(--dle-focus); outline-offset: -2px; }
 .dle-rb-tolerance { max-width: 280px; }
 .dle-rb-ctx { max-width: 200px; font-size: var(--dle-text-sm); }
 .dle-rb-field input[type="text"],
 .dle-rb-field input[type="text"].text_pole {
-    transition: border-color 120ms ease, box-shadow 120ms ease;
+    transition: border-color var(--dle-dur-fast, 120ms) var(--dle-ease-out, ease-out), box-shadow var(--dle-dur-fast, 120ms) var(--dle-ease-out, ease-out);
 }
 .dle-rb-field input[type="text"]:focus {
     box-shadow: 0 0 0 2px color-mix(in srgb, var(--dle-accent) 25%, transparent);
@@ -3463,7 +4604,7 @@ button.dle-browse-block.dle-block-active {
 .dle-rb-gating-disabled { opacity: 0.4; pointer-events: none; }
 .dle-rb-link-icon { cursor: pointer; font-size: var(--dle-text-sm); color: var(--dle-accent); padding: 0 4px; }
 /* BUG-189: focus ring */
-.dle-rb-link-icon:focus-visible { outline: 2px solid var(--dle-accent); outline-offset: 2px; border-radius: 2px; }
+.dle-rb-link-icon:focus-visible { outline: 2px solid var(--dle-focus); outline-offset: 2px; border-radius: 2px; }
 @keyframes dle-rb-field-in { from { opacity: 0; transform: translateY(-4px); } to { opacity: 1; transform: translateY(0); } }
 .dle-rb-new { animation: dle-rb-field-in 200ms ease-out; }
 .dle-rb-actions {
@@ -3485,7 +4626,7 @@ button.dle-browse-block.dle-block-active {
 .dle-rb-field-error { border-left: 3px solid var(--dle-error); }
 
 /* Chip keyboard focus */
-button.dle-chip-x:focus-visible { outline: 2px solid var(--dle-accent); outline-offset: 1px; }
+button.dle-chip-x:focus-visible { outline: 2px solid var(--dle-focus); outline-offset: 1px; }
 
 /* Browse tab custom fields */
 .dle-browse-fields { font-size: var(--dle-text-xs); color: var(--dle-text-muted); margin-top: 4px; }
@@ -3505,7 +4646,7 @@ button.dle-chip-x:focus-visible { outline: 2px solid var(--dle-accent); outline-
 }
 
 /* Rule builder field remove animation */
-.dle-rb-removing { opacity: 0; transform: translateY(-4px); transition: opacity 150ms ease, transform 150ms ease; }
+.dle-rb-removing { opacity: 0; transform: translateY(-4px); transition: opacity var(--dle-dur-fast, 120ms) var(--dle-ease, ease-in), transform var(--dle-dur-fast, 120ms) var(--dle-ease, ease-in); }
 
 /* Rule builder responsive breakpoints */
 @media (max-width: 1024px) {
@@ -3526,7 +4667,8 @@ button.dle-chip-x:focus-visible { outline: 2px solid var(--dle-accent); outline-
 .dle-wizard {
     display: flex;
     flex-direction: column;
-    min-height: 500px;
+    /* Clamp the floor so short/landscape phone viewports never push the footer nav off-screen (Issue #39) */
+    min-height: min(500px, 80dvh);
     max-height: 80vh;
     gap: var(--dle-space-3);
 }
@@ -3553,7 +4695,7 @@ button.dle-chip-x:focus-visible { outline: 2px solid var(--dle-accent); outline-
     padding: 4px 8px;
     min-width: 60px;
     opacity: 0.4;
-    transition: opacity 200ms ease;
+    transition: opacity var(--dle-dur-base, 200ms) var(--dle-ease-out, ease-out);
 }
 .dle-wizard-step.active {
     opacity: 1;
@@ -3569,7 +4711,7 @@ button.dle-chip-x:focus-visible { outline: 2px solid var(--dle-accent); outline-
    regardless of which popup container the wizard renders inside. */
 .dle-wizard-step.completed:focus-visible {
     opacity: 1;
-    outline: 2px solid var(--dle-accent);
+    outline: 2px solid var(--dle-focus);
     outline-offset: 2px;
     border-radius: var(--dle-radius-sm);
 }
@@ -3584,7 +4726,7 @@ button.dle-chip-x:focus-visible { outline: 2px solid var(--dle-accent); outline-
     font-size: var(--dle-text-base);
     font-weight: 700;
     border: 2px solid var(--dle-border);
-    transition: background-color 200ms ease, border-color 200ms ease, color 200ms ease, box-shadow 200ms ease;
+    transition: background-color var(--dle-dur-base, 200ms) var(--dle-ease-out, ease-out), border-color var(--dle-dur-base, 200ms) var(--dle-ease-out, ease-out), color var(--dle-dur-base, 200ms) var(--dle-ease-out, ease-out), box-shadow var(--dle-dur-base, 200ms) var(--dle-ease-out, ease-out);
     color: var(--dle-text-muted);
 }
 .dle-wizard-step.active .dle-wizard-step-dot {
@@ -3741,7 +4883,7 @@ button.dle-chip-x:focus-visible { outline: 2px solid var(--dle-accent); outline-
     border: 1px solid var(--dle-border);
     border-radius: var(--dle-radius-md, 8px);
     cursor: pointer;
-    transition: border-color 150ms ease, background 150ms ease;
+    transition: border-color var(--dle-dur-fast, 120ms) var(--dle-ease-out, ease-out), background var(--dle-dur-fast, 120ms) var(--dle-ease-out, ease-out);
 }
 .dle-wizard-radio:hover {
     background: var(--dle-bg-hover);
@@ -3789,7 +4931,7 @@ button.dle-chip-x:focus-visible { outline: 2px solid var(--dle-accent); outline-
     border-radius: var(--dle-radius-md, 8px);
     background: var(--dle-bg-2);
     cursor: pointer;
-    transition: border-color 150ms ease, background 150ms ease, transform 100ms ease;
+    transition: border-color var(--dle-dur-fast, 120ms) var(--dle-ease-out, ease-out), background var(--dle-dur-fast, 120ms) var(--dle-ease-out, ease-out), transform var(--dle-dur-fast, 120ms) var(--dle-ease-out, ease-out);
 }
 .dle-wizard-preset:hover {
     background: var(--dle-bg-hover);
@@ -3808,13 +4950,41 @@ button.dle-chip-x:focus-visible { outline: 2px solid var(--dle-accent); outline-
     color: var(--dle-text-muted);
 }
 
+/* #2: onboarding welcome choice cards + action row + skip btn + panel focus. */
+.dle-wizard-fork-heading { margin: var(--dle-space-4) 0 var(--dle-space-2); font-size: var(--dle-text-base); color: var(--dle-text-muted); }
+.dle-wizard-fork { display: grid; grid-template-columns: repeat(3, 1fr); gap: var(--dle-space-2); margin-bottom: var(--dle-space-3); }
+.dle-wizard-choice-card {
+    position: relative; display: flex; flex-direction: column; align-items: flex-start; gap: var(--dle-space-1);
+    text-align: left; padding: var(--dle-space-3); border: 2px solid var(--dle-border);
+    border-radius: var(--dle-radius-md, 8px); background: var(--dle-bg-2); cursor: pointer;
+    transition: border-color var(--dle-dur-fast,120ms) var(--dle-ease-out,ease-out),
+                background var(--dle-dur-fast,120ms) var(--dle-ease-out,ease-out),
+                transform var(--dle-dur-fast,120ms) var(--dle-ease-out,ease-out);
+}
+.dle-wizard-choice-card:hover { background: var(--dle-bg-hover); border-color: var(--dle-accent); transform: translateY(-1px); }
+.dle-wizard-choice-card:focus-visible { outline: none; border-color: var(--dle-accent); box-shadow: 0 0 0 2px var(--dle-focus, var(--dle-accent)); }
+.dle-wizard-choice-recommended { border-color: color-mix(in srgb, var(--dle-accent) 55%, var(--dle-border)); }
+.dle-wizard-choice-icon { font-size: 1.5em; color: var(--dle-accent); }
+.dle-wizard-choice-title { font-weight: 600; font-size: var(--dle-text-sm); }
+.dle-wizard-choice-desc { font-size: var(--dle-text-xs); color: var(--dle-text-muted); }
+.dle-wizard-choice-badge {
+    position: absolute; top: var(--dle-space-1); right: var(--dle-space-1);
+    font-size: var(--dle-text-xs); padding: 1px 6px; border-radius: var(--dle-radius-sm, 4px);
+    background: color-mix(in srgb, var(--dle-accent) 18%, transparent); color: var(--dle-accent);
+    max-width: 55%; white-space: nowrap; overflow: hidden; text-overflow: ellipsis;
+}
+.dle-wizard-action-row { display: flex; flex-wrap: wrap; align-items: center; gap: var(--dle-space-2); margin: var(--dle-space-2) 0 var(--dle-space-1); }
+.dle-wizard-skip-btn { opacity: var(--dle-opacity-muted, 0.75); }
+.dle-wizard-skip-btn:hover { opacity: 1; }
+.dle-wizard-page:focus-visible { outline: none; box-shadow: inset 0 0 0 2px var(--dle-focus, var(--dle-accent)); border-radius: var(--dle-radius-sm, 4px); }
+
 /* --- Confirm Badge (preset selection, etc.) --- */
 .dle-wizard-confirm-badge {
     font-size: var(--dle-text-sm);
     color: var(--dle-success);
     padding: var(--dle-space-1) 0;
     opacity: 0;
-    transition: opacity 200ms ease;
+    transition: opacity var(--dle-dur-base, 200ms) var(--dle-ease-out, ease-out);
 }
 .dle-wizard-confirm-badge.dle-wizard-badge-visible,
 .dle-wizard-confirm-badge:has(i) {
@@ -3858,10 +5028,6 @@ button.dle-chip-x:focus-visible { outline: 2px solid var(--dle-accent); outline-
     padding: var(--dle-space-1) 0;
     margin-top: var(--dle-space-1);
 }
-.dle-wizard-status-ok { color: var(--dle-success); }
-.dle-wizard-status-err { color: var(--dle-error); }
-.dle-wizard-status-skip { color: var(--dle-text-muted); font-style: italic; }
-
 /* --- Done Page --- */
 .dle-wizard-done-header {
     text-align: center;
@@ -3904,7 +5070,7 @@ button.dle-chip-x:focus-visible { outline: 2px solid var(--dle-accent); outline-
 
 .dle-wizard-actions-grid {
     display: grid;
-    grid-template-columns: 1fr 1fr;
+    grid-template-columns: repeat(auto-fit, minmax(140px, 1fr));
     gap: var(--dle-space-2);
     margin-bottom: var(--dle-space-3);
 }
@@ -4010,6 +5176,7 @@ button.dle-chip-x:focus-visible { outline: 2px solid var(--dle-accent); outline-
 @media (max-width: 600px) {
     .dle-wizard-row, .dle-wizard-row-3 { flex-direction: column; }
     .dle-wizard-preset-group { flex-direction: column; }
+    .dle-wizard-fork { grid-template-columns: 1fr; }
     .dle-wizard-actions-grid { grid-template-columns: 1fr; }
     .dle-wizard-step-label { display: none; }
     /* BUG-182: shrink dots + padding so 9 steps fit under 540px without scroll */
@@ -4028,12 +5195,15 @@ button.dle-chip-x:focus-visible { outline: 2px solid var(--dle-accent); outline-
     display: flex;
     gap: 0;
     border-bottom: 2px solid var(--SmartThemeBorderColor);
-    margin-bottom: 6px;
+    margin-bottom: var(--dle-space-2);
 }
 .dle-librarian-sub-tab {
     flex: 1;
     position: relative;
-    padding: 5px 32px 5px 10px;
+    /* Symmetric padding by default; only reserve right gutter when a count badge is actually
+       present (#f101) so badge-less tabs aren't visually off-center and translated labels
+       (DE/RU) get the full width on the stacked 1100px breakpoint. */
+    padding: 5px 10px;
     font-size: var(--dle-text-sm);
     font-weight: 600;
     text-align: center;
@@ -4044,14 +5214,18 @@ button.dle-chip-x:focus-visible { outline: 2px solid var(--dle-accent); outline-
     color: var(--SmartThemeBodyColor);
     opacity: 0.6;
     cursor: pointer;
-    transition: opacity 0.15s, border-color 0.2s;
+    transition: opacity var(--dle-dur-fast, 120ms) var(--dle-ease-out, ease-out), border-color var(--dle-dur-fast, 120ms) var(--dle-ease-out, ease-out);
+}
+/* Reserve room for the absolutely-positioned badge only when it has content. */
+.dle-librarian-sub-tab:has(.dle-sub-tab-count:not(:empty)) {
+    padding-right: 32px;
 }
 .dle-librarian-sub-tab:hover {
     opacity: 0.85;
 }
 .dle-librarian-sub-tab.active {
     opacity: 1;
-    border-bottom-color: var(--SmartThemeQuoteColor);
+    border-bottom-color: var(--dle-accent);
     color: var(--SmartThemeBodyColor);
 }
 .dle-sub-tab-count {
@@ -4069,19 +5243,19 @@ button.dle-chip-x:focus-visible { outline: 2px solid var(--dle-accent); outline-
     display: flex;
     gap: 4px;
     align-items: center;
-    margin-bottom: 6px;
+    margin-bottom: var(--dle-space-2);
 }
 /* --- Librarian select-all bar --- */
 .dle-librarian-select-all-bar {
     display: flex;
     align-items: center;
-    gap: 6px;
-    padding: 4px 6px;
+    gap: var(--dle-space-2);
+    padding: 4px var(--dle-space-2);
     font-size: var(--dle-text-xs);
     border-bottom: 1px solid var(--dle-border);
 }
 .dle-librarian-select-all-bar input[type="checkbox"] {
-    accent-color: var(--dle-accent);
+    /* f019: accent-color now comes from the global #deeplore-drawer rule (single source of truth). */
     cursor: pointer;
 }
 
@@ -4113,6 +5287,21 @@ button.dle-chip-x:focus-visible { outline: 2px solid var(--dle-accent); outline-
     width: 14px;
     text-align: center;
     opacity: 0.7;
+    flex-shrink: 0;
+}
+.dle-librarian-activity-row .dle-activity-query {
+    flex: 1 1 auto;
+    min-width: 0;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+}
+.dle-librarian-activity-row .dle-activity-meta {
+    flex-shrink: 0;
+}
+.dle-librarian-activity-row .dle-activity-time {
+    flex-shrink: 0;
+    margin-left: auto;
 }
 .dle-activity-results-link {
     all: unset;
@@ -4124,7 +5313,7 @@ button.dle-chip-x:focus-visible { outline: 2px solid var(--dle-accent); outline-
 }
 .dle-activity-results-link:hover { opacity: 0.85; }
 .dle-activity-results-link:focus-visible {
-    outline: 2px solid var(--SmartThemeQuoteColor);
+    outline: 2px solid var(--dle-focus);
     outline-offset: 2px;
     border-radius: 2px;
 }
@@ -4158,7 +5347,7 @@ button.dle-chip-x:focus-visible { outline: 2px solid var(--dle-accent); outline-
     border-radius: 4px;
     cursor: pointer;
     font-size: var(--dle-text-sm);
-    transition: background-color 0.15s;
+    transition: background-color var(--dle-dur-fast, 120ms) var(--dle-ease-out, ease-out);
     border-left: 3px solid transparent;
     animation: dle-entry-in 200ms ease-out both;
 }
@@ -4166,7 +5355,7 @@ button.dle-chip-x:focus-visible { outline: 2px solid var(--dle-accent); outline-
     background: color-mix(in srgb, var(--SmartThemeQuoteColor) 25%, var(--SmartThemeBlurTintColor, rgba(0,0,0,0.3)));
 }
 .dle-librarian-entry:focus-visible {
-    outline: 2px solid var(--SmartThemeQuoteColor);
+    outline: 2px solid var(--dle-focus);
     outline-offset: -2px;
 }
 
@@ -4177,21 +5366,68 @@ button.dle-chip-x:focus-visible { outline: 2px solid var(--dle-accent); outline-
         calc(var(--dle-gap, 0) * 22%), transparent);
 }
 
+/* #3: drawer-render — bulk bar, gap-row chevron grid, browse kebab, footer dock.
+   (.dle-gap-title / .dle-gap-time / .dle-gap-entry-title grid placements folded
+   into their existing cosmetic rules above to avoid duplicate fighting.) */
+/* f041 librarian bulk-action bar */
+.dle-librarian-select-all-bar { flex-wrap: wrap; }
+.dle-librarian-bulk-actions { display: none; align-items: center; gap: var(--dle-space-1); margin-left: auto; }
+.dle-librarian-select-all-bar.dle-has-selection .dle-librarian-bulk-actions { display: inline-flex; animation: dle-fade-in 120ms ease-out; }
+.dle-librarian-select-all-bar.dle-has-selection .dle-librarian-select-count { font-weight: 600; opacity: 1; }
+.dle-librarian-bulk-btn {
+    display: inline-flex; align-items: center; gap: 4px; padding: 3px 8px; font-size: var(--dle-text-xs);
+    border: 1px solid var(--dle-border); border-radius: var(--dle-radius-sm); background: var(--dle-bg-surface, transparent);
+    color: var(--dle-text, inherit); cursor: pointer;
+    transition: background var(--dle-dur-fast,120ms) var(--dle-ease-out,ease-out), border-color var(--dle-dur-fast,120ms) var(--dle-ease-out,ease-out);
+}
+.dle-librarian-bulk-btn:hover { background: var(--dle-bg-hover); }
+.dle-librarian-bulk-btn:focus-visible { outline: 2px solid var(--dle-focus); outline-offset: 1px; }
+.dle-librarian-bulk-btn[disabled] { opacity: var(--dle-opacity-disabled, .45); pointer-events: none; }
+.dle-librarian-bulk-btn-ghost { border-color: transparent; background: none; }
+.dle-librarian-bulk-btn-ghost:hover { background: var(--dle-bg-hover); }
+.dle-librarian-bulk-btn-danger:hover { border-color: var(--dle-error); color: var(--dle-error); }
+.dle-librarian-bulk-sep { width: 1px; height: 16px; background: var(--dle-border); margin: 0 2px; }
+/* f042 gap-row chevron + inline reason */
+.dle-librarian-entry { grid-template-columns: 18px 18px 1fr auto 16px; }
+.dle-gap-main { grid-column: 3; grid-row: 1; display: flex; flex-direction: column; gap: 1px; min-width: 0; }
+.dle-gap-title-row { display: flex; align-items: baseline; gap: 6px; min-width: 0; }
+.dle-gap-reason-teaser { white-space: nowrap; overflow: hidden; text-overflow: ellipsis; min-width: 0; line-height: 1.2; }
+.dle-gap-chevron { grid-column: 5; grid-row: 1; display: inline-flex; align-items: center; justify-content: center; opacity: var(--dle-opacity-muted); font-size: var(--dle-text-xs); transition: transform var(--dle-dur-fast,120ms) var(--dle-ease-out,ease-out); }
+.dle-librarian-entry[aria-expanded="true"] .dle-gap-chevron { transform: rotate(90deg); }
+.dle-librarian-entry:hover .dle-gap-chevron { opacity: 1; }
+/* f035 browse row kebab / hover-reveal */
+.dle-browse-actions { display: inline-flex; align-items: center; position: relative; }
+.dle-browse-actions-cluster { display: inline-flex; align-items: center; gap: 2px; max-width: 0; overflow: hidden; opacity: 0; transition: max-width var(--dle-dur-fast,120ms) var(--dle-ease-out,ease-out), opacity var(--dle-dur-fast,120ms) var(--dle-ease-out,ease-out); }
+.dle-browse-entry:hover .dle-browse-actions-cluster,
+.dle-browse-actions:focus-within .dle-browse-actions-cluster,
+.dle-browse-actions.dle-actions-open .dle-browse-actions-cluster,
+.dle-browse-actions.dle-actions-pinned-open .dle-browse-actions-cluster { max-width: 120px; opacity: 1; }
+.dle-browse-kebab { display: inline-flex; align-items: center; justify-content: center; min-width: 28px; min-height: 28px; padding: 4px; background: none; border: none; color: inherit; opacity: var(--dle-opacity-ghost, .35); cursor: pointer; border-radius: var(--dle-radius-sm); }
+.dle-browse-entry:hover .dle-browse-kebab, .dle-browse-kebab:focus-visible, .dle-browse-actions.dle-actions-open .dle-browse-kebab { opacity: 1; }
+.dle-browse-kebab:hover { background: var(--dle-bg-hover); }
+.dle-browse-kebab:focus-visible { outline: 2px solid var(--dle-focus); outline-offset: 1px; }
+.dle-browse-actions.dle-actions-pinned-open .dle-browse-kebab { opacity: .5; }
+/* footer diagnostics dock (.dle-health-icons / .dle-health-icon:hover dock props
+   folded into their canonical rules in ZONE 3 footer to avoid duplicate selectors). */
+.dle-diag-dock { display: flex; flex-direction: column; gap: 2px; }
+.dle-diag-dock-label { text-transform: uppercase; letter-spacing: .04em; font-size: var(--dle-text-xs); line-height: 1; }
+.dle-health-icon-action { color: var(--dle-warning); }
+
 /* --- Bulk selection --- */
 .dle-gap-check {
     width: 18px;
     height: 18px;
     margin: 0;
     cursor: pointer;
-    accent-color: var(--dle-accent);
+    /* f019: accent-color now comes from the global #deeplore-drawer rule (single source of truth). */
     grid-column: 1;
     grid-row: 1;
 }
-/* Checkbox and status share column 1; type=2, title=3, time=4 */
-/* (.dle-gap-status grid placement set in the full rule below at ~L3938) */
+/* Checkbox and status share column 1; type=2, main(title)=3, time=4, chevron=5.
+   (#3: title/time/entry-title grid placement now governed by the f042 chevron
+   grid block below — old explicit .dle-gap-title{3}/.dle-gap-time{4} one-liners
+   superseded; .dle-gap-title/.dle-gap-time now sit inside .dle-gap-main.) */
 .dle-gap-type { grid-column: 2; }
-.dle-gap-title { grid-column: 3; }
-.dle-gap-time { grid-column: 4; }
 /* BUG-209: scoped under .dle-librarian-entry so source order + specificity
    beats the temperature-tint rule without !important. Selection is the
    stronger user signal so it intentionally suppresses temperature heatmap. */
@@ -4219,14 +5455,11 @@ button.dle-chip-x:focus-visible { outline: 2px solid var(--dle-accent); outline-
     grid-row: 1;
 }
 .dle-gap-status:focus-visible {
-    outline: 2px solid var(--SmartThemeQuoteColor);
+    outline: 2px solid var(--dle-focus);
     outline-offset: -2px;
 }
-.dle-gap-pending { color: var(--dle-warning); }
-.dle-gap-acknowledged { color: var(--SmartThemeBotMesColorName, #8899aa); }
-.dle-gap-in-progress { color: var(--dle-info); font-size: var(--dle-text-xs); }
-.dle-gap-written { color: var(--dle-success); }
-.dle-gap-rejected { color: var(--dle-error); }
+.dle-gap-pending { color: var(--dle-warning-fg); }
+.dle-gap-written { color: var(--dle-success-fg); }
 
 /* --- Gap type icon --- */
 .dle-gap-type {
@@ -4237,10 +5470,38 @@ button.dle-chip-x:focus-visible { outline: 2px solid var(--dle-accent); outline-
 
 /* --- Gap title --- */
 .dle-gap-title {
+    /* #3: flows inside .dle-gap-title-row (flex), no longer its own grid cell. */
+    grid-column: auto;
     font-weight: 600;
     white-space: nowrap;
     overflow: hidden;
     text-overflow: ellipsis;
+    min-width: 0;
+}
+
+/* f039: update flags point at an existing entry — give them the info/blue
+   identity (vs the gold gap tint) and render the entry reference as a chip so
+   'update Castle' reads as targeting a real entry, not describing a void.
+   Mirrors the in-chat dropdown treatment for cross-surface consistency. */
+.dle-gap-update-icon { color: var(--dle-info); }
+.dle-librarian-entry.dle-gap-update {
+    border-left-color: color-mix(in srgb, var(--dle-info) 55%, transparent);
+}
+.dle-gap-entry-title {
+    /* #3: now flows inside .dle-gap-title-row (flex), not its own grid cell. */
+    grid-column: auto;
+    grid-row: auto;
+    flex: 0 1 auto;
+    justify-self: start;
+    align-self: start;
+    padding: 0 6px;
+    border-radius: var(--dle-radius-sm);
+    background: color-mix(in srgb, var(--dle-info) 16%, transparent);
+    color: color-mix(in srgb, var(--dle-info) 75%, var(--SmartThemeBodyColor, #ccc));
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    max-width: 100%;
     min-width: 0;
 }
 
@@ -4260,6 +5521,8 @@ button.dle-chip-x:focus-visible { outline: 2px solid var(--dle-accent); outline-
     display: none; /* hidden by default, shown on wider drawers */
 }
 .dle-gap-time {
+    grid-column: 4;
+    grid-row: 1;
     color: var(--SmartThemeBodyColor);
     opacity: 0.5;
 }
@@ -4276,7 +5539,7 @@ button.dle-chip-x:focus-visible { outline: 2px solid var(--dle-accent); outline-
     font-size: var(--dle-text-sm);
 }
 .dle-gap-no-results {
-    color: var(--dle-warning);
+    color: var(--dle-warning-fg);
     font-style: italic;
     font-size: var(--dle-text-xs);
 }
@@ -4335,7 +5598,7 @@ button.dle-chip-x:focus-visible { outline: 2px solid var(--dle-accent); outline-
     color: var(--SmartThemeBodyColor);
     background: color-mix(in srgb, var(--SmartThemeBodyColor) 8%, transparent);
     cursor: pointer;
-    transition: background 0.15s, border-color 0.15s;
+    transition: background var(--dle-dur-fast, 120ms) var(--dle-ease-out, ease-out), border-color var(--dle-dur-fast, 120ms) var(--dle-ease-out, ease-out);
 }
 .dle-gap-detail-actions .dle-gap-action:hover {
     background: color-mix(in srgb, var(--SmartThemeBodyColor) 16%, transparent);
@@ -4357,7 +5620,7 @@ button.dle-chip-x:focus-visible { outline: 2px solid var(--dle-accent); outline-
     text-align: center;
     border-radius: 7px;
     background: var(--dle-success);
-    color: var(--SmartThemeBodyColor, #fff);
+    color: var(--dle-on-success); /* f061: shared on-fill token, was raw SmartThemeBodyColor */
 }
 .dle-librarian-badge.dle-visible {
     display: block;
@@ -4460,8 +5723,9 @@ button.dle-chip-x:focus-visible { outline: 2px solid var(--dle-accent); outline-
     grid-template-columns: 1fr minmax(280px, 340px);
     gap: 16px;
     height: 80vh;
-    min-height: 500px;
-    transition: grid-template-columns 200ms ease;
+    /* Clamp the floor so short/landscape phone viewports never push the submit button off-screen (Issue #39) */
+    min-height: min(500px, 80dvh);
+    transition: grid-template-columns var(--dle-dur-base, 200ms) var(--dle-ease-out, ease-out);
 }
 .dle-librarian-popup.dle-librarian-chat-collapsed {
     grid-template-columns: 1fr auto;
@@ -4530,7 +5794,7 @@ button.dle-chip-x:focus-visible { outline: 2px solid var(--dle-accent); outline-
     overflow: hidden;
     text-overflow: ellipsis;
     max-width: 240px;
-    transition: color 0.15s ease, opacity 0.15s ease;
+    transition: color var(--dle-dur-fast, 120ms) var(--dle-ease-out, ease-out), opacity var(--dle-dur-fast, 120ms) var(--dle-ease-out, ease-out);
 }
 .dle-lib-write-status:empty {
     display: none;
@@ -4580,7 +5844,7 @@ button.dle-chip-x:focus-visible { outline: 2px solid var(--dle-accent); outline-
 .dle-librarian-content-area {
     flex: 1;
     min-height: 200px;
-    font-family: monospace;
+    font-family: var(--dle-font-mono);
     font-size: var(--dle-text-base);
     line-height: 1.5;
     resize: none;
@@ -4588,7 +5852,7 @@ button.dle-chip-x:focus-visible { outline: 2px solid var(--dle-accent); outline-
 .dle-librarian-unified-textarea {
     flex: 1;
     min-height: 0;
-    font-family: var(--monoFontFamily, ui-monospace, SFMono-Regular, Menlo, Consolas, monospace);
+    font-family: var(--dle-font-mono);
     font-size: var(--dle-text-sm);
     line-height: 1.5;
     resize: none;
@@ -4608,7 +5872,7 @@ button.dle-chip-x:focus-visible { outline: 2px solid var(--dle-accent); outline-
     border-radius: var(--dle-radius-sm);
     min-height: 36px;
     align-items: center;
-    transition: border-color 0.15s;
+    transition: border-color var(--dle-dur-fast, 120ms) var(--dle-ease-out, ease-out);
 }
 .dle-librarian-keys:focus-within {
     border-color: var(--SmartThemeQuoteColor);
@@ -4624,7 +5888,7 @@ button.dle-chip-x:focus-visible { outline: 2px solid var(--dle-accent); outline-
     border: 1px solid color-mix(in srgb, var(--SmartThemeQuoteColor) 40%, transparent);
     border-radius: 4px;
     white-space: nowrap;
-    transition: background 0.1s;
+    transition: background var(--dle-dur-fast, 120ms) var(--dle-ease-out, ease-out);
 }
 .dle-key-chip:hover {
     background: color-mix(in srgb, var(--SmartThemeQuoteColor) 35%, transparent);
@@ -4638,7 +5902,7 @@ button.dle-chip-x:focus-visible { outline: 2px solid var(--dle-accent); outline-
     font-size: var(--dle-text-base);
     line-height: 1;
     opacity: 0.5;
-    transition: opacity 0.1s;
+    transition: opacity var(--dle-dur-fast, 120ms) var(--dle-ease-out, ease-out);
 }
 .dle-key-remove:hover { opacity: 1; }
 .dle-key-input {
@@ -4650,70 +5914,9 @@ button.dle-chip-x:focus-visible { outline: 2px solid var(--dle-accent); outline-
     flex: 1;
 }
 .dle-key-input:focus-visible {
-    outline: 2px solid var(--SmartThemeQuoteColor);
+    outline: 2px solid var(--dle-focus);
     outline-offset: 1px;
     border-radius: 2px;
-}
-
-/* Frontmatter preview (collapsible, default collapsed) */
-.dle-librarian-frontmatter-preview {
-    margin-top: var(--dle-space-1);
-    flex-shrink: 0;
-}
-.dle-librarian-frontmatter-label {
-    font-size: var(--dle-text-xs);
-    font-weight: 600;
-    opacity: var(--dle-opacity-faint);
-    cursor: pointer;
-    user-select: none;
-    display: flex;
-    align-items: center;
-    gap: var(--dle-space-1);
-}
-.dle-librarian-frontmatter-label:hover { opacity: var(--dle-opacity-muted); }
-.dle-librarian-frontmatter-label .dle-frontmatter-chevron {
-    transition: transform 200ms ease;
-    font-size: var(--dle-text-xs);
-}
-.dle-librarian-frontmatter-preview.dle-frontmatter-expanded .dle-frontmatter-chevron {
-    transform: rotate(90deg);
-}
-.dle-librarian-frontmatter-code {
-    display: none;
-}
-.dle-librarian-frontmatter-preview.dle-frontmatter-expanded .dle-librarian-frontmatter-code {
-    display: block;
-}
-textarea.dle-librarian-frontmatter-code {
-    font-family: var(--monoFontFamily, ui-monospace, SFMono-Regular, Menlo, Consolas, monospace);
-    font-size: var(--dle-text-xs);
-    padding: 8px;
-    background: color-mix(in srgb, var(--SmartThemeBlurTintColor) 50%, transparent);
-    color: var(--SmartThemeBodyColor);
-    border: 1px solid color-mix(in srgb, var(--SmartThemeBorderColor) 50%, transparent);
-    border-radius: 4px;
-    white-space: pre;
-    word-break: normal;
-    overflow-wrap: normal;
-    tab-size: 2;
-    width: 100%;
-    box-sizing: border-box;
-    min-height: 180px;
-    max-height: 260px;
-    overflow: auto;
-    line-height: 1.45;
-    resize: vertical;
-    text-align: left;
-    direction: ltr;
-}
-textarea.dle-librarian-frontmatter-code:focus {
-    outline: none;
-    border-color: var(--SmartThemeQuoteColor);
-}
-textarea.dle-librarian-frontmatter-code:focus-visible {
-    outline: 2px solid var(--SmartThemeUnderlineColor);
-    outline-offset: -2px;
-    border-color: var(--SmartThemeQuoteColor);
 }
 
 /* --- Chat panel (right) --- */
@@ -4745,7 +5948,7 @@ textarea.dle-librarian-frontmatter-code:focus-visible {
     font-size: var(--dle-text-base);
     padding: 2px 6px;
     opacity: 0.5;
-    transition: opacity 0.15s;
+    transition: opacity var(--dle-dur-fast, 120ms) var(--dle-ease-out, ease-out);
 }
 #dle-lib-chat-collapse:hover { opacity: 1; }
 #dle-lib-chat-collapse { position: relative; }
@@ -4761,7 +5964,7 @@ textarea.dle-librarian-frontmatter-code:focus-visible {
     text-align: center;
     border-radius: 8px;
     background: var(--dle-error, #e74c3c);
-    color: #fff;
+    color: var(--dle-on-error); /* f061: shared on-fill token, was hardcoded #fff */
     padding: 0 3px;
 }
 .dle-librarian-chat-title {
@@ -4775,7 +5978,7 @@ textarea.dle-librarian-frontmatter-code:focus-visible {
     font-size: var(--dle-text-base);
     padding: 2px 6px;
     opacity: 0.6;
-    transition: opacity 0.15s;
+    transition: opacity var(--dle-dur-fast, 120ms) var(--dle-ease-out, ease-out);
 }
 .dle-lib-activity-toggle:hover { opacity: 1; }
 .dle-lib-activity-toggle[aria-expanded="true"] { opacity: 1; color: var(--SmartThemeQuoteColor); }
@@ -4784,6 +5987,7 @@ textarea.dle-librarian-frontmatter-code:focus-visible {
 .dle-lib-activity-log {
     max-height: 140px;
     overflow-y: auto;
+    overscroll-behavior: contain; /* Issue #39 */
     border: 1px solid var(--SmartThemeBorderColor);
     border-radius: 4px;
     margin-bottom: 6px;
@@ -4845,6 +6049,7 @@ textarea.dle-librarian-frontmatter-code:focus-visible {
 .dle-librarian-messages {
     flex: 1;
     overflow-y: auto;
+    overscroll-behavior: contain; /* Issue #39 */
     display: flex;
     flex-direction: column;
     gap: var(--dle-space-3);
@@ -4868,7 +6073,7 @@ textarea.dle-librarian-frontmatter-code:focus-visible {
     font-size: var(--dle-text-xs);
     padding: 2px 4px;
     opacity: 0;
-    transition: opacity 0.15s;
+    transition: opacity var(--dle-dur-fast, 120ms) var(--dle-ease-out, ease-out);
     background: none;
     border: none;
     color: var(--SmartThemeBodyColor);
@@ -4940,7 +6145,7 @@ textarea.dle-librarian-frontmatter-code:focus-visible {
     border: 1px solid var(--SmartThemeBorderColor);
     border-radius: var(--dle-radius-md);
     padding: var(--dle-space-2) var(--dle-space-3);
-    transition: border-color 0.15s;
+    transition: border-color var(--dle-dur-fast, 120ms) var(--dle-ease-out, ease-out);
 }
 .dle-lib-option-card:hover {
     border-color: var(--SmartThemeQuoteColor);
@@ -4971,6 +6176,7 @@ textarea.dle-librarian-frontmatter-code:focus-visible {
     padding: 2px 10px;
     opacity: 0.7;
     width: 100%;
+    box-sizing: border-box; /* width:100% + card padding must not overflow the narrow chat-column grid track */
     margin-top: 4px;
 }
 
@@ -5057,7 +6263,7 @@ textarea.dle-librarian-frontmatter-code:focus-visible {
     display: flex;
     align-items: center;
     gap: 6px;
-    font-family: var(--monoFontFamily, monospace);
+    font-family: var(--dle-font-mono);
     user-select: none;
 }
 .dle-lib-tool-header:hover {
@@ -5065,7 +6271,7 @@ textarea.dle-librarian-frontmatter-code:focus-visible {
 }
 /* BUG-184: focus ring for keyboard users */
 .dle-lib-tool-header:focus-visible {
-    outline: 2px solid var(--dle-accent);
+    outline: 2px solid var(--dle-focus);
     outline-offset: 2px;
     opacity: 1;
 }
@@ -5073,15 +6279,14 @@ textarea.dle-librarian-frontmatter-code:focus-visible {
     color: var(--SmartThemeQuoteColor);
     font-size: var(--dle-text-xs);
 }
-.dle-lib-tool-spinner {
-    font-size: var(--dle-text-xs);
-    color: var(--SmartThemeQuoteColor);
-}
+/* f069: removed the .dle-lib-tool-spinner rule — it set color (overriding the global
+   accent contract) and font-size (inert: goo-spinner is sized by its `size` attribute).
+   The spinner now falls through to the single global goo-spinner accent rule. */
 .dle-lib-tool-result {
     white-space: pre-wrap;
     word-break: break-word;
-    font-family: var(--monoFontFamily, monospace);
-    font-size: var(--dle-text-xs);
+    font-family: var(--dle-font-mono);
+    font-size: var(--dle-text-code);
     max-height: 200px;
     overflow-y: auto;
     margin-top: 4px;
@@ -5133,7 +6338,7 @@ textarea.dle-librarian-frontmatter-code:focus-visible {
     padding: 6px 8px;
     font-size: var(--dle-text-base);
     cursor: pointer;
-    transition: background-color 0.15s;
+    transition: background-color var(--dle-dur-fast, 120ms) var(--dle-ease-out, ease-out);
 }
 .dle-lib-queue-item:hover {
     background: color-mix(in srgb, var(--SmartThemeBodyColor) 8%, transparent);
@@ -5176,7 +6381,7 @@ textarea.dle-librarian-frontmatter-code:focus-visible {
     font-size: var(--dle-text-xs);
     padding: 2px 6px;
     opacity: var(--dle-opacity-muted);
-    transition: opacity 0.15s;
+    transition: opacity var(--dle-dur-fast, 120ms) var(--dle-ease-out, ease-out);
 }
 .dle-librarian-clear-written:hover {
     opacity: 1;
@@ -5199,26 +6404,6 @@ textarea.dle-librarian-frontmatter-code:focus-visible {
         padding-left: 0;
         padding-top: 12px;
     }
-}
-
-/* ============================================================================
- * Tool Call Messages — Hidden (consolidated into reply dropdown)
- * ST creates separate .toolCall messages for each tool invocation.
- * We hide these entirely and show a single "Consulted lore vault" dropdown
- * on the assistant reply message instead (injected by librarian-ui.js).
- * ============================================================================ */
-
-/* Hide tool-call system messages only when DLE is actively rendering a
-   consulted-vault dropdown in the same chat. The :has() guard scopes the
-   override to chats DLE is participating in, so other extensions that emit
-   .smallSysMes.toolCall messages are not affected. */
-#chat:has(.dle-librarian-details) .mes.smallSysMes.toolCall {
-    display: none;
-}
-
-/* Hide empty intermediate "Thought for some time" messages before tool calls */
-#chat:has(.dle-librarian-details) .mes.reasoning:has(+ .mes.smallSysMes.toolCall) {
-    display: none;
 }
 
 /* ============================================================================
@@ -5257,7 +6442,10 @@ textarea.dle-librarian-frontmatter-code:focus-visible {
     padding-right: calc(0.7em + 14px);
     border-radius: 5px;
     background-color: color-mix(in srgb, var(--SmartThemeBlurTintColor, #1a1a2e) 85%, var(--dle-librarian-tint) 15%);
-    font-size: calc(var(--mainFontSize, 15px) * 0.9);
+    /* f064: use the shared em-relative type scale instead of a parallel
+       mainFontSize calc so the chat widget tracks the same tokens (and the
+       BUG-213 readability floor) as the rest of DLE. */
+    font-size: var(--dle-text-sm);
 }
 
 .dle-librarian-header:hover {
@@ -5266,7 +6454,7 @@ textarea.dle-librarian-frontmatter-code:focus-visible {
 
 .dle-librarian-icon-header {
     color: var(--dle-librarian-accent);
-    font-size: 0.85em;
+    font-size: var(--dle-text-sm);
     flex-shrink: 0;
 }
 
@@ -5280,10 +6468,12 @@ textarea.dle-librarian-frontmatter-code:focus-visible {
     top: 50%;
     right: 7px;
     transform: translateY(-50%);
-    font-size: calc(var(--mainFontSize, 15px) * 0.7);
+    /* f064: token scale (was 0.7*mainFontSize, which undercut the BUG-213
+       readability floor). xs token keeps the disclosure glyph above it. */
+    font-size: var(--dle-text-xs);
     color: var(--SmartThemeBodyColor, #ccc);
     opacity: 0.6;
-    transition: transform 0.15s ease;
+    transition: transform var(--dle-dur-base, 200ms) var(--dle-ease-out, ease-out);
 }
 
 .dle-librarian-details:not([open]) .dle-librarian-arrow {
@@ -5299,6 +6489,12 @@ textarea.dle-librarian-frontmatter-code:focus-visible {
     margin-bottom: 0.5em;
     color: var(--SmartThemeBodyColor, #ccc);
     opacity: 0.85;
+    /* Bound the expanded list so a reply with many searches + flags can't
+       balloon past ST's compact reasoning-block size and shove the character
+       reply down the chat flow.  Internal scroll keeps the collapsed summary
+       as the primary compact view. */
+    max-height: 40vh;
+    overflow-y: auto;
 }
 
 .dle-librarian-dropdown-entry {
@@ -5306,7 +6502,9 @@ textarea.dle-librarian-frontmatter-code:focus-visible {
     align-items: baseline;
     gap: 8px;
     padding: 3px 0;
-    font-size: calc(var(--mainFontSize, 15px) * 0.85);
+    /* f064: token scale (was 0.85*mainFontSize). Entries live in .dle-librarian-content
+       which inherits the chat base, so sm resolves to the same ~0.85em it did before. */
+    font-size: var(--dle-text-sm);
 }
 
 .dle-librarian-dropdown-entry .dle-librarian-icon {
@@ -5314,7 +6512,7 @@ textarea.dle-librarian-frontmatter-code:focus-visible {
     width: 1.2em;
     text-align: center;
     color: color-mix(in srgb, var(--SmartThemeQuoteColor, #d4a847) 60%, gold);
-    font-size: 0.85em;
+    font-size: var(--dle-text-sm);
 }
 
 .dle-librarian-dropdown-entry .dle-librarian-query {
@@ -5340,6 +6538,18 @@ textarea.dle-librarian-frontmatter-code:focus-visible {
     content: '\2192  '; /* → */
 }
 
+/* f039: 'update existing entry' flags read distinct from 'new gap' flags.
+   Gap flags keep the gold tint; update flags borrow the info/blue token so a
+   'this entry is stale' signal doesn't look like a 'this lore is missing' one.
+   The ' — EntryTitle' reference rides inside .dle-librarian-query here (single
+   span), so we tint the whole update query to point at the named entry. */
+.dle-librarian-dropdown-entry.dle-flag-update .dle-librarian-icon {
+    color: var(--dle-info);
+}
+.dle-librarian-dropdown-entry.dle-flag-update .dle-librarian-query {
+    color: color-mix(in srgb, var(--dle-info) 75%, var(--SmartThemeBodyColor, #ccc));
+}
+
 /* ═══ Phase 10: Competitive Feature Steals ═══ */
 
 /* Command palette */
@@ -5355,7 +6565,7 @@ textarea.dle-librarian-frontmatter-code:focus-visible {
 .dle-palette-item:hover, .dle-palette-item:focus-visible {
     background: var(--dle-bg-2);
 }
-.dle-palette-cmd { min-width: 180px; flex-shrink: 0; font-family: monospace; color: var(--dle-text-muted); font-size: var(--dle-text-sm); }
+.dle-palette-cmd { min-width: 180px; flex-shrink: 0; font-family: var(--dle-font-mono); color: var(--dle-text-muted); font-size: var(--dle-text-code); }
 .dle-palette-desc { font-size: var(--dle-text-sm); }
 .dle-palette-empty { padding: var(--dle-space-3); color: var(--dle-text-muted); font-size: var(--dle-text-sm); }
 
@@ -5387,28 +6597,74 @@ textarea.dle-librarian-frontmatter-code:focus-visible {
 #form_sheld { position: relative; }
 #send_form  { position: relative; z-index: 2; }
 
+/* Wave I sized the toast up 50% (padding 5/16 → 8/24, font 0.82em → 1.23em).
+   f049 rebalanced it back down (padding 6/20, font 1.05em, spinner 38 → 28 in
+   index.js) so the transient per-turn status no longer dominates the durable
+   footer/diagnostics surfaces — visual weight should track information durability. */
 #dle-pipeline-status {
     position: absolute;
     bottom: 100%;
     left: 0;
     right: 0;
-    padding: 5px 16px;
-    font-size: 0.82em;
+    padding: 6px 20px;
+    font-size: 1.05em;
     font-style: italic;
-    color: var(--SmartThemeQuoteColor, #aaa);
-    background: color-mix(in srgb, var(--SmartThemeBlurTintColor, #222) 92%, white);
+    color: var(--SmartThemeBodyColor, #ddd);
+    /* f044: blend the tint toward the theme BODY color, not literal white, so the
+       panel separates from the chat background in BOTH dark and light themes (a
+       near-white light tint mixed with more white was nearly invisible). */
+    background: color-mix(in srgb, var(--SmartThemeBlurTintColor, #222) 88%, var(--SmartThemeBodyColor));
+    /* f044: subtle DLE-branded left accent so the toast reads as a DLE surface
+       regardless of theme. */
     border: 1px solid color-mix(in srgb, var(--SmartThemeBorderColor) 60%, transparent);
+    border-left: 3px solid var(--dle-accent);
     border-bottom: none;
-    border-radius: 8px 8px 0 0;
+    border-radius: 12px 12px 0 0;
     display: flex;
     align-items: center;
-    gap: 8px;
+    gap: 12px;
     z-index: 1;
     pointer-events: none;
-    animation: dle-toast-in 0.3s ease-out forwards;
+    animation: dle-toast-in var(--dle-dur-slow, 320ms) var(--dle-ease-out, ease-out) forwards;
 }
-#dle-pipeline-status.dle-toast-out { animation: dle-toast-out 0.2s ease-in forwards; }
-#dle-pipeline-status i.fa-spinner { font-size: 0.85em; opacity: 0.7; }
+#dle-pipeline-status.dle-toast-out { animation: dle-toast-out var(--dle-dur-base, 200ms) var(--dle-ease, ease-in) forwards; }
+
+/* Wave D: phase text cross-fades on change (the spinner node is left untouched so its
+   spin never restarts). Uses the Wave A motion tokens. The swap class is re-triggered
+   from JS via a remove → reflow → re-add cycle in _updatePipelineStatus. */
+.dle-pipeline-status-text { display: inline-block; }
+.dle-pipeline-status-text.dle-phase-swap {
+    animation: dle-phase-swap var(--dle-dur-fast, 120ms) var(--dle-ease-out, ease-out);
+}
+@keyframes dle-phase-swap {
+    from { opacity: 0; transform: translateY(2px); }
+    to   { opacity: 1; transform: none; }
+}
+
+/* #6 (LP1): consulting-vault heartbeat (elapsed) + cancel on the pipeline toast. */
+.dle-pipeline-elapsed { margin-left: 6px; font-size: var(--dle-text-xs); opacity: var(--dle-opacity-muted); font-variant-numeric: tabular-nums; }
+.dle-pipeline-cancel {
+    margin-left: 8px; padding: 1px 7px; font-size: var(--dle-text-xs); cursor: pointer;
+    border: 1px solid var(--dle-border); border-radius: var(--dle-radius-sm);
+    background: var(--dle-bg-surface, transparent); color: var(--dle-text, inherit);
+    transition: background var(--dle-dur-fast,120ms) var(--dle-ease-out,ease-out), border-color var(--dle-dur-fast,120ms) var(--dle-ease-out,ease-out);
+}
+.dle-pipeline-cancel:hover { background: var(--dle-bg-hover); border-color: var(--dle-error); color: var(--dle-error); }
+.dle-pipeline-cancel:focus-visible { outline: 2px solid var(--dle-focus); outline-offset: 1px; }
+
+/* Wave D: explicit reduced-motion coverage. #dle-pipeline-status lives in #form_sheld,
+   OUTSIDE the descendant-scoped reduced-motion block (which only covers .dle-settings *
+   and #deeplore-drawer *), so it needs its own opt-out. _removePipelineStatus has a
+   setTimeout fallback, so killing dle-toast-out's animationend is safe.
+   Wave G decision: kept HERE, next to the toast it governs, rather than folded into the
+   broad block — locality wins, and the broad block can't reach #form_sheld anyway. */
+@media (prefers-reduced-motion: reduce) {
+    #dle-pipeline-status,
+    #dle-pipeline-status.dle-toast-out,
+    .dle-pipeline-status-text.dle-phase-swap {
+        animation: none !important;
+    }
+}
 
 /* GOTCHA: translateY(%) is relative to element's own height, not parent's.
    calc(100% + var(--bottomFormBlockSize)) ensures the toast hides behind the
@@ -5431,3 +6687,456 @@ textarea.dle-librarian-frontmatter-code:focus-visible {
     color: var(--dle-warning, #e2a832);
 }
 
+/* ═══════════════════════════════════════════════════════════════════════════
+   Wave G — a11y hardening (Windows High Contrast) + universal press feedback
+   ═══════════════════════════════════════════════════════════════════════════ */
+
+/* Universal pressed feedback — every DLE button / role=button / role=radio dips on
+   :active so a click registers physically (was a single :active rule in the whole
+   sheet). Instantaneous state change (no transition) → reduced-motion safe. Scoped
+   to DLE roots so ST's own controls are untouched. */
+#deeplore-drawer button:active,
+#deeplore-drawer [role="button"]:active,
+#deeplore-drawer [role="radio"]:active,
+.dle-settings button:active,
+.dle-settings [role="button"]:active,
+.dle-popup button:active,
+.dle-popup [role="button"]:active {
+    transform: translateY(1px);
+}
+
+/* Forced-colors (Windows High Contrast): DLE leans on color-mix(…transparent) tints
+   and custom borders that the OS palette strips, so state conveyed by background tint
+   disappears. Restore it with system colors + explicit borders. The preview harness
+   can't emulate forced-colors, so these are authored conservatively against verified
+   class names rather than visually tuned. */
+@media (forced-colors: active) {
+    /* Keyboard focus must be a visible system outline everywhere DLE renders. */
+    #deeplore-drawer :focus-visible,
+    .dle-settings :focus-visible,
+    .dle-popup :focus-visible {
+        outline: 2px solid Highlight !important;
+        outline-offset: 2px;
+    }
+
+    /* Panel delineation — its tinted bg/border collapse to Canvas. */
+    #deeplore-panel { border: 1px solid CanvasText; }
+
+    /* Selected radio / active tab / pressed quick-filter: the "current" tint vanishes
+       → mark with a system border + Highlight text. */
+    .dle-tab.active,
+    .dle-why-filter-btn[aria-checked="true"],
+    .dle-librarian-sub-tab[aria-checked="true"],
+    .dle-qf-pill[aria-pressed="true"] {
+        border: 1px solid Highlight !important;
+        color: Highlight !important;
+    }
+
+    /* Browse row state cues (injected / selected) read via bg → add an inset ring. */
+    .dle-browse-injected { outline: 1px solid Highlight; outline-offset: -1px; }
+    .dle-browse-selected { outline: 2px solid Highlight; outline-offset: -2px; }
+
+    /* Pin / block toggles signal "engaged" via tint → border them when active. */
+    .dle-pin-active,
+    .dle-block-active { border: 1px solid Highlight !important; }
+
+    /* Health dots, temperature tints and token heat are color-as-data — preserve their
+       hues instead of letting the OS flatten them to CanvasText. */
+    #dle-drawer-footer [data-health],
+    .dle-status-dot,
+    .dle-temp-hot,
+    .dle-temp-cold,
+    .dle-why-tokens { forced-color-adjust: none; }
+}
+
+/* ═══════════════════════════════════════════════════════════════════════════
+   Wave I — goo-spinner integration
+   ═══════════════════════════════════════════════════════════════════════════ */
+/* The component fills with currentColor (instances pass color="currentColor"), so this
+   one rule makes EVERY goo-spinner take the DLE accent and adapt to dark/light via the
+   theme-derived var. Size is set per-instance via the `size` attribute (NOT width/height
+   here — the internal jelly physics reads the attribute, so a CSS size override would
+   desync the box from the blob orbit). vertical-align keeps inline spinners on the
+   text baseline (toast, buttons, refresh glyph). */
+goo-spinner {
+    color: var(--dle-accent, var(--SmartThemeQuoteColor, #5b8def));
+    vertical-align: middle;
+    line-height: 0;
+}
+
+/* ═══════════════════════════════════════════════════════════════════════════
+   F18 — Temperature legend gradient line (browse tab)
+   ═══════════════════════════════════════════════════════════════════════════ */
+.dle-browse-temp-legend {
+    height: 3px;
+    background: linear-gradient(to right,
+        color-mix(in srgb, var(--dle-info) 70%, transparent) 0%,
+        transparent 50%,
+        color-mix(in srgb, var(--dle-error) 70%, transparent) 100%
+    );
+    border-radius: 2px;
+    margin: var(--dle-space-1) 0 var(--dle-space-2);
+    position: relative;
+}
+.dle-browse-temp-legend::before,
+.dle-browse-temp-legend::after {
+    font-size: var(--dle-text-xs);
+    color: var(--dle-text-muted);
+    position: absolute;
+    top: -14px;
+}
+.dle-browse-temp-legend::before {
+    content: 'rarely injected';
+    left: 0;
+}
+.dle-browse-temp-legend::after {
+    content: 'frequently injected';
+    right: 0;
+}
+
+/* ═══════════════════════════════════════════════════════════════════════════
+   New agent classes
+   ═══════════════════════════════════════════════════════════════════════════ */
+
+/* Chip warn variant — base chip styling applies; this adds warn tinting */
+.dle-chip-warn {
+    background: color-mix(in srgb, var(--dle-warning) 20%, transparent);
+    border-color: color-mix(in srgb, var(--dle-warning) 40%, transparent);
+    color: var(--SmartThemeBodyColor, #eee);
+}
+
+/* Reasoning warning button — button reset, chip classes paint */
+.dle-reasoning-warning-btn {
+    background: transparent;
+    border: none;
+    padding: 0;
+    font: inherit;
+    cursor: pointer;
+    display: inline-flex;
+    align-items: center;
+    gap: var(--dle-space-1);
+}
+.dle-reasoning-warning-btn:focus-visible {
+    outline: 2px solid var(--dle-focus);
+    outline-offset: 2px;
+    border-radius: 4px;
+}
+
+/* Chip dismiss × button */
+.dle-chip-dismiss {
+    font-size: var(--dle-text-sm);
+    opacity: var(--dle-opacity-muted);
+    cursor: pointer;
+    margin-left: var(--dle-space-1);
+    padding: 0 var(--dle-space-1);
+    background: none;
+    border: none;
+    color: inherit;
+    line-height: 1;
+    border-radius: 2px;
+}
+.dle-chip-dismiss:hover,
+.dle-chip-dismiss:focus-visible {
+    opacity: 1;
+    outline: 1px solid var(--dle-focus);
+}
+
+/* Gating value chip — interactive, mirrors .dle-folder-badge-chip */
+.dle-folder-badge-chip,
+.dle-gating-value-chip {
+    cursor: pointer;
+}
+.dle-folder-badge-chip:hover,
+.dle-gating-value-chip:hover {
+    opacity: 0.8;
+}
+/* BUG-188: focus ring for keyboard users */
+.dle-folder-badge-chip:focus-visible,
+.dle-gating-value-chip:focus-visible {
+    outline: 2px solid var(--dle-focus);
+    outline-offset: 2px;
+}
+
+/* Browse quick-filter toolbar container */
+.dle-browse-quick-filters {
+    display: flex;
+    gap: var(--dle-space-2);
+    flex-wrap: wrap;
+    padding: var(--dle-space-1) var(--dle-space-2);
+}
+.dle-browse-quick-filters:empty {
+    display: none;
+}
+
+/* Browse quick-filter pill — chip style + pressed state */
+.dle-browse-quick-filter-pill,
+.dle-qf-pill {
+    font-size: var(--dle-text-xs);
+    padding: 2px var(--dle-space-2);
+    border: 1px solid var(--dle-border, var(--SmartThemeBorderColor));
+    border-radius: 999px;
+    cursor: pointer;
+    user-select: none;
+    background: transparent;
+    color: var(--dle-text-muted);
+    transition: background var(--dle-dur-fast, 120ms) var(--dle-ease-out, ease-out), color var(--dle-dur-fast, 120ms) var(--dle-ease-out, ease-out);
+}
+.dle-browse-quick-filter-pill:hover,
+.dle-qf-pill:hover {
+    color: var(--SmartThemeBodyColor, #eee);
+}
+.dle-browse-quick-filter-pill:focus-visible,
+.dle-qf-pill:focus-visible {
+    outline: 2px solid var(--dle-focus);
+    outline-offset: 2px;
+}
+.dle-browse-quick-filter-pill[aria-pressed="true"],
+.dle-browse-quick-filter-pill.dle-qf-active,
+.dle-qf-pill[aria-pressed="true"],
+.dle-qf-pill.dle-qf-active {
+    background: color-mix(in srgb, var(--dle-accent) 20%, transparent);
+    color: var(--dle-accent);
+    border-color: var(--dle-accent);
+}
+
+/* Browse clear-filters button (inside empty state) */
+.dle-browse-clear-filters {
+    margin-top: var(--dle-space-2);
+    padding: 4px var(--dle-space-3);
+    background: transparent;
+    border: 1px solid var(--dle-accent);
+    color: var(--dle-accent);
+    border-radius: 4px;
+    cursor: pointer;
+    font-size: var(--dle-text-sm);
+}
+.dle-browse-clear-filters:hover {
+    background: color-mix(in srgb, var(--dle-accent) 15%, transparent);
+}
+.dle-browse-clear-filters:focus-visible {
+    outline: 2px solid var(--dle-focus);
+    outline-offset: 2px;
+}
+
+/* Browse active filters summary paragraph */
+.dle-browse-active-filters-list {
+    font-size: var(--dle-text-sm);
+    color: var(--dle-text-muted);
+    margin: var(--dle-space-1) 0;
+    display: flex;
+    flex-wrap: wrap;
+    gap: var(--dle-space-1);
+    justify-content: center;
+}
+.dle-browse-active-filters-list:empty {
+    display: none;
+}
+.dle-browse-active-filter-chip {
+    font-size: var(--dle-text-xs);
+    padding: 2px var(--dle-space-2);
+    border: 1px solid var(--dle-border, var(--SmartThemeBorderColor));
+    border-radius: 999px;
+    background: color-mix(in srgb, var(--dle-accent) 12%, transparent);
+    color: var(--dle-text-muted);
+}
+
+/* P50 legend in empty-no-data state */
+.dle-empty-legend {
+    font-size: var(--dle-text-xs);
+    color: var(--dle-text-muted);
+    margin-top: var(--dle-space-2);
+    opacity: var(--dle-opacity-muted, 0.7);
+}
+
+/* ============================================================================
+ * P3 Polish — Status, Footer, Browse, Gating, Librarian
+ * ============================================================================ */
+
+/* Item 7: skip-tools state-change pulse (1 iter, 600ms, subtle scale+fade) */
+@keyframes dle-skip-tools-pulse {
+    0%   { transform: scale(1);    opacity: 1; }
+    40%  { transform: scale(1.18); opacity: 0.75; }
+    100% { transform: scale(1);    opacity: 1; }
+}
+.dle-skip-tools-pulse {
+    animation: dle-skip-tools-pulse 600ms ease-out 1;
+}
+
+/* Item 8: indexing shimmer on entries-bar-container (infinite while active) */
+@keyframes dle-indexing-shimmer {
+    0%   { background-position: -200% center; }
+    100% { background-position: 200% center; }
+}
+.dle-indexing-shimmer {
+    background: linear-gradient(90deg,
+        transparent 25%,
+        color-mix(in srgb, var(--dle-accent) 30%, transparent) 50%,
+        transparent 75%) center / 200% auto;
+    animation: dle-indexing-shimmer 1.4s linear infinite;
+}
+
+/* Item 9: browse copy-title ghost button matching .dle-browse-pin */
+button.dle-browse-copy-title-btn {
+    font-size: var(--dle-text-base);
+    cursor: pointer;
+    opacity: var(--dle-opacity-muted);
+    background: none;
+    border: none;
+    color: inherit;
+    padding: 6px;
+    min-width: 32px;
+    min-height: 32px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+}
+button.dle-browse-copy-title-btn:hover {
+    opacity: 1;
+    background: var(--dle-bg-hover);
+    border-radius: var(--dle-radius-sm);
+}
+button.dle-browse-copy-title-btn:focus-visible {
+    outline: 2px solid var(--dle-focus);
+    outline-offset: 2px;
+    border-radius: var(--dle-radius-sm);
+}
+
+/* Item 10: gating-clear-btn — × dismiss matching chip dismiss style */
+.dle-gating-clear-btn {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    background: none;
+    border: none;
+    cursor: pointer;
+    color: var(--dle-text-muted);
+    font-size: var(--dle-text-sm);
+    padding: 0 var(--dle-space-1);
+    border-radius: var(--dle-radius-sm);
+    line-height: 1;
+    opacity: var(--dle-opacity-muted);
+}
+.dle-gating-clear-btn:hover {
+    opacity: 1;
+    color: var(--dle-error);
+    background: color-mix(in srgb, var(--dle-error) 12%, transparent);
+}
+.dle-gating-clear-btn:focus-visible {
+    outline: 2px solid var(--dle-focus);
+    outline-offset: 2px;
+}
+
+/* Item 11: librarian clear + invert buttons matching .dle-librarian-select-all-bar style */
+.dle-librarian-clear-btn,
+.dle-librarian-invert-btn {
+    font-size: var(--dle-text-xs);
+    padding: 2px var(--dle-space-2);
+    background: none;
+    border: 1px solid var(--dle-border);
+    border-radius: var(--dle-radius-sm);
+    color: var(--dle-text-muted);
+    cursor: pointer;
+    opacity: var(--dle-opacity-muted);
+    transition: opacity var(--dle-dur-fast, 120ms) var(--dle-ease-out, ease-out), border-color var(--dle-dur-fast, 120ms) var(--dle-ease-out, ease-out);
+}
+.dle-librarian-clear-btn:hover,
+.dle-librarian-invert-btn:hover {
+    opacity: 1;
+    border-color: var(--dle-accent);
+    color: var(--dle-accent);
+}
+.dle-librarian-clear-btn:focus-visible,
+.dle-librarian-invert-btn:focus-visible {
+    outline: 2px solid var(--dle-focus);
+    outline-offset: 2px;
+}
+
+/* Item 12: why-clear-filter-pill inline pill matching .dle-browse-clear-filters */
+.dle-why-clear-filter-pill {
+    display: inline-block;
+    padding: 2px var(--dle-space-2);
+    background: transparent;
+    border: 1px solid var(--dle-accent);
+    color: var(--dle-accent);
+    border-radius: var(--dle-radius-pill);
+    cursor: pointer;
+    font-size: var(--dle-text-xs);
+    line-height: 1.4;
+    vertical-align: middle;
+}
+.dle-why-clear-filter-pill:hover {
+    background: color-mix(in srgb, var(--dle-accent) 15%, transparent);
+}
+.dle-why-clear-filter-pill:focus-visible {
+    outline: 2px solid var(--dle-focus);
+    outline-offset: 2px;
+}
+
+/* v2.5: proxy mode migration — pulse-glow attention on the migrated feature's
+   accordion when the post-migration popup opens Settings. 4 pulses × 1.2s ≈ 5s,
+   matched by the 6s setTimeout in _maybeShowProxyDeprecationNotice. */
+@keyframes dle-pulse-attention-kf {
+    0%, 100% { box-shadow: 0 0 0 0 transparent; }
+    50% { box-shadow: 0 0 0 8px color-mix(in srgb, var(--dle-warning) 60%, transparent); }
+}
+.dle-pulse-attention {
+    animation: dle-pulse-attention-kf 1.2s ease-in-out 4;
+    outline: 2px solid var(--dle-warning);
+    outline-offset: 2px;
+}
+
+/* v2.6 R2 E1: dle-notify toast facade — copyable error bodies + action buttons */
+.dle-toast-copyable { cursor: copy; }
+.dle-toast-copyable::after {
+    content: 'copy';
+    text-transform: uppercase;
+    letter-spacing: 0.04em;
+    opacity: 0.5;
+    margin-left: 6px;
+    font-size: 0.72em;
+    vertical-align: middle;
+}
+.dle-toast-copyable:hover::after { opacity: 0.9; }
+.dle-toast-copied::after { content: 'copied'; opacity: 1; color: var(--dle-success-fg, #6cc070); }
+.dle-toast-actions { display: flex; gap: 6px; margin-top: 8px; flex-wrap: wrap; }
+.dle-toast-action { font-size: 0.8em; padding: 2px 10px; }
+
+
+/* WI import report popup — responsive 2-column field list + EM explainer box */
+.dle-import-report-cols {
+    columns: 2;
+    column-gap: 2em;
+}
+@media (max-width: 600px) {
+    .dle-import-report-cols {
+        columns: 1;
+    }
+}
+.dle-import-report-em-box {
+    border: 1px solid var(--SmartThemeBorderColor, #444);
+    padding: 0.75em;
+    border-radius: 4px;
+    margin: 0.5em 0;
+}
+
+/* #5: import recovery reconciliation table. */
+.dle-import-recovery { margin-top: var(--dle-space-4); }
+.dle-import-recovery-bulk { margin: var(--dle-space-2) 0; }
+.dle-import-recovery-table { width: 100%; border-collapse: collapse; font-size: var(--dle-text-sm); margin-top: var(--dle-space-2); }
+.dle-import-recovery-table th, .dle-import-recovery-table td { text-align: left; padding: var(--dle-space-1) var(--dle-space-2); border-bottom: 1px solid var(--dle-border); vertical-align: top; }
+.dle-import-recovery-table th { color: var(--dle-text-muted); font-weight: 600; white-space: nowrap; }
+.dle-import-recovery-entry { word-break: break-word; }
+.dle-import-recovery-action { white-space: nowrap; }
+.dle-import-recovery-row-done { opacity: var(--dle-opacity-muted); }
+.dle-import-cat { display: inline-block; padding: 0 var(--dle-space-1); border-radius: var(--dle-radius-sm); font-size: var(--dle-text-xs); font-weight: 600; text-transform: uppercase; letter-spacing: 0.02em; border: 1px solid currentColor; margin-right: var(--dle-space-1); white-space: nowrap; }
+.dle-import-cat-transient { color: var(--dle-info-fg); }
+.dle-import-cat-collision { color: var(--dle-warning-fg); }
+.dle-import-cat-convert { color: var(--dle-error-fg); }
+.dle-import-cat-write { color: var(--dle-warning-fg); }
+.dle-import-cat-unknown { color: var(--dle-text-muted); }
+.dle-import-recovery-status { font-size: var(--dle-text-sm); font-weight: 600; }
+.dle-import-recovery-status-pending { color: var(--dle-text-muted); }
+.dle-import-recovery-status-ok { color: var(--dle-success-fg); }
+.dle-import-recovery-status-fail { color: var(--dle-error-fg); }
+.dle-import-recovery-status-dismissed { color: var(--dle-text-muted); opacity: var(--dle-opacity-muted); }
+@media (max-width: 600px) { .dle-import-recovery-table th:nth-child(2), .dle-import-recovery-table td.dle-import-recovery-reason { font-size: var(--dle-text-xs); } }
