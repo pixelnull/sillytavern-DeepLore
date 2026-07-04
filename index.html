@@ -257,7 +257,7 @@
 </g>
 </svg></div>
             </div>
-            <div id="deeplore-panel" class="drawer-content fillRight pinnedOpen openDrawer" role="region" aria-label="DeepLore panel">
+            <div id="deeplore-panel" class="drawer-content fillRight closedDrawer" role="region" aria-label="DeepLore panel">
                 <div id="deeplore-panelheader" class="fa-solid fa-grip drag-grabber" aria-hidden="true"></div>
                 <div class="dle-drawer-controls">
                     <div class="dle-drawer-pin" title="Pin drawer open">
@@ -4839,7 +4839,7 @@ Shift+Click to replace the existing checkpoint with a new one" tabindex="0" role
     </div>
 
     <!-- Area for hidden data lists for secrets autosuggests -->
-    <div id="secrets_datalists" class="displayNone"><datalist id="api_key_horde_datalist"></datalist><datalist id="api_key_mancer_datalist"></datalist><datalist id="api_key_openai_datalist"></datalist><datalist id="api_key_novel_datalist"></datalist><datalist id="api_key_claude_datalist"><option value="0e329344-616e-46bc-902d-217d2b2c8b52">04/06/2026 6:48 PM (*******asd)</option></datalist><datalist id="api_key_openrouter_datalist"></datalist><datalist id="api_key_ai21_datalist"></datalist><datalist id="api_key_makersuite_datalist"></datalist><datalist id="api_key_vertexai_datalist"></datalist><datalist id="api_key_vllm_datalist"></datalist><datalist id="api_key_aphrodite_datalist"></datalist><datalist id="api_key_tabby_datalist"></datalist><datalist id="api_key_mistralai_datalist"></datalist><datalist id="api_key_custom_datalist"></datalist><datalist id="api_key_togetherai_datalist"></datalist><datalist id="api_key_ooba_datalist"></datalist><datalist id="api_key_infermaticai_datalist"></datalist><datalist id="api_key_dreamgen_datalist"></datalist><datalist id="api_key_koboldcpp_datalist"></datalist><datalist id="api_key_llamacpp_datalist"></datalist><datalist id="api_key_cohere_datalist"></datalist><datalist id="api_key_perplexity_datalist"></datalist><datalist id="api_key_groq_datalist"></datalist><datalist id="api_key_featherless_datalist"></datalist><datalist id="api_key_huggingface_datalist"></datalist><datalist id="api_key_chutes_datalist"></datalist><datalist id="api_key_electronhub_datalist"></datalist><datalist id="api_key_nanogpt_datalist"></datalist><datalist id="api_key_generic_datalist"></datalist><datalist id="api_key_deepseek_datalist"></datalist><datalist id="api_key_aimlapi_datalist"></datalist><datalist id="api_key_xai_datalist"></datalist><datalist id="vertexai_service_account_json_datalist"></datalist><datalist id="api_key_moonshot_datalist"></datalist><datalist id="api_key_fireworks_datalist"></datalist><datalist id="api_key_cometapi_datalist"></datalist><datalist id="api_key_azure_openai_datalist"></datalist><datalist id="api_key_zai_datalist"></datalist><datalist id="api_key_siliconflow_datalist"></datalist><datalist id="api_key_pollinations_datalist"></datalist></div>
+    <div id="secrets_datalists" class="displayNone"><datalist id="api_key_horde_datalist"></datalist><datalist id="api_key_mancer_datalist"></datalist><datalist id="api_key_openai_datalist"></datalist><datalist id="api_key_novel_datalist"></datalist><datalist id="api_key_claude_datalist"></datalist><datalist id="api_key_openrouter_datalist"></datalist><datalist id="api_key_ai21_datalist"></datalist><datalist id="api_key_makersuite_datalist"></datalist><datalist id="api_key_vertexai_datalist"></datalist><datalist id="api_key_vllm_datalist"></datalist><datalist id="api_key_aphrodite_datalist"></datalist><datalist id="api_key_tabby_datalist"></datalist><datalist id="api_key_mistralai_datalist"></datalist><datalist id="api_key_custom_datalist"></datalist><datalist id="api_key_togetherai_datalist"></datalist><datalist id="api_key_ooba_datalist"></datalist><datalist id="api_key_infermaticai_datalist"></datalist><datalist id="api_key_dreamgen_datalist"></datalist><datalist id="api_key_koboldcpp_datalist"></datalist><datalist id="api_key_llamacpp_datalist"></datalist><datalist id="api_key_cohere_datalist"></datalist><datalist id="api_key_perplexity_datalist"></datalist><datalist id="api_key_groq_datalist"></datalist><datalist id="api_key_featherless_datalist"></datalist><datalist id="api_key_huggingface_datalist"></datalist><datalist id="api_key_chutes_datalist"></datalist><datalist id="api_key_electronhub_datalist"></datalist><datalist id="api_key_nanogpt_datalist"></datalist><datalist id="api_key_generic_datalist"></datalist><datalist id="api_key_deepseek_datalist"></datalist><datalist id="api_key_aimlapi_datalist"></datalist><datalist id="api_key_xai_datalist"></datalist><datalist id="vertexai_service_account_json_datalist"></datalist><datalist id="api_key_moonshot_datalist"></datalist><datalist id="api_key_fireworks_datalist"></datalist><datalist id="api_key_cometapi_datalist"></datalist><datalist id="api_key_azure_openai_datalist"></datalist><datalist id="api_key_zai_datalist"></datalist><datalist id="api_key_siliconflow_datalist"></datalist><datalist id="api_key_pollinations_datalist"></datalist></div>
 
     <!-- Script includes -->
 
@@ -6761,6 +6761,62 @@ if (libOverlay) {
 }
 .dle-demo-glow-bar:hover { animation-play-state: paused; }
 </style>
+<script>
+// ─── Demo tip assignment: re-apply data-demo-tip to real v2.6.1 drawer DOM ───
+// (drawer/settings/chat were rebuilt from live extension DOM, which carries no demo tips)
+(function () {
+    const drawer = document.getElementById('deeplore-panel');
+    if (!drawer) return;
+    const setFirst = (sel, tip) => {
+        const el = drawer.querySelector(sel);
+        if (el && !el.getAttribute('data-demo-tip')) el.setAttribute('data-demo-tip', tip);
+    };
+    const ASSIGN = [
+    { "sel": ".dle-tool-btn[data-action=\"help\"]", "tip": "Shows all available slash commands like /dle-pin, /dle-block, /dle-why, and more." },
+    { "sel": ".dle-status-row", "tip": "DLE loaded 255 lore entries from your Obsidian vault. &ldquo;Idle&rdquo; means it's waiting for the next message — it runs automatically before every AI response. &ldquo;AI Only&rdquo; means the AI evaluates your full vault to pick the most relevant entries, no keyword matching required." },
+    { "sel": ".dle-status-dot", "tip": "Status indicator — shows whether DeepLore is idle, indexing, or actively choosing lore for injection." },
+    { "sel": ".dle-token-bar-container", "tip": "This is your token budget — how many tokens the injected lore is spending. Right now DLE is sending about 7.9k tokens of world-building context to the AI each message. Set a hard cap to stay within a budget, or leave it unlimited (&infin;) like here." },
+    { "sel": ".dle-entries-bar-container", "tip": "DLE selected 20 of the 255 entries in this vault as relevant to the current conversation — and injected all of them. The rest stay home. You can cap this number if you want to limit context, or leave it unlimited." },
+    { "sel": ".dle-action-btn[data-action=\"librarian-chat\"]", "tip": "Librarian Chat — opens a dedicated AI conversation where the Librarian can search your vault, flag gaps, and help you write new entries. The Librarian has its own AI connection separate from the main retrieval pipeline." },
+    { "sel": ".dle-action-btn[data-action=\"graph\"]", "tip": "Knowledge Graph — visualizes links, requires/excludes relationships, and cascade connections between your vault entries. Nodes are colored by type and injection frequency." },
+    { "sel": ".dle-action-btn[data-action=\"clear-picks\"]", "tip": "Clear Picks — wipes the AI search sliding window cache. Next message will do a full re-evaluation of all candidates instead of reusing recent selections." },
+    { "sel": ".dle-action-btn[data-action=\"skip-tools\"]", "tip": "Skip Tools — temporarily disables Librarian tool calling for the next generation only. Useful when you want a quick response without the Librarian searching or flagging." },
+    { "sel": "#dle-tab-injection", "tip": "Injection — After each AI response, this shows exactly which lore entries were injected and why DLE chose them. Great for debugging context or understanding what the AI &ldquo;knows&rdquo; at any given moment. The badge shows 20 entries were active for the last message." },
+    { "sel": "#dle-tab-browse", "tip": "Browse your entire lore vault — all 255 entries from Obsidian, searchable and filterable. See which ones are active, which are gated out, and how often each one gets used. You can also edit entries directly from here." },
+    { "sel": "#dle-tab-gating", "tip": "Gating lets you tag lore entries with conditions — era, location, faction, arc — and then set those values here. Entries that don't match the current context get silently excluded. Keeps the wrong-era lore out of scenes where it doesn't belong." },
+    { "sel": "#dle-tab-librarian", "tip": "The Librarian watches your conversations and flags lore gaps — topics that came up but have no vault entry yet. Each flag shows urgency and frequency. Use the action buttons to open gaps in the editor, mark them done, or dismiss. The badge (5) is the number of open flags." },
+    { "sel": "#dle-tab-tools", "tip": "Tools gives you diagnostics, vault health checks, the knowledge graph visualizer, and data export. If something looks wrong with your lore injection, this is where you go to find out why." },
+    { "sel": ".dle-entry-folder", "tip": "Folder path — the Obsidian vault folder this entry lives in." },
+    { "sel": ".dle-inject-count", "tip": "Injection counter — how many times this entry has been injected in the current chat." },
+    { "sel": ".dle-browse-nav-btn", "tip": "Jump to this entry in the Browse tab to see full details, pin/block controls, and metadata." },
+    { "sel": ".dle-why-new-badge", "tip": "NEW — this entry was added this generation (wasn't injected last time)." },
+    { "sel": ".dle-why-not-header", "tip": "Filtered Out — entries that matched keywords but were excluded by gating rules, cooldowns, or blocks." },
+    { "sel": ".dle-why-timers-toggle", "tip": "Entry Timers — cooldowns, warmups, and probability gates currently active on entries in your vault." },
+    { "sel": ".dle-gating-fields-container", "tip": "Contextual gating filters — entries are only injected when era, location, or scene conditions match. Set a value here and only lore tagged with that value will be considered, filtering out irrelevant entries automatically." },
+    { "sel": ".dle-librarian-list", "tip": "Librarian detected a lore gap — a topic mentioned in conversation with no matching vault entry. Each flag shows the topic, urgency, and when it was detected. Click to open and write a new entry that fills the gap." },
+    { "sel": ".dle-tool-btn[data-action=\"librarian-new\"]", "tip": "Librarian tools — create new vault entries from detected gaps, or review your entire vault for coverage issues and missing lore." },
+    { "sel": ".dle-context-bar-container", "tip": "Your AI has a limited &ldquo;memory window&rdquo; — this bar shows how full it is. Right now about 2.6k tokens are used out of the model's 403.6k-token window, so there's plenty of headroom — but DLE keeps an eye on it so you never get blindsided by a context overflow." },
+    { "sel": ".dle-activity-feed-toggle", "tip": "A running log of every lore injection this session — what mode was used, how many entries were selected, and how many tokens they consumed. Handy for spotting if a particular message caused a sudden spike, or for confirming DLE is actually working." },
+    { "sel": ".dle-ai-stats", "tip": "DLE made 2 AI calls this session to search your vault. Repeat searches are served from a sliding-window cache instead of hitting the API again, so this number stays low instead of growing linearly with your message count." },
+    { "sel": ".dle-why-funnel", "tip": "The pipeline funnel at a glance — <strong>79 matched</strong> keywords, the AI <strong>picked 10</strong> as most relevant, and <strong>20 were injected</strong> once constants and cascade-links were added. It shows how DLE narrows your whole vault down to just what this moment needs." },
+    { "sel": ".dle-diag-dock", "tip": "Diagnostics dock — live health icons for your Obsidian connection, the AI connection, and index freshness. Green means all systems go; hover any icon for detail. This is where system health lives, separate from the activity spinner." }
+];
+    ASSIGN.forEach(a => setFirst(a.sel, a.tip));
+    // .dle-why-match badges carry different tips by kind — v2.6.1 renders one token per stage
+    // (CONST / KEY / AI / INIT as separate badges). Tag the first badge of each kind.
+    const WHY = [
+    { "needle": "CONST", "tip": "CONST — this entry is tagged 'lorebook-always' and injects every generation regardless of relevance." },
+    { "needle": "KEY", "tip": "KEY — matched by the keyword scan. In two-stage mode the keyword stage flags this entry as a candidate before the AI confirms it." },
+    { "needle": "AI", "tip": "AI — the AI selection stage picked this entry as most relevant from the keyword candidates. This is the second stage of two-stage retrieval." },
+    { "needle": "INIT", "tip": "INIT — injected as story-initialization context: a seed or bootstrap entry that grounds a brand-new chat before keywords have anything to match on." }
+];
+    WHY.forEach(w => {
+        const el = [...drawer.querySelectorAll('.dle-why-match')].find(
+            e => e.textContent.trim().toUpperCase() === w.needle && !e.getAttribute('data-demo-tip'));
+        if (el) el.setAttribute('data-demo-tip', w.tip);
+    });
+})();
+</script>
 <script>
 (function () {
     const BOX  = 'dle-demo-glow';
