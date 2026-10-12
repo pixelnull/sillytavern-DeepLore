@@ -3396,6 +3396,29 @@ test('L12-1: summarizeEntries catch releases the half-open probe on excluded err
 });
 
 // ============================================================================
+// #45 — summarizeEntries must bypass the 500ms AI throttle
+// The batch is serial and user-driven (a review popup per entry). When a call is
+// throttled, the catch counts it failed and the loop immediately calls again; with
+// no popup in between every remaining entry lands inside the same 500ms window, so
+// /dle-import reported "0 written, 0 skipped, 16 failed". Structural guard: the
+// summaryGen callAI config must set skipThrottle: true.
+// ============================================================================
+
+section('#45 — summarizeEntries bypasses the AI throttle');
+
+test('GH45-1: summarizeEntries callAI config sets skipThrottle: true', async () => {
+    const { readFile } = await import('node:fs/promises');
+    const src = await readFile(new URL('../src/ui/commands-ai.js', import.meta.url), 'utf8');
+    const fnStart = src.indexOf('export async function summarizeEntries');
+    assert(fnStart >= 0, 'GH45-1: summarizeEntries must be present in commands-ai.js');
+    const after = src.indexOf('\nexport ', fnStart + 1);
+    const body = src.slice(fnStart, after >= 0 ? after : src.length);
+    const call = body.slice(body.indexOf('await callAI('), body.indexOf('recordAiSuccess()'));
+    assert(/skipThrottle\s*:\s*true/.test(call),
+        'GH45-1: summarizeEntries must pass skipThrottle: true so one throttle hit cannot fail the whole batch');
+});
+
+// ============================================================================
 // WB-CB-PROBE — hierarchicalPreFilter releases probe on every early-return (AI-audit H1)
 // ============================================================================
 
