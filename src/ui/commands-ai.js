@@ -404,6 +404,9 @@ export async function summarizeEntries(entries) {
                     ...resolved,
                     caller: 'summaryGen',
                     maxTokens: 300,
+                    // #45: serial, user-driven batch. A throttled call fails instantly,
+                    // so without this every remaining entry lands in the same 500ms window.
+                    skipThrottle: true,
                 });
                 recordAiSuccess();
             } catch (callErr) {
